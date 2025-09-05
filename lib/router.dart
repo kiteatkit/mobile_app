@@ -42,7 +42,7 @@ final GoRouter appRouter = GoRouter(
           const CoachDashboardPage(),
     ),
     GoRoute(
-      path: '/group',
+      path: '/group-view',
       builder: (BuildContext context, GoRouterState state) {
         final group = state.extra as Group;
         return GroupViewPage(group: group);

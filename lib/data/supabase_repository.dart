@@ -5,17 +5,34 @@ import '../models/group.dart';
 import '../models/player.dart';
 import '../models/training_session.dart';
 import '../models/attendance.dart';
+import '../models/training_schedule.dart';
 import 'dart:typed_data';
 
 class SupabaseRepository {
   final SupabaseClient _client;
   SupabaseRepository() : _client = SupabaseManager.client;
 
+  // Кэш для часто запрашиваемых данных
+  List<Player>? _cachedPlayers;
+  List<Group>? _cachedGroups;
+  DateTime? _lastCacheUpdate;
+  static const Duration _cacheTimeout = Duration(minutes: 5);
+
   Future<List<Group>> getGroups() async {
+    if (_cachedGroups != null &&
+        _lastCacheUpdate != null &&
+        DateTime.now().difference(_lastCacheUpdate!) < _cacheTimeout) {
+      return _cachedGroups!;
+    }
+
     final data = await _client.from('groups').select('*').order('name');
-    return (data as List)
+    final groups = (data as List)
         .map((e) => Group.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+
+    _cachedGroups = groups;
+    _lastCacheUpdate = DateTime.now();
+    return groups;
   }
 
   Future<Group> createGroup({
@@ -28,7 +45,9 @@ class SupabaseRepository {
         .insert({'name': name, 'description': description, 'color': color})
         .select()
         .single();
-    return Group.fromJson(Map<String, dynamic>.from(data));
+    final group = Group.fromJson(Map<String, dynamic>.from(data));
+    _invalidateCache();
+    return group;
   }
 
   Future<void> updateGroup({
@@ -50,6 +69,15 @@ class SupabaseRepository {
   }
 
   Future<List<Player>> getPlayers({String? groupId}) async {
+    // Если запрашиваем всех игроков, используем кэш
+    if (groupId == null) {
+      if (_cachedPlayers != null &&
+          _lastCacheUpdate != null &&
+          DateTime.now().difference(_lastCacheUpdate!) < _cacheTimeout) {
+        return _cachedPlayers!;
+      }
+    }
+
     dynamic data;
     if (groupId != null) {
       data = await _client
@@ -63,9 +91,18 @@ class SupabaseRepository {
           .select('*')
           .order('total_points', ascending: false);
     }
-    return (data as List)
+
+    final players = (data as List)
         .map((e) => Player.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+
+    // Кэшируем только если запрашиваем всех игроков
+    if (groupId == null) {
+      _cachedPlayers = players;
+      _lastCacheUpdate = DateTime.now();
+    }
+
+    return players;
   }
 
   Future<List<TrainingSession>> getTrainingsInRange(
@@ -212,6 +249,11 @@ class SupabaseRepository {
     await _client.from('players').update({'group_id': null}).eq('id', playerId);
   }
 
+  Future<void> deletePlayer(String playerId) async {
+    // Выполняем удаление в одной транзакции для ускорения
+    await _client.rpc('delete_player_cascade', params: {'player_id': playerId});
+  }
+
   Future<String> uploadAvatar({
     required String playerId,
     required Uint8List bytes,
@@ -231,4 +273,124 @@ class SupabaseRepository {
 
   String _formatDate(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  // Методы для работы с расписанием тренировок
+  Future<List<TrainingSchedule>> getTrainingSchedules({String? groupId}) async {
+    dynamic data;
+    if (groupId != null) {
+      data = await _client
+          .from('training_schedules')
+          .select('*')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+    } else {
+      data = await _client
+          .from('training_schedules')
+          .select('*')
+          .order('created_at', ascending: false);
+    }
+    return (data as List)
+        .map((e) => TrainingSchedule.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  Future<TrainingSchedule> createTrainingSchedule({
+    required String groupId,
+    required String title,
+    required List<int> weekdays,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final data = await _client
+        .from('training_schedules')
+        .insert({
+          'group_id': groupId,
+          'title': title,
+          'weekdays': weekdays,
+          'start_time': startTime,
+          'end_time': endTime,
+        })
+        .select()
+        .single();
+    final schedule = TrainingSchedule.fromJson(Map<String, dynamic>.from(data));
+    _invalidateCache();
+    return schedule;
+  }
+
+  Future<void> updateTrainingSchedule({
+    required String id,
+    String? title,
+    List<int>? weekdays,
+    String? startTime,
+    String? endTime,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (title != null) payload['title'] = title;
+    if (weekdays != null) payload['weekdays'] = weekdays;
+    if (startTime != null) payload['start_time'] = startTime;
+    if (endTime != null) payload['end_time'] = endTime;
+    if (payload.isEmpty) return;
+
+    await _client.from('training_schedules').update(payload).eq('id', id);
+    _invalidateCache();
+  }
+
+  Future<void> deleteTrainingSchedule(String id) async {
+    await _client.from('training_schedules').delete().eq('id', id);
+    _invalidateCache();
+  }
+
+  // Автоматическое создание тренировок на основе расписания
+  Future<void> generateTrainingSessionsFromSchedule({
+    required String groupId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final schedules = await getTrainingSchedules(groupId: groupId);
+
+    for (final schedule in schedules) {
+      DateTime currentDate = startDate;
+
+      while (currentDate.isBefore(endDate) ||
+          currentDate.isAtSameMomentAs(endDate)) {
+        // Проверяем, является ли текущий день днем недели для тренировки
+        if (schedule.weekdays.contains(currentDate.weekday)) {
+          // Проверяем, не существует ли уже тренировка на этот день
+          final existingSessions = await getTrainingsInRange(
+            DateTime(currentDate.year, currentDate.month, currentDate.day),
+            DateTime(
+              currentDate.year,
+              currentDate.month,
+              currentDate.day,
+              23,
+              59,
+            ),
+          );
+
+          final hasExistingSession = existingSessions.any((session) {
+            final sessionDate = DateTime.parse(session.date);
+            return sessionDate.year == currentDate.year &&
+                sessionDate.month == currentDate.month &&
+                sessionDate.day == currentDate.day;
+          });
+
+          if (!hasExistingSession) {
+            // Создаем тренировку
+            await createTrainingSession(
+              date: currentDate,
+              title: schedule.title,
+            );
+          }
+        }
+
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+    }
+  }
+
+  void _invalidateCache() {
+    _cachedPlayers = null;
+    _cachedGroups = null;
+    _lastCacheUpdate = null;
+  }
 }
