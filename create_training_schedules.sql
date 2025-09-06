@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS training_schedules (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  weekdays INTEGER[] NOT NULL,
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS group_id UUID REFERENCES groups(id) ON DELETE SET NULL;

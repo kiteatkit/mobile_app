@@ -10,6 +10,7 @@ abstract class TrainingSession with _$TrainingSession {
     required String date,
     required String title,
     required String created_at,
+    String? group_id,
   }) = _TrainingSession;
 
   factory TrainingSession.fromJson(Map<String, dynamic> json) =>

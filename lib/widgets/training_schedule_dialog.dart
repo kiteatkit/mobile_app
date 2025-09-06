@@ -325,7 +325,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Тренировки будут автоматически создаваться в выбранные дни недели',
+                        'Расписание сохранено. Тренировки будут создаваться только в выбранный день и время по требованию.',
                         style: TextStyle(
                           color: UI.muted,
                           fontSize: UI.isSmallScreen(context) ? 11 : 12,

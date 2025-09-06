@@ -8,6 +8,7 @@ import '../models/training_session.dart';
 import '../models/attendance.dart';
 import '../widgets/back_button.dart';
 import '../widgets/training_schedule_dialog.dart';
+import '../widgets/scheduled_trainings_dialog.dart';
 
 class GroupViewPage extends StatefulWidget {
   const GroupViewPage({
@@ -134,37 +135,37 @@ class _GroupViewPageState extends State<GroupViewPage>
                     // Заголовок и контент с отступами
                     Padding(
                       padding: UI.getScreenPadding(context),
-                      child: Column(
-                        children: [
-                          // Заголовок с зеленой точкой и кнопкой закрыть
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${widget.group.name} - Игроки команды',
-                                  style: TextStyle(
-                                    color: UI.white,
-                                    fontSize: UI.getSubtitleFontSize(context),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const CustomBackButton(),
-                            ],
+                child: Column(
+                  children: [
+                    // Заголовок с зеленой точкой и кнопкой закрыть
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${widget.group.name} - Игроки команды',
+                                  style: TextStyle(
+                              color: UI.white,
+                                    fontSize: UI.getSubtitleFontSize(context),
+                              fontWeight: FontWeight.bold,
+                            ),
+                                  overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const CustomBackButton(),
+                      ],
+                    ),
                           SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
-                          // Карточки статистики
+                    // Карточки статистики
                           UI.isSmallScreen(context)
                               ? Column(
                                   children: [
@@ -195,34 +196,34 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   ],
                                 )
                               : Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildStatCard(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
                                         context: context,
-                                        icon: Icons.emoji_events,
-                                        value:
-                                            '${players.fold<int>(0, (s, p) => s + _monthlyTotal(p.id))}',
-                                        label: 'Очки за месяц',
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    if (players.isNotEmpty)
-                                      Expanded(
-                                        child: _buildStatCard(
+                            icon: Icons.emoji_events,
+                            value:
+                                '${players.fold<int>(0, (s, p) => s + _monthlyTotal(p.id))}',
+                            label: 'Очки за месяц',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        if (players.isNotEmpty)
+                          Expanded(
+                            child: _buildStatCard(
                                           context: context,
-                                          icon: Icons.military_tech,
-                                          value: _leader?.name ?? '-',
-                                          label: _leader == null
-                                              ? 'Лидер команды'
-                                              : 'Лидер команды • ${_monthlyTotal(_leader!.id)} очков за месяц',
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                              icon: Icons.military_tech,
+                              value: _leader?.name ?? '-',
+                              label: _leader == null
+                                  ? 'Лидер команды'
+                                  : 'Лидер команды • ${_monthlyTotal(_leader!.id)} очков за месяц',
+                            ),
+                          ),
+                      ],
+                    ),
 
                           SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
-                          // Секция игроков команды
+                    // Секция игроков команды
                           UI.isSmallScreen(context)
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,94 +299,200 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     ),
                                     if (!widget.isPlayerMode) ...[
                                       const SizedBox(height: 12),
+                                      UI.isSmallScreen(context)
+                                          ? Column(
+                                              children: [
                                       Row(
                                         children: [
                                           Expanded(
                                             child: SizedBox(
-                                              height: UI.isSmallScreen(context)
-                                                  ? 36
-                                                  : 40,
+                                                        height: 36,
                                               child: ElevatedButton.icon(
                                                 onPressed: () =>
                                                     _openAddTrainingDialog(),
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: UI.primary,
+                                                            backgroundColor:
+                                                                UI.primary,
+                                                            foregroundColor:
+                                                                UI.white,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    6,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          icon: const Icon(
+                                                            Icons.add,
+                                                            size: 14,
+                                                          ),
+                                                          label: const Text(
+                                                            'Тренировка',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Expanded(
+                                                      child: SizedBox(
+                                                        height: 36,
+                                                        child: ElevatedButton.icon(
+                                                          onPressed: () =>
+                                                              _openScheduledTrainingsDialog(),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                UI.primary,
+                                                            foregroundColor:
+                                                                UI.white,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    6,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          icon: const Icon(
+                                                            Icons.queue,
+                                                            size: 14,
+                                                          ),
+                                                          label: const Text(
+                                                            'Очередь',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  height: 36,
+                                                  child: ElevatedButton.icon(
+                                                    onPressed: () =>
+                                                        _openTrainingScheduleDialog(),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          UI.primary,
                                                   foregroundColor: UI.white,
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          UI.isSmallScreen(
-                                                                context,
-                                                              )
-                                                              ? 6
-                                                              : 8,
+                                                              6,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    icon: const Icon(
+                                                      Icons.schedule,
+                                                      size: 14,
+                                                    ),
+                                                    label: const Text(
+                                                      'Расписание',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Row(
+                                              children: [
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: ElevatedButton.icon(
+                                                      onPressed: () =>
+                                                          _openAddTrainingDialog(),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            UI.primary,
+                                                        foregroundColor:
+                                                            UI.white,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
                                                         ),
                                                   ),
                                                 ),
-                                                icon: Icon(
+                                                      icon: const Icon(
                                                   Icons.add,
-                                                  size:
-                                                      UI.isSmallScreen(context)
-                                                      ? 14
-                                                      : 16,
+                                                        size: 16,
                                                 ),
-                                                label: Text(
+                                                      label: const Text(
                                                   'Тренировка',
                                                   style: TextStyle(
-                                                    fontSize:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 12
-                                                        : 14,
+                                                          fontSize: 14,
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                          SizedBox(
-                                            width: UI.isSmallScreen(context)
-                                                ? 6
-                                                : 8,
-                                          ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: ElevatedButton.icon(
+                                                      onPressed: () =>
+                                                          _openScheduledTrainingsDialog(),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            UI.primary,
+                                                        foregroundColor:
+                                                            UI.white,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      icon: const Icon(
+                                                        Icons.queue,
+                                                        size: 16,
+                                                      ),
+                                                      label: const Text(
+                                                        'Очередь',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
                                           Expanded(
                                             child: SizedBox(
-                                              height: UI.isSmallScreen(context)
-                                                  ? 36
-                                                  : 40,
+                                                    height: 40,
                                               child: ElevatedButton.icon(
                                                 onPressed: () =>
                                                     _openTrainingScheduleDialog(),
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: UI.primary,
-                                                  foregroundColor: UI.white,
+                                                        backgroundColor:
+                                                            UI.primary,
+                                                        foregroundColor:
+                                                            UI.white,
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          UI.isSmallScreen(
-                                                                context,
-                                                              )
-                                                              ? 6
-                                                              : 8,
+                                                                8,
                                                         ),
                                                   ),
                                                 ),
-                                                icon: Icon(
+                                                      icon: const Icon(
                                                   Icons.schedule,
-                                                  size:
-                                                      UI.isSmallScreen(context)
-                                                      ? 14
-                                                      : 16,
+                                                        size: 16,
                                                 ),
-                                                label: Text(
+                                                      label: const Text(
                                                   'Расписание',
                                                   style: TextStyle(
-                                                    fontSize:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 12
-                                                        : 14,
+                                                          fontSize: 14,
                                                   ),
                                                 ),
                                               ),
@@ -397,71 +504,69 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   ],
                                 )
                               : Row(
-                                  children: [
-                                    const Text(
-                                      'Игроки команды',
-                                      style: TextStyle(
-                                        color: UI.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const Spacer(),
+                      children: [
+                        const Text(
+                          'Игроки команды',
+                          style: TextStyle(
+                            color: UI.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
                                     const Text(
                                       'Месяц:',
                                       style: TextStyle(color: UI.white),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: UI.card,
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: UI.card,
                                         borderRadius: BorderRadius.circular(
                                           UI.radiusLg,
                                         ),
-                                        border: Border.all(color: UI.border),
-                                      ),
-                                      child: DropdownButton<DateTime>(
-                                        dropdownColor: UI.card,
-                                        value: selectedMonth,
-                                        underline: const SizedBox(),
-                                        icon: const Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: UI.white,
-                                          size: 16,
-                                        ),
-                                        items: List.generate(12, (i) {
-                                          final d = DateTime(
-                                            DateTime.now().year,
-                                            DateTime.now().month - i,
-                                            1,
-                                          );
-                                          return DropdownMenuItem(
-                                            value: d,
-                                            child: Text(
-                                              _formatMonth(d),
+                            border: Border.all(color: UI.border),
+                          ),
+                          child: DropdownButton<DateTime>(
+                            dropdownColor: UI.card,
+                            value: selectedMonth,
+                            underline: const SizedBox(),
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down,
+                              color: UI.white,
+                              size: 16,
+                            ),
+                            items: List.generate(12, (i) {
+                              final d = DateTime(
+                                DateTime.now().year,
+                                DateTime.now().month - i,
+                                1,
+                              );
+                              return DropdownMenuItem(
+                                value: d,
+                                child: Text(
+                                  _formatMonth(d),
                                               style: const TextStyle(
                                                 color: UI.white,
                                               ),
-                                            ),
-                                          );
-                                        }),
-                                        onChanged: (v) {
-                                          if (v == null) return;
-                                          setState(() => selectedMonth = v);
-                                          _load();
-                                        },
+                                ),
+                              );
+                            }),
+                            onChanged: (v) {
+                              if (v == null) return;
+                              setState(() => selectedMonth = v);
+                              _load();
+                            },
                                       ),
                                     ),
                                     if (!widget.isPlayerMode) ...[
                                       const SizedBox(width: 8),
                                       SizedBox(
-                                        height: UI.isSmallScreen(context)
-                                            ? 36
-                                            : 40,
+                                        height: 40,
                                         child: ElevatedButton.icon(
                                           onPressed: () =>
                                               _openAddTrainingDialog(),
@@ -470,39 +575,43 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             foregroundColor: UI.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                    UI.isSmallScreen(context)
-                                                        ? 6
-                                                        : 8,
-                                                  ),
+                                                  BorderRadius.circular(8),
                                             ),
                                           ),
-                                          icon: Icon(
-                                            Icons.add,
-                                            size: UI.isSmallScreen(context)
-                                                ? 14
-                                                : 16,
-                                          ),
-                                          label: Text(
+                                          icon: const Icon(Icons.add, size: 16),
+                                          label: const Text(
                                             'Тренировка',
-                                            style: TextStyle(
-                                              fontSize:
-                                                  UI.isSmallScreen(context)
-                                                  ? 12
-                                                  : 14,
-                                            ),
+                                            style: TextStyle(fontSize: 14),
                                           ),
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
                                       SizedBox(
-                                        width: UI.isSmallScreen(context)
-                                            ? 6
-                                            : 8,
+                                        height: 40,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () =>
+                                              _openScheduledTrainingsDialog(),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: UI.primary,
+                                            foregroundColor: UI.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.queue,
+                                            size: 16,
+                                          ),
+                                          label: const Text(
+                                            'Очередь',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                        ),
                                       ),
+                                      const SizedBox(width: 8),
                                       SizedBox(
-                                        height: UI.isSmallScreen(context)
-                                            ? 36
-                                            : 40,
+                                        height: 40,
                                         child: ElevatedButton.icon(
                                           onPressed: () =>
                                               _openTrainingScheduleDialog(),
@@ -511,27 +620,16 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             foregroundColor: UI.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                    UI.isSmallScreen(context)
-                                                        ? 6
-                                                        : 8,
+                                                  BorderRadius.circular(8),
                                                   ),
                                             ),
-                                          ),
-                                          icon: Icon(
+                                          icon: const Icon(
                                             Icons.schedule,
-                                            size: UI.isSmallScreen(context)
-                                                ? 14
-                                                : 16,
+                                            size: 16,
                                           ),
-                                          label: Text(
+                                          label: const Text(
                                             'Расписание',
-                                            style: TextStyle(
-                                              fontSize:
-                                                  UI.isSmallScreen(context)
-                                                  ? 12
-                                                  : 14,
-                                            ),
+                                            style: TextStyle(fontSize: 14),
                                           ),
                                         ),
                                       ),
@@ -547,46 +645,46 @@ class _GroupViewPageState extends State<GroupViewPage>
                     // Таблица игроков
                     Container(
                       height: 400, // Фиксированная высота вместо Expanded
-                      decoration: BoxDecoration(
-                        color: UI.card,
-                        borderRadius: BorderRadius.circular(UI.radiusLg),
-                        border: Border.all(color: UI.border),
+                        decoration: BoxDecoration(
+                          color: UI.card,
+                          borderRadius: BorderRadius.circular(UI.radiusLg),
+                          border: Border.all(color: UI.border),
                       ),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
                             minWidth: MediaQuery.of(context).size.width,
-                          ),
-                          child: Column(
-                            children: [
-                              // Заголовок таблицы
-                              Container(
+                        ),
+                        child: Column(
+                          children: [
+                            // Заголовок таблицы
+                            Container(
                                 padding: UI.getCardPadding(context),
-                                decoration: const BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(color: UI.border),
-                                  ),
+                              decoration: const BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(color: UI.border),
                                 ),
-                                child: Row(
-                                  children: [
+                              ),
+                              child: Row(
+                                children: [
                                     // Колонка игрока - адаптивная ширина
                                     Container(
                                       width: UI.isSmallScreen(context)
-                                          ? 120
-                                          : 200,
+                                          ? 160
+                                          : 250,
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
+                                        vertical: 16,
                                       ),
-                                      child: Text(
-                                        'Игрок',
-                                        style: TextStyle(
-                                          color: UI.muted,
+                                    child: Text(
+                                      'Игрок',
+                                      style: TextStyle(
+                                        color: UI.muted,
                                           fontSize: UI.isSmallScreen(context)
-                                              ? 9
-                                              : 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                              ? 13
+                                              : 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
@@ -594,25 +692,25 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     ...trainings.map(
                                       (training) => Container(
                                         width: UI.isSmallScreen(context)
-                                            ? 80
-                                            : 120,
+                                            ? 120
+                                            : 160,
                                         padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
+                                          vertical: 16,
                                         ),
-                                        child: Column(
+                                      child: Column(
                                           mainAxisSize: MainAxisSize.min,
-                                          children: [
+                                        children: [
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Icon(
-                                                  Icons.calendar_today,
-                                                  color: UI.muted,
+                                            Icons.calendar_today,
+                                            color: UI.muted,
                                                   size:
                                                       UI.isSmallScreen(context)
-                                                      ? 12
-                                                      : 16,
+                                                      ? 16
+                                                      : 20,
                                                 ),
                                                 SizedBox(
                                                   width:
@@ -620,53 +718,56 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                       ? 2
                                                       : 4,
                                                 ),
-                                                PopupMenuButton<String>(
-                                                  icon: Icon(
-                                                    Icons.more_vert,
-                                                    color: UI.muted,
-                                                    size:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 12
-                                                        : 16,
+                                                if (!widget.isPlayerMode)
+                                                  PopupMenuButton<String>(
+                                                    icon: Icon(
+                                                      Icons.more_vert,
+                                                      color: UI.muted,
+                                                      size:
+                                                          UI.isSmallScreen(
+                                                            context,
+                                                          )
+                                                          ? 12
+                                                          : 16,
+                                                    ),
+                                                    onSelected: (value) {
+                                                      if (value == 'delete') {
+                                                        _deleteTraining(
+                                                          training,
+                                                        );
+                                                      } else if (value ==
+                                                          'create') {
+                                                        _openAddTrainingDialog();
+                                                      }
+                                                    },
+                                                    itemBuilder: (context) => [
+                                                      const PopupMenuItem(
+                                                        value: 'create',
+                                                        child: Text(
+                                                          'Создать тренировку',
+                                                        ),
+                                                      ),
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Text(
+                                                          'Удалить тренировку',
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  onSelected: (value) {
-                                                    if (value == 'delete') {
-                                                      _deleteTraining(training);
-                                                    } else if (value ==
-                                                        'create') {
-                                                      _openAddTrainingDialog();
-                                                    }
-                                                  },
-                                                  itemBuilder: (context) => [
-                                                    const PopupMenuItem(
-                                                      value: 'create',
-                                                      child: Text(
-                                                        'Создать тренировку',
-                                                      ),
-                                                    ),
-                                                    const PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Text(
-                                                        'Удалить тренировку',
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
                                               ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
                                               training.title,
-                                              style: TextStyle(
-                                                color: UI.muted,
+                                            style: TextStyle(
+                                              color: UI.muted,
                                                 fontSize:
                                                     UI.isSmallScreen(context)
                                                     ? 8
                                                     : 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                               textAlign: TextAlign.center,
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
@@ -682,16 +783,16 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                 ),
                                                 fontSize:
                                                     UI.isSmallScreen(context)
-                                                    ? 7
-                                                    : 9,
+                                                    ? 11
+                                                    : 13,
                                               ),
                                               textAlign: TextAlign.center,
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
+                                    ),
                                     ),
                                     // Колонка итого - адаптивная ширина
                                     Container(
@@ -701,41 +802,41 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8,
                                       ),
-                                      child: Column(
+                                    child: Column(
                                         mainAxisSize: MainAxisSize.min,
-                                        children: [
+                                      children: [
                                           Icon(
-                                            Icons.emoji_events,
-                                            color: UI.muted,
+                                          Icons.emoji_events,
+                                          color: UI.muted,
                                             size: UI.isSmallScreen(context)
                                                 ? 12
                                                 : 16,
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Итого',
-                                            style: TextStyle(
-                                              color: UI.muted,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Итого',
+                                          style: TextStyle(
+                                            color: UI.muted,
                                               fontSize:
                                                   UI.isSmallScreen(context)
                                                   ? 8
                                                   : 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            textAlign: TextAlign.center,
+                                            fontWeight: FontWeight.w600,
                                           ),
-                                        ],
-                                      ),
+                                            textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              // Строки игроков
+                            ),
+                            // Строки игроков
                               ...players.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final player = entry.value;
-                                final isLeader = player.id == _leader?.id;
-                                final monthlyTotal = _monthlyTotal(player.id);
+                                  final isLeader = player.id == _leader?.id;
+                                  final monthlyTotal = _monthlyTotal(player.id);
 
                                 return Container(
                                   decoration: BoxDecoration(
@@ -753,18 +854,18 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       // Колонка игрока - адаптивная ширина
                                       Container(
                                         width: UI.isSmallScreen(context)
-                                            ? 120
-                                            : 200,
+                                            ? 160
+                                            : 250,
                                         padding: EdgeInsets.symmetric(
                                           horizontal: UI.isSmallScreen(context)
-                                              ? 6
-                                              : 12,
-                                          vertical: 8,
+                                              ? 12
+                                              : 20,
+                                          vertical: 16,
                                         ),
                                         child: _PlayerInfo(
-                                          player: player,
-                                          isLeader: isLeader,
-                                          isLast: index == players.length - 1,
+                                    player: player,
+                                    isLeader: isLeader,
+                                    isLast: index == players.length - 1,
                                         ),
                                       ),
                                       // Колонки баллов для каждой тренировки - адаптивная ширина
@@ -775,21 +876,21 @@ class _GroupViewPageState extends State<GroupViewPage>
                                         );
                                         return Container(
                                           width: UI.isSmallScreen(context)
-                                              ? 80
-                                              : 120,
+                                              ? 120
+                                              : 160,
                                           padding: EdgeInsets.symmetric(
                                             horizontal:
                                                 UI.isSmallScreen(context)
-                                                ? 4
-                                                : 8,
-                                            vertical: 8,
+                                                ? 8
+                                                : 16,
+                                            vertical: 16,
                                           ),
                                           child: widget.isPlayerMode
                                               ? Container(
                                                   height:
                                                       UI.isSmallScreen(context)
-                                                      ? 28
-                                                      : 32,
+                                                      ? 44
+                                                      : 48,
                                                   decoration: BoxDecoration(
                                                     color: UI.primary
                                                         .withOpacity(0.1),
@@ -816,8 +917,8 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                             UI.isSmallScreen(
                                                               context,
                                                             )
-                                                            ? 10
-                                                            : 14,
+                                                            ? 14
+                                                            : 18,
                                                         fontWeight:
                                                             FontWeight.bold,
                                                       ),
@@ -914,9 +1015,9 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               textAlign: TextAlign.center,
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    ],
+                              ),
+                            ),
+                          ],
                                   ),
                                 );
                               }),
@@ -1251,7 +1352,17 @@ class _GroupViewPageState extends State<GroupViewPage>
 
     if (result == true && selectedDate != null) {
       try {
+        // Сначала пытаемся создать тренировку на основе расписания
+        try {
+          await repo.createTrainingFromSchedule(
+            groupId: widget.group.id,
+            date: selectedDate!,
+          );
+        } catch (e) {
+          // Если нет расписания, создаем обычную тренировку
         await repo.createTrainingSession(date: selectedDate!);
+        }
+
         await _load(); // Перезагружаем данные
 
         if (mounted) {
@@ -1288,6 +1399,18 @@ class _GroupViewPageState extends State<GroupViewPage>
       ),
     );
   }
+
+  Future<void> _openScheduledTrainingsDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) => ScheduledTrainingsDialog(
+        group: widget.group,
+        onTrainingCreated: () {
+          _load();
+        },
+      ),
+    );
+  }
 }
 
 class _PlayerInfo extends StatelessWidget {
@@ -1303,8 +1426,8 @@ class _PlayerInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = UI.isSmallScreen(context) ? 24.0 : 32.0;
-    final iconSize = UI.isSmallScreen(context) ? 12.0 : 14.0;
+    final avatarSize = UI.isSmallScreen(context) ? 32.0 : 40.0;
+    final iconSize = UI.isSmallScreen(context) ? 16.0 : 18.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -1337,7 +1460,7 @@ class _PlayerInfo extends StatelessWidget {
                   : _buildPlayerFallbackAvatar(player, avatarSize),
             ),
           ),
-          SizedBox(width: UI.isSmallScreen(context) ? 6 : 8),
+          SizedBox(width: UI.isSmallScreen(context) ? 12 : 16),
           // Информация об игроке
           Expanded(
             child: Column(
@@ -1348,11 +1471,11 @@ class _PlayerInfo extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        player.name,
+                      player.name,
                         style: TextStyle(
-                          color: UI.white,
-                          fontSize: UI.isSmallScreen(context) ? 10 : 13,
-                          fontWeight: FontWeight.bold,
+                        color: UI.white,
+                          fontSize: UI.isSmallScreen(context) ? 14 : 17,
+                        fontWeight: FontWeight.bold,
                         ),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -1373,7 +1496,7 @@ class _PlayerInfo extends StatelessWidget {
                   '@${player.login}',
                   style: TextStyle(
                     color: UI.muted,
-                    fontSize: UI.isSmallScreen(context) ? 8 : 10,
+                    fontSize: UI.isSmallScreen(context) ? 11 : 13,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,

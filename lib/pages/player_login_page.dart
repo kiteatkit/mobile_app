@@ -15,6 +15,7 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   Future<void> _handleLogin() async {
@@ -130,7 +131,7 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         style: const TextStyle(color: UI.white),
                         decoration: InputDecoration(
                           labelText: 'Пароль',
@@ -140,6 +141,19 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(UI.radiusSm),
                             borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: UI.muted,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
                         ),
                       ),

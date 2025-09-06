@@ -7,6 +7,7 @@ import '../models/player.dart';
 import '../models/training_session.dart';
 import '../models/attendance.dart';
 import '../models/training_schedule.dart';
+import '../models/scheduled_training.dart';
 import 'dart:typed_data';
 
 class SupabaseRepository {
@@ -418,7 +419,22 @@ class SupabaseRepository {
     required String startTime,
     required String endTime,
   }) async {
-    // Создаем тренировки на ближайшие 4 недели для выбранных дней недели
+    // Сначала создаем расписание
+    final scheduleData = await _client
+        .from('training_schedules')
+        .insert({
+          'group_id': groupId,
+          'title': title,
+          'weekdays': weekdays,
+          'start_time': startTime,
+          'end_time': endTime,
+        })
+        .select()
+        .single();
+
+    final scheduleId = scheduleData['id'] as String;
+
+    // Создаем запланированные тренировки на ближайшие 4 недели
     final now = DateTime.now();
     final endDate = now.add(const Duration(days: 28)); // 4 недели вперед
 
@@ -433,7 +449,7 @@ class SupabaseRepository {
         // Проверяем, что дата не в прошлом и не превышает 4 недели
         if (targetDate.isAfter(now.subtract(const Duration(days: 1))) &&
             targetDate.isBefore(endDate)) {
-          // Проверяем, не существует ли уже тренировка на этот день
+          // Проверяем, не существует ли уже тренировка или запланированная тренировка на этот день
           final existingSessions = await getTrainingsInRange(
             DateTime(targetDate.year, targetDate.month, targetDate.day),
             DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59),
@@ -447,8 +463,15 @@ class SupabaseRepository {
           });
 
           if (!hasExistingSession) {
-            // Создаем тренировку
-            await createTrainingSession(date: targetDate);
+            // Создаем запланированную тренировку
+            await createScheduledTraining(
+              groupId: groupId,
+              date: targetDate,
+              title: title,
+              startTime: startTime,
+              endTime: endTime,
+              scheduleId: scheduleId,
+            );
           }
         }
       }
@@ -478,6 +501,185 @@ class SupabaseRepository {
   Future<void> deleteTrainingSchedule(String id) async {
     await _client.from('training_schedules').delete().eq('id', id);
     _invalidateCache();
+  }
+
+  // Методы для работы с запланированными тренировками
+  Future<List<ScheduledTraining>> getScheduledTrainings({
+    String? groupId,
+  }) async {
+    dynamic data;
+    if (groupId != null) {
+      data = await _client
+          .from('scheduled_trainings')
+          .select('*')
+          .eq('group_id', groupId)
+          .order('date', ascending: true);
+    } else {
+      data = await _client
+          .from('scheduled_trainings')
+          .select('*')
+          .order('date', ascending: true);
+    }
+    return (data as List)
+        .map((e) => ScheduledTraining.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  Future<ScheduledTraining> createScheduledTraining({
+    required String groupId,
+    required DateTime date,
+    required String title,
+    required String startTime,
+    required String endTime,
+    required String scheduleId,
+  }) async {
+    final data = await _client
+        .from('scheduled_trainings')
+        .insert({
+          'group_id': groupId,
+          'date': _formatDate(date),
+          'title': title,
+          'start_time': startTime,
+          'end_time': endTime,
+          'schedule_id': scheduleId,
+        })
+        .select()
+        .single();
+
+    return ScheduledTraining.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteScheduledTraining(String id) async {
+    await _client.from('scheduled_trainings').delete().eq('id', id);
+    _invalidateCache();
+  }
+
+  Future<void> updateScheduledTrainingDate({
+    required String id,
+    required DateTime newDate,
+  }) async {
+    await _client
+        .from('scheduled_trainings')
+        .update({'date': _formatDate(newDate)})
+        .eq('id', id);
+    _invalidateCache();
+  }
+
+  // Создание тренировки из запланированной
+  Future<TrainingSession> createTrainingFromScheduled({
+    required ScheduledTraining scheduledTraining,
+  }) async {
+    try {
+      await _checkInternetConnection();
+
+      final data = await _client
+          .from('training_sessions')
+          .insert({
+            'date': scheduledTraining.date,
+            'title': scheduledTraining.title,
+            'group_id': scheduledTraining.group_id,
+          })
+          .select()
+          .single();
+
+      final trainingSession = TrainingSession.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+
+      // Автоматически создаем записи посещения для всех игроков группы с 1 баллом
+      final players = await getPlayers(groupId: scheduledTraining.group_id);
+      if (players.isNotEmpty) {
+        final attendanceRecords = players
+            .map(
+              (player) => {
+                'session_id': trainingSession.id,
+                'player_id': player.id,
+                'points': 1,
+                'attended': true,
+              },
+            )
+            .toList();
+
+        await insertAttendanceBatch(
+          sessionId: trainingSession.id,
+          records: attendanceRecords,
+        );
+      }
+
+      // Удаляем запланированную тренировку после создания реальной
+      await deleteScheduledTraining(scheduledTraining.id);
+
+      _invalidateCache();
+      return trainingSession;
+    } catch (e) {
+      print('Ошибка при создании тренировки из запланированной: $e');
+      rethrow;
+    }
+  }
+
+  // Создание тренировки на конкретную дату на основе расписания
+  Future<TrainingSession> createTrainingFromSchedule({
+    required String groupId,
+    required DateTime date,
+  }) async {
+    try {
+      await _checkInternetConnection();
+
+      // Получаем расписание для группы
+      final schedules = await getTrainingSchedules(groupId: groupId);
+
+      if (schedules.isEmpty) {
+        throw Exception('Нет расписания для группы');
+      }
+
+      // Находим подходящее расписание для дня недели
+      final weekday = date.weekday;
+      final suitableSchedule = schedules.firstWhere(
+        (schedule) => schedule.weekdays.contains(weekday),
+        orElse: () =>
+            schedules.first, // Если нет точного совпадения, берем первое
+      );
+
+      final dateStr = _formatDate(date);
+      final title =
+          '${suitableSchedule.title} - ${date.day}.${date.month}.${date.year}';
+
+      final data = await _client
+          .from('training_sessions')
+          .insert({'date': dateStr, 'title': title, 'group_id': groupId})
+          .select()
+          .single();
+
+      final trainingSession = TrainingSession.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+
+      // Автоматически создаем записи посещения для всех игроков группы с 1 баллом
+      final players = await getPlayers(groupId: groupId);
+      if (players.isNotEmpty) {
+        final attendanceRecords = players
+            .map(
+              (player) => {
+                'session_id': trainingSession.id,
+                'player_id': player.id,
+                'points': 1,
+                'attended': true,
+              },
+            )
+            .toList();
+
+        await insertAttendanceBatch(
+          sessionId: trainingSession.id,
+          records: attendanceRecords,
+        );
+      }
+
+      _invalidateCache();
+      return trainingSession;
+    } catch (e) {
+      print('Ошибка при создании тренировки из расписания: $e');
+      rethrow;
+    }
   }
 
   // Автоматическое создание тренировок на основе расписания

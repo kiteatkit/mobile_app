@@ -4,7 +4,7 @@ import '../ui/ui_constants.dart';
 import 'package:go_router/go_router.dart';
 import '../models/group.dart';
 import '../models/player.dart';
-import '../widgets/group_selection_dialog.dart';
+import '../widgets/player_details_dialog.dart';
 // import '../widgets/training_schedule_dialog.dart';
 
 class CoachDashboardPage extends StatefulWidget {
@@ -42,6 +42,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   final playerPasswordCtrl = TextEditingController();
   DateTime? selectedBirthDate;
   String? selectedGroupId;
+  bool _obscurePlayerPassword = true;
 
   @override
   void initState() {
@@ -51,10 +52,12 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
   String _generateLogin(String name) {
     // Генерируем логин на основе имени
-    final cleanName = name.toLowerCase()
+    final cleanName = name
+        .toLowerCase()
         .replaceAll(RegExp(r'[^a-zа-я0-9]'), '')
         .substring(0, name.length > 8 ? 8 : name.length);
-    final randomSuffix = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
+    final randomSuffix = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000))
+        .toString();
     return '$cleanName$randomSuffix';
   }
 
@@ -576,12 +579,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                               g,
                                                             );
                                                           }
-                                                          if (v ==
-                                                              'trainings') {
-                                                            _openTrainingManagement(
-                                                              g,
-                                                            );
-                                                          }
                                                           // if (v == 'schedule') {
                                                           //   _openTrainingScheduleDialog(
                                                           //     g,
@@ -598,12 +595,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                             value: 'edit',
                                                             child: Text(
                                                               'Редактировать',
-                                                            ),
-                                                          ),
-                                                          const PopupMenuItem(
-                                                            value: 'trainings',
-                                                            child: Text(
-                                                              'Управление тренировками',
                                                             ),
                                                           ),
                                                           // const PopupMenuItem(
@@ -1137,6 +1128,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     playerPasswordCtrl.clear();
     selectedBirthDate = null;
     selectedGroupId = null;
+    _obscurePlayerPassword = true;
 
     await showDialog(
       context: context,
@@ -1195,12 +1187,25 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   Expanded(
                     child: TextField(
                       controller: playerPasswordCtrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Пароль',
-                        labelStyle: TextStyle(color: UI.muted),
+                        labelStyle: const TextStyle(color: UI.muted),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePlayerPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: UI.muted,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscurePlayerPassword = !_obscurePlayerPassword;
+                            });
+                          },
+                        ),
                       ),
                       style: const TextStyle(color: UI.white),
-                      obscureText: true,
+                      obscureText: _obscurePlayerPassword,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1400,132 +1405,135 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     )
                   : null;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: UI.background,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: UI.border),
-                ),
-                child: Row(
-                  children: [
-                    // Аватар игрока
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: UI.primary, width: 1),
+              return GestureDetector(
+                onTap: () => _showPlayerDetails(player),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: UI.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: UI.border),
+                  ),
+                  child: Row(
+                    children: [
+                      // Аватар игрока
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: UI.primary, width: 1),
+                        ),
+                        child: ClipOval(
+                          child:
+                              player.avatar_url != null &&
+                                  player.avatar_url!.isNotEmpty
+                              ? Image.network(
+                                  player.avatar_url!,
+                                  width: 32,
+                                  height: 32,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _buildPlayerFallbackAvatar(player),
+                                )
+                              : _buildPlayerFallbackAvatar(player),
+                        ),
                       ),
-                      child: ClipOval(
-                        child:
-                            player.avatar_url != null &&
-                                player.avatar_url!.isNotEmpty
-                            ? Image.network(
-                                player.avatar_url!,
-                                width: 32,
-                                height: 32,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildPlayerFallbackAvatar(player),
-                              )
-                            : _buildPlayerFallbackAvatar(player),
+                      const SizedBox(width: 12),
+                      // Информация об игроке
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              player.name,
+                              style: const TextStyle(
+                                color: UI.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '@${player.login}',
+                              style: const TextStyle(
+                                color: UI.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                if (playerGroup != null) ...[
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: _parseColor(playerGroup.color),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    playerGroup.name,
+                                    style: const TextStyle(
+                                      color: UI.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ] else
+                                  const Text(
+                                    'Без группы',
+                                    style: TextStyle(
+                                      color: UI.muted,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Информация об игроке
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Кнопки управления
+                      Row(
                         children: [
-                          Text(
-                            player.name,
-                            style: const TextStyle(
-                              color: UI.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                          // Кнопка изменения группы
+                          GestureDetector(
+                            onTap: () => _changePlayerGroup(player),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: UI.primary.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.swap_horiz,
+                                color: UI.primary,
+                                size: 16,
+                              ),
                             ),
                           ),
-                          Text(
-                            '@${player.login}',
-                            style: const TextStyle(
-                              color: UI.muted,
-                              fontSize: 12,
+                          const SizedBox(width: 8),
+                          // Кнопка удаления игрока
+                          GestureDetector(
+                            onTap: () => _confirmDeletePlayer(player),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 16,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (playerGroup != null) ...[
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _parseColor(playerGroup.color),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  playerGroup.name,
-                                  style: const TextStyle(
-                                    color: UI.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ] else
-                                const Text(
-                                  'Без группы',
-                                  style: TextStyle(
-                                    color: UI.muted,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
                           ),
                         ],
                       ),
-                    ),
-                    // Кнопки управления
-                    Row(
-                      children: [
-                        // Кнопка изменения группы
-                        GestureDetector(
-                          onTap: () => _changePlayerGroup(player),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: UI.primary.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(
-                              Icons.swap_horiz,
-                              color: UI.primary,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        // Кнопка удаления игрока
-                        GestureDetector(
-                          onTap: () => _confirmDeletePlayer(player),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -1645,6 +1653,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     );
   }
 
+  void _showPlayerDetails(Player player) {
+    showDialog(
+      context: context,
+      builder: (context) => PlayerDetailsDialog(player: player),
+    );
+  }
+
   Future<void> _confirmDeletePlayer(Player player) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1719,10 +1734,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   //     ),
   //   );
   // }
-
-  Future<void> _openTrainingManagement(Group group) async {
-    context.push('/group/${group.id}');
-  }
 
   Widget _buildPlayerFallbackAvatar(Player player) {
     return Container(

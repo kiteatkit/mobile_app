@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainingSession {
 
- String get id; String get date; String get title; String get created_at;
+ String get id; String get date; String get title; String get created_at; String? get group_id;
 /// Create a copy of TrainingSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TrainingSessionCopyWith<TrainingSession> get copyWith => _$TrainingSessionCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainingSession&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.title, title) || other.title == title)&&(identical(other.created_at, created_at) || other.created_at == created_at));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainingSession&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.title, title) || other.title == title)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.group_id, group_id) || other.group_id == group_id));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,title,created_at);
+int get hashCode => Object.hash(runtimeType,id,date,title,created_at,group_id);
 
 @override
 String toString() {
-  return 'TrainingSession(id: $id, date: $date, title: $title, created_at: $created_at)';
+  return 'TrainingSession(id: $id, date: $date, title: $title, created_at: $created_at, group_id: $group_id)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TrainingSessionCopyWith<$Res>  {
   factory $TrainingSessionCopyWith(TrainingSession value, $Res Function(TrainingSession) _then) = _$TrainingSessionCopyWithImpl;
 @useResult
 $Res call({
- String id, String date, String title, String created_at
+ String id, String date, String title, String created_at, String? group_id
 });
 
 
@@ -65,13 +65,14 @@ class _$TrainingSessionCopyWithImpl<$Res>
 
 /// Create a copy of TrainingSession
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? title = null,Object? created_at = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? title = null,Object? created_at = null,Object? group_id = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,created_at: null == created_at ? _self.created_at : created_at // ignore: cast_nullable_to_non_nullable
-as String,
+as String,group_id: freezed == group_id ? _self.group_id : group_id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String date,  String title,  String created_at)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String date,  String title,  String created_at,  String? group_id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainingSession() when $default != null:
-return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
+return $default(_that.id,_that.date,_that.title,_that.created_at,_that.group_id);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String date,  String title,  String created_at)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String date,  String title,  String created_at,  String? group_id)  $default,) {final _that = this;
 switch (_that) {
 case _TrainingSession():
-return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
+return $default(_that.id,_that.date,_that.title,_that.created_at,_that.group_id);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +198,10 @@ return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String date,  String title,  String created_at)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String date,  String title,  String created_at,  String? group_id)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainingSession() when $default != null:
-return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
+return $default(_that.id,_that.date,_that.title,_that.created_at,_that.group_id);case _:
   return null;
 
 }
@@ -212,13 +213,14 @@ return $default(_that.id,_that.date,_that.title,_that.created_at);case _:
 @JsonSerializable()
 
 class _TrainingSession implements TrainingSession {
-  const _TrainingSession({required this.id, required this.date, required this.title, required this.created_at});
+  const _TrainingSession({required this.id, required this.date, required this.title, required this.created_at, this.group_id});
   factory _TrainingSession.fromJson(Map<String, dynamic> json) => _$TrainingSessionFromJson(json);
 
 @override final  String id;
 @override final  String date;
 @override final  String title;
 @override final  String created_at;
+@override final  String? group_id;
 
 /// Create a copy of TrainingSession
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainingSession&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.title, title) || other.title == title)&&(identical(other.created_at, created_at) || other.created_at == created_at));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainingSession&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.title, title) || other.title == title)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.group_id, group_id) || other.group_id == group_id));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,title,created_at);
+int get hashCode => Object.hash(runtimeType,id,date,title,created_at,group_id);
 
 @override
 String toString() {
-  return 'TrainingSession(id: $id, date: $date, title: $title, created_at: $created_at)';
+  return 'TrainingSession(id: $id, date: $date, title: $title, created_at: $created_at, group_id: $group_id)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$TrainingSessionCopyWith<$Res> implements $TrainingSession
   factory _$TrainingSessionCopyWith(_TrainingSession value, $Res Function(_TrainingSession) _then) = __$TrainingSessionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String date, String title, String created_at
+ String id, String date, String title, String created_at, String? group_id
 });
 
 
@@ -270,13 +272,14 @@ class __$TrainingSessionCopyWithImpl<$Res>
 
 /// Create a copy of TrainingSession
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? date = null,Object? title = null,Object? created_at = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? date = null,Object? title = null,Object? created_at = null,Object? group_id = freezed,}) {
   return _then(_TrainingSession(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,created_at: null == created_at ? _self.created_at : created_at // ignore: cast_nullable_to_non_nullable
-as String,
+as String,group_id: freezed == group_id ? _self.group_id : group_id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

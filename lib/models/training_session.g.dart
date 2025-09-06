@@ -12,6 +12,7 @@ _TrainingSession _$TrainingSessionFromJson(Map<String, dynamic> json) =>
       date: json['date'] as String,
       title: json['title'] as String,
       created_at: json['created_at'] as String,
+      group_id: json['group_id'] as String?,
     );
 
 Map<String, dynamic> _$TrainingSessionToJson(_TrainingSession instance) =>
@@ -20,4 +21,5 @@ Map<String, dynamic> _$TrainingSessionToJson(_TrainingSession instance) =>
       'date': instance.date,
       'title': instance.title,
       'created_at': instance.created_at,
+      'group_id': instance.group_id,
     };

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../data/supabase_repository.dart';
@@ -19,12 +20,14 @@ class PlayerProfilePage extends StatefulWidget {
 class _PlayerProfilePageState extends State<PlayerProfilePage> {
   final repo = SupabaseRepository();
   final loginCtrl = TextEditingController();
-  final currentPassCtrl = TextEditingController();
   final newPassCtrl = TextEditingController();
   final confirmPassCtrl = TextEditingController();
   Uint8List? avatarBytes;
   String? avatarMime;
   bool saving = false;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
   String? error;
 
   @override
@@ -63,7 +66,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
         );
       }
 
-      // Веб-логика проверяла текущий пароль в БД. Здесь упростим до проверки совпадения введённых паролей.
+      // Проверяем совпадение новых паролей
       String? newPassword;
       if (newPassCtrl.text.isNotEmpty) {
         if (newPassCtrl.text != confirmPassCtrl.text) {
@@ -229,20 +232,83 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                     ),
                     const SizedBox(height: 16),
 
-                    TextField(
-                      controller: currentPassCtrl,
-                      style: const TextStyle(color: UI.white),
-                      decoration: InputDecoration(
-                        labelText: 'Текущий пароль',
-                        labelStyle: const TextStyle(color: UI.muted),
-                        filled: true,
-                        fillColor: UI.background,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UI.radiusSm),
-                          borderSide: BorderSide.none,
-                        ),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
                       ),
-                      obscureText: true,
+                      decoration: BoxDecoration(
+                        color: UI.background,
+                        borderRadius: BorderRadius.circular(UI.radiusSm),
+                        border: Border.all(color: UI.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Текущий пароль',
+                                  style: TextStyle(
+                                    fontSize: UI.getBodyFontSize(context),
+                                    color: UI.muted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _obscureCurrentPassword
+                                      ? '••••••••'
+                                      : (widget.player.password ??
+                                            'Не установлен'),
+                                  style: TextStyle(
+                                    fontSize: UI.getBodyFontSize(context),
+                                    color: UI.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              _obscureCurrentPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: UI.muted,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureCurrentPassword =
+                                    !_obscureCurrentPassword;
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.copy,
+                              color: UI.muted,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              if (widget.player.password != null) {
+                                Clipboard.setData(
+                                  ClipboardData(text: widget.player.password!),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Пароль скопирован в буфер обмена',
+                                    ),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -257,8 +323,21 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                           borderRadius: BorderRadius.circular(UI.radiusSm),
                           borderSide: BorderSide.none,
                         ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureNewPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: UI.muted,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureNewPassword = !_obscureNewPassword;
+                            });
+                          },
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _obscureNewPassword,
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -273,8 +352,22 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                           borderRadius: BorderRadius.circular(UI.radiusSm),
                           borderSide: BorderSide.none,
                         ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: UI.muted,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _obscureConfirmPassword,
                     ),
 
                     if (error != null) ...[

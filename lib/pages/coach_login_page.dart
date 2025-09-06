@@ -11,6 +11,7 @@ class CoachLoginPage extends StatefulWidget {
 class _CoachLoginPageState extends State<CoachLoginPage> {
   final _passwordController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   Future<void> _handleLogin() async {
@@ -111,7 +112,7 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
                       // Поле ввода
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Пароль',
@@ -121,6 +122,19 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(4),
                             borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: const Color(0xFF9A9A9A),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
                         ),
                       ),
