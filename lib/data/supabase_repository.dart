@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:io';
 
 import '../supabase_client.dart';
 import '../models/group.dart';

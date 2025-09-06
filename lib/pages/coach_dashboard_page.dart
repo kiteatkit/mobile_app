@@ -1293,7 +1293,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   labelStyle: TextStyle(color: UI.muted),
                 ),
                 dropdownColor: UI.card,
-                value: selectedGroupId,
+                initialValue: selectedGroupId,
                 items: [
                   const DropdownMenuItem(
                     value: null,
@@ -1569,7 +1569,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   labelStyle: TextStyle(color: UI.muted),
                 ),
                 dropdownColor: UI.card,
-                value: selectedGroupId,
+                initialValue: selectedGroupId,
                 items: [
                   const DropdownMenuItem(
                     value: null,
