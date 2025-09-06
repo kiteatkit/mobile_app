@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../models/group.dart';
 import '../models/player.dart';
 import '../widgets/group_selection_dialog.dart';
-import '../widgets/training_schedule_dialog.dart';
+// import '../widgets/training_schedule_dialog.dart';
 
 class CoachDashboardPage extends StatefulWidget {
   const CoachDashboardPage({super.key});
@@ -20,19 +20,48 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   List<Group> groups = [];
   List<Player> players = [];
   final nameCtrl = TextEditingController();
-  final descCtrl = TextEditingController();
-  final colorCtrl = TextEditingController(text: '#3B82F6');
+  String selectedColor = '#3B82F6';
+
+  // Предустановленные цвета для команд
+  static const List<Map<String, dynamic>> predefinedColors = [
+    {'name': 'Синий', 'value': '#3B82F6'},
+    {'name': 'Красный', 'value': '#EF4444'},
+    {'name': 'Зеленый', 'value': '#10B981'},
+    {'name': 'Желтый', 'value': '#F59E0B'},
+    {'name': 'Фиолетовый', 'value': '#8B5CF6'},
+    {'name': 'Розовый', 'value': '#EC4899'},
+    {'name': 'Оранжевый', 'value': '#F97316'},
+    {'name': 'Бирюзовый', 'value': '#06B6D4'},
+    {'name': 'Серый', 'value': '#6B7280'},
+    {'name': 'Изумрудный', 'value': '#059669'},
+  ];
 
   // Контроллеры для добавления игрока
   final playerNameCtrl = TextEditingController();
   final playerLoginCtrl = TextEditingController();
   final playerPasswordCtrl = TextEditingController();
-  final playerBirthDateCtrl = TextEditingController();
+  DateTime? selectedBirthDate;
+  String? selectedGroupId;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  String _generateLogin(String name) {
+    // Генерируем логин на основе имени
+    final cleanName = name.toLowerCase()
+        .replaceAll(RegExp(r'[^a-zа-я0-9]'), '')
+        .substring(0, name.length > 8 ? 8 : name.length);
+    final randomSuffix = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
+    return '$cleanName$randomSuffix';
+  }
+
+  String _generatePassword() {
+    // Генерируем пароль из 6 цифр
+    final random = DateTime.now().millisecondsSinceEpoch;
+    return (100000 + (random % 900000)).toString();
   }
 
   Future<void> _load() async {
@@ -61,74 +90,118 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
       backgroundColor: UI.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: UI.getScreenPadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: const [
-                        SizedBox(height: 16),
+              UI.isSmallScreen(context)
+                  ? Column(
+                      children: [
+                        const SizedBox(height: 16),
                         Text(
                           'Панель тренера',
                           style: TextStyle(
-                            color: Color(0xFFFF8A00),
-                            fontSize: 22,
+                            color: UI.primary,
+                            fontSize: UI.getTitleFontSize(context),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           'Управляйте своей командой и мотивируйте игроков',
-                          style: TextStyle(color: Color(0xFF9A9A9A)),
+                          style: TextStyle(
+                            color: UI.muted,
+                            fontSize: UI.getBodyFontSize(context),
+                          ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF24201E)),
+                              backgroundColor: const Color(0xFF171412),
+                            ),
+                            onPressed: () => context.go('/'),
+                            icon: const Icon(Icons.logout, size: 16),
+                            label: const Text('Выход'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 16),
+                              Text(
+                                'Панель тренера',
+                                style: TextStyle(
+                                  color: UI.primary,
+                                  fontSize: UI.getTitleFontSize(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Управляйте своей командой и мотивируйте игроков',
+                                style: TextStyle(
+                                  color: UI.muted,
+                                  fontSize: UI.getBodyFontSize(context),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Color(0xFF24201E)),
+                            backgroundColor: const Color(0xFF171412),
+                          ),
+                          onPressed: () => context.go('/'),
+                          icon: const Icon(Icons.logout, size: 16),
+                          label: const Text('Выход'),
+                        ),
                       ],
                     ),
-                  ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF24201E)),
-                      backgroundColor: const Color(0xFF171412),
-                    ),
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.logout, size: 16),
-                    label: const Text('Выход'),
-                  ),
-                ],
-              ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: UI.isSmallScreen(context) ? 16 : 16),
 
               // Заголовок Команды
-              const Center(
+              Center(
                 child: Text(
                   'Команды',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: UI.getSubtitleFontSize(context),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               const SizedBox(height: 4),
-              const Center(
+              Center(
                 child: Text(
                   'Создайте команды и добавляйте игроков прямо в них',
-                  style: TextStyle(color: Color(0xFF9A9A9A)),
+                  style: TextStyle(
+                    color: UI.muted,
+                    fontSize: UI.getBodyFontSize(context),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
               // Секция управления игроками
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: UI.getCardPadding(context),
                 decoration: BoxDecoration(
                   color: UI.card,
                   borderRadius: BorderRadius.circular(8),
@@ -136,97 +209,199 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.people, color: Colors.white),
-                        const SizedBox(width: 6),
-                        const Expanded(
-                          child: Text(
-                            'Управление игроками',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                    UI.isSmallScreen(context)
+                        ? Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.people, color: Colors.white),
+                                  const SizedBox(width: 6),
+                                  const Expanded(
+                                    child: Text(
+                                      'Управление игроками',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: _openAddPlayerDialog,
+                                      child: Container(
+                                        height: UI.getButtonHeight(context),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: UI.gradientPrimary,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.person_add,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Добавить игрока',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: _openPlayersManagement,
+                                      child: Container(
+                                        height: UI.getButtonHeight(context),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: UI.card,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          border: Border.all(color: UI.border),
+                                        ),
+                                        child: const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.settings,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Управлять',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              const Icon(Icons.people, color: Colors.white),
+                              const SizedBox(width: 6),
+                              const Expanded(
+                                child: Text(
+                                  'Управление игроками',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: _openAddPlayerDialog,
+                                    child: Container(
+                                      height: 32,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: UI.gradientPrimary,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person_add,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Добавить игрока',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: _openPlayersManagement,
+                                    child: Container(
+                                      height: 32,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: UI.card,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: UI.border),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.settings,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Управлять',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: _openAddPlayerDialog,
-                              child: Container(
-                                height: 32,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: UI.gradientPrimary,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.person_add,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Добавить игрока',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: _openPlayersManagement,
-                              child: Container(
-                                height: 32,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: UI.card,
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: UI.border),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.settings,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Управлять',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Всего игроков: ${players.length}',
-                      style: const TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 14,
+                      style: TextStyle(
+                        color: UI.muted,
+                        fontSize: UI.getBodyFontSize(context),
                       ),
                     ),
                     Text(
                       'Без группы: ${players.where((p) => p.group_id == null).length}',
-                      style: const TextStyle(
-                        color: Color(0xFF9A9A9A),
-                        fontSize: 14,
+                      style: TextStyle(
+                        color: UI.muted,
+                        fontSize: UI.getBodyFontSize(context),
                       ),
                     ),
                   ],
@@ -238,7 +413,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               // Карточка списка команд
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: UI.getCardPadding(context),
                   decoration: BoxDecoration(
                     color: UI.card,
                     borderRadius: BorderRadius.circular(8),
@@ -262,7 +437,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                           GestureDetector(
                             onTap: _openCreateGroupDialog,
                             child: Container(
-                              height: 32,
+                              height: UI.getButtonHeight(context),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
@@ -271,16 +446,18 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
-                                children: const [
-                                  Icon(
+                                children: [
+                                  const Icon(
                                     Icons.add,
                                     size: 16,
                                     color: Colors.white,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Добавить команду',
-                                    style: TextStyle(
+                                    UI.isSmallScreen(context)
+                                        ? 'Добавить'
+                                        : 'Добавить команду',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                     ),
@@ -294,10 +471,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                       const SizedBox(height: 16),
                       Expanded(
                         child: groups.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Text(
                                   'Команды не найдены',
-                                  style: TextStyle(color: Colors.white),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: UI.getBodyFontSize(context),
+                                  ),
                                 ),
                               )
                             : ListView.separated(
@@ -329,7 +509,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                           // Левая цветная полоса
                                           Container(
                                             width: 4,
-                                            height: 120,
+                                            height: UI.isSmallScreen(context)
+                                                ? 100
+                                                : 120,
                                             decoration: BoxDecoration(
                                               color: _parseColor(g.color),
                                               borderRadius:
@@ -343,7 +525,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                           ),
                                           Expanded(
                                             child: Padding(
-                                              padding: const EdgeInsets.all(16),
+                                              padding: UI.getCardPadding(
+                                                context,
+                                              ),
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -367,12 +551,15 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                       Expanded(
                                                         child: Text(
                                                           g.name,
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 16,
-                                                              ),
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: UI
+                                                                .getBodyFontSize(
+                                                                  context,
+                                                                ),
+                                                          ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
                                                         ),
                                                       ),
                                                       PopupMenuButton<String>(
@@ -389,11 +576,17 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                               g,
                                                             );
                                                           }
-                                                          if (v == 'schedule') {
-                                                            _openTrainingScheduleDialog(
+                                                          if (v ==
+                                                              'trainings') {
+                                                            _openTrainingManagement(
                                                               g,
                                                             );
                                                           }
+                                                          // if (v == 'schedule') {
+                                                          //   _openTrainingScheduleDialog(
+                                                          //     g,
+                                                          //   );
+                                                          // }
                                                           if (v == 'delete') {
                                                             _confirmDeleteGroup(
                                                               g,
@@ -408,11 +601,17 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                             ),
                                                           ),
                                                           const PopupMenuItem(
-                                                            value: 'schedule',
+                                                            value: 'trainings',
                                                             child: Text(
-                                                              'Расписание тренировок',
+                                                              'Управление тренировками',
                                                             ),
                                                           ),
+                                                          // const PopupMenuItem(
+                                                          //   value: 'schedule',
+                                                          //   child: Text(
+                                                          //     'Расписание тренировок',
+                                                          //   ),
+                                                          // ),
                                                           const PopupMenuItem(
                                                             value: 'delete',
                                                             child: Text(
@@ -424,77 +623,156 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                     ],
                                                   ),
                                                   const SizedBox(height: 16),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceEvenly,
-                                                    children: [
-                                                      Column(
-                                                        children: const [
-                                                          Icon(
-                                                            Icons.person,
-                                                            color: Color(
-                                                              0xFFFF8A00,
-                                                            ),
-                                                          ),
-                                                          SizedBox(height: 4),
-                                                        ],
-                                                      ),
-                                                      Column(
-                                                        children: [
-                                                          Text(
-                                                            '${members.length}',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color: Colors
-                                                                      .white,
+                                                  UI.isSmallScreen(context)
+                                                      ? Column(
+                                                          children: [
+                                                            Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceEvenly,
+                                                              children: [
+                                                                Column(
+                                                                  children: [
+                                                                    const Icon(
+                                                                      Icons
+                                                                          .person,
+                                                                      color: Color(
+                                                                        0xFFFF8A00,
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      height: 4,
+                                                                    ),
+                                                                    Text(
+                                                                      '${members.length}',
+                                                                      style: const TextStyle(
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                                    ),
+                                                                    const Text(
+                                                                      'Игроков',
+                                                                      style: TextStyle(
+                                                                        color: Color(
+                                                                          0xFF9A9A9A,
+                                                                        ),
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
-                                                          ),
-                                                          const Text(
-                                                            'Игроков',
-                                                            style: TextStyle(
-                                                              color: Color(
-                                                                0xFF9A9A9A,
-                                                              ),
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Column(
-                                                        children: const [
-                                                          Icon(
-                                                            Icons.emoji_events,
-                                                            color: Color(
-                                                              0xFFFF8A00,
-                                                            ),
-                                                          ),
-                                                          SizedBox(height: 4),
-                                                        ],
-                                                      ),
-                                                      Column(
-                                                        children: [
-                                                          Text(
-                                                            '$totalPoints',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color: Colors
-                                                                      .white,
+                                                                Column(
+                                                                  children: [
+                                                                    const Icon(
+                                                                      Icons
+                                                                          .emoji_events,
+                                                                      color: Color(
+                                                                        0xFFFF8A00,
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      height: 4,
+                                                                    ),
+                                                                    Text(
+                                                                      '$totalPoints',
+                                                                      style: const TextStyle(
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                                    ),
+                                                                    const Text(
+                                                                      'Очков за месяц',
+                                                                      style: TextStyle(
+                                                                        color: Color(
+                                                                          0xFF9A9A9A,
+                                                                        ),
+                                                                        fontSize:
+                                                                            12,
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
-                                                          ),
-                                                          const Text(
-                                                            'Очков за месяц',
-                                                            style: TextStyle(
-                                                              color: Color(
-                                                                0xFF9A9A9A,
-                                                              ),
-                                                              fontSize: 12,
+                                                              ],
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
+                                                          ],
+                                                        )
+                                                      : Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceEvenly,
+                                                          children: [
+                                                            Column(
+                                                              children: const [
+                                                                Icon(
+                                                                  Icons.person,
+                                                                  color: Color(
+                                                                    0xFFFF8A00,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                  height: 4,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Column(
+                                                              children: [
+                                                                Text(
+                                                                  '${members.length}',
+                                                                  style: const TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                                ),
+                                                                const Text(
+                                                                  'Игроков',
+                                                                  style: TextStyle(
+                                                                    color: Color(
+                                                                      0xFF9A9A9A,
+                                                                    ),
+                                                                    fontSize:
+                                                                        12,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Column(
+                                                              children: const [
+                                                                Icon(
+                                                                  Icons
+                                                                      .emoji_events,
+                                                                  color: Color(
+                                                                    0xFFFF8A00,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                  height: 4,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Column(
+                                                              children: [
+                                                                Text(
+                                                                  '$totalPoints',
+                                                                  style: const TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                                ),
+                                                                const Text(
+                                                                  'Очков за месяц',
+                                                                  style: TextStyle(
+                                                                    color: Color(
+                                                                      0xFF9A9A9A,
+                                                                    ),
+                                                                    fontSize:
+                                                                        12,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
                                                   const SizedBox(height: 8),
                                                   // Лидер команды
                                                   if (members.isNotEmpty)
@@ -584,100 +862,247 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
   Future<void> _openCreateGroupDialog() async {
     nameCtrl.clear();
-    descCtrl.clear();
-    colorCtrl.text = '#3B82F6';
+    selectedColor = '#3B82F6';
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Новая команда'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Название'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: const Text(
+            'Новая команда',
+            style: TextStyle(color: UI.white, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Название команды',
+                  labelStyle: TextStyle(color: UI.muted),
+                ),
+                style: const TextStyle(color: UI.white),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Выберите цвет:',
+                style: TextStyle(
+                  color: UI.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: predefinedColors.map((colorData) {
+                  final isSelected = selectedColor == colorData['value'];
+                  return GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        selectedColor = colorData['value'];
+                      });
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: _parseColor(colorData['value']),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 24,
+                            )
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                predefinedColors.firstWhere(
+                  (color) => color['value'] == selectedColor,
+                )['name'],
+                style: const TextStyle(color: UI.muted, fontSize: 14),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
             ),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(labelText: 'Описание'),
-            ),
-            TextField(
-              controller: colorCtrl,
-              decoration: const InputDecoration(labelText: 'Цвет (#RRGGBB)'),
+            FilledButton(
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+
+                try {
+                  await repo.createGroup(
+                    name: nameCtrl.text.trim(),
+                    color: selectedColor,
+                  );
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _load();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Команда успешно создана'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Ошибка при создании команды: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: UI.primary,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Создать'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameCtrl.text.trim().isEmpty) return;
-              await repo.createGroup(
-                name: nameCtrl.text.trim(),
-                description: descCtrl.text.trim().isEmpty
-                    ? null
-                    : descCtrl.text.trim(),
-                color: colorCtrl.text.trim().isEmpty
-                    ? '#3B82F6'
-                    : colorCtrl.text.trim(),
-              );
-              if (mounted) Navigator.pop(context);
-              _load();
-            },
-            child: const Text('Создать'),
-          ),
-        ],
       ),
     );
   }
 
   Future<void> _openEditGroupDialog(Group g) async {
     nameCtrl.text = g.name;
-    descCtrl.text = g.description ?? '';
-    colorCtrl.text = g.color;
+    selectedColor = g.color;
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Редактировать команду'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Название'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: const Text(
+            'Редактировать команду',
+            style: TextStyle(color: UI.white, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Название команды',
+                  labelStyle: TextStyle(color: UI.muted),
+                ),
+                style: const TextStyle(color: UI.white),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Выберите цвет:',
+                style: TextStyle(
+                  color: UI.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: predefinedColors.map((colorData) {
+                  final isSelected = selectedColor == colorData['value'];
+                  return GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        selectedColor = colorData['value'];
+                      });
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: _parseColor(colorData['value']),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 24,
+                            )
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                predefinedColors.firstWhere(
+                  (color) => color['value'] == selectedColor,
+                )['name'],
+                style: const TextStyle(color: UI.muted, fontSize: 14),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
             ),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(labelText: 'Описание'),
-            ),
-            TextField(
-              controller: colorCtrl,
-              decoration: const InputDecoration(labelText: 'Цвет (#RRGGBB)'),
+            FilledButton(
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+
+                try {
+                  await repo.updateGroup(
+                    id: g.id,
+                    name: nameCtrl.text.trim(),
+                    color: selectedColor,
+                  );
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    _load();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Команда успешно обновлена'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Ошибка при обновлении команды: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: UI.primary,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Сохранить'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              await repo.updateGroup(
-                id: g.id,
-                name: nameCtrl.text.trim(),
-                description: descCtrl.text.trim(),
-                color: colorCtrl.text.trim(),
-              );
-              if (mounted) Navigator.pop(context);
-              _load();
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
       ),
     );
   }
@@ -710,119 +1135,239 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     playerNameCtrl.clear();
     playerLoginCtrl.clear();
     playerPasswordCtrl.clear();
-    playerBirthDateCtrl.clear();
+    selectedBirthDate = null;
+    selectedGroupId = null;
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: UI.card,
-        title: const Text(
-          'Добавить игрока',
-          style: TextStyle(color: UI.white, fontSize: 18),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: playerNameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Имя игрока',
-                labelStyle: TextStyle(color: UI.muted),
-              ),
-              style: const TextStyle(color: UI.white),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: playerLoginCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Логин',
-                labelStyle: TextStyle(color: UI.muted),
-              ),
-              style: const TextStyle(color: UI.white),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: playerPasswordCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Пароль',
-                labelStyle: TextStyle(color: UI.muted),
-              ),
-              style: const TextStyle(color: UI.white),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: playerBirthDateCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Дата рождения (YYYY-MM-DD)',
-                labelStyle: TextStyle(color: UI.muted),
-              ),
-              style: const TextStyle(color: UI.white),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Группа',
-                labelStyle: TextStyle(color: UI.muted),
-              ),
-              dropdownColor: UI.card,
-              value: null,
-              items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('Без группы', style: TextStyle(color: UI.white)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: const Text(
+            'Добавить игрока',
+            style: TextStyle(color: UI.white, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: playerNameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Имя игрока',
+                  labelStyle: TextStyle(color: UI.muted),
                 ),
-                ...groups.map(
-                  (group) => DropdownMenuItem(
-                    value: group.id,
-                    child: Text(
-                      group.name,
+                style: const TextStyle(color: UI.white),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: playerLoginCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Логин',
+                        labelStyle: TextStyle(color: UI.muted),
+                      ),
                       style: const TextStyle(color: UI.white),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      final name = playerNameCtrl.text.trim();
+                      if (name.isNotEmpty) {
+                        playerLoginCtrl.text = _generateLogin(name);
+                        setDialogState(() {});
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: UI.primary,
+                      foregroundColor: UI.white,
+                      minimumSize: const Size(80, 40),
+                    ),
+                    child: const Text('Генерировать'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: playerPasswordCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Пароль',
+                        labelStyle: TextStyle(color: UI.muted),
+                      ),
+                      style: const TextStyle(color: UI.white),
+                      obscureText: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      playerPasswordCtrl.text = _generatePassword();
+                      setDialogState(() {});
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: UI.primary,
+                      foregroundColor: UI.white,
+                      minimumSize: const Size(80, 40),
+                    ),
+                    child: const Text('Генерировать'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        selectedBirthDate ??
+                        DateTime.now().subtract(const Duration(days: 365 * 18)),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.dark(
+                            primary: UI.primary,
+                            onPrimary: UI.white,
+                            surface: UI.card,
+                            onSurface: UI.white,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (date != null) {
+                    setDialogState(() {
+                      selectedBirthDate = date;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: UI.card,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: UI.muted.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today,
+                        color: UI.muted,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        selectedBirthDate != null
+                            ? '${selectedBirthDate!.day.toString().padLeft(2, '0')}.${selectedBirthDate!.month.toString().padLeft(2, '0')}.${selectedBirthDate!.year}'
+                            : 'Выберите дату рождения',
+                        style: TextStyle(
+                          color: selectedBirthDate != null
+                              ? UI.white
+                              : UI.muted,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-              onChanged: (value) {
-                // Сохраняем выбранную группу
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Группа',
+                  labelStyle: TextStyle(color: UI.muted),
+                ),
+                dropdownColor: UI.card,
+                value: selectedGroupId,
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text(
+                      'Без группы',
+                      style: TextStyle(color: UI.white),
+                    ),
+                  ),
+                  ...groups.map(
+                    (group) => DropdownMenuItem(
+                      value: group.id,
+                      child: Text(
+                        group.name,
+                        style: const TextStyle(color: UI.white),
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedGroupId = value;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (playerNameCtrl.text.trim().isEmpty ||
+                    playerLoginCtrl.text.trim().isEmpty ||
+                    playerPasswordCtrl.text.trim().isEmpty) {
+                  return;
+                }
+
+                try {
+                  await repo.addPlayer(
+                    name: playerNameCtrl.text.trim(),
+                    login: playerLoginCtrl.text.trim(),
+                    password: playerPasswordCtrl.text.trim(),
+                    birthDate: selectedBirthDate != null
+                        ? '${selectedBirthDate!.year}-${selectedBirthDate!.month.toString().padLeft(2, '0')}-${selectedBirthDate!.day.toString().padLeft(2, '0')}'
+                        : null,
+                    groupId: selectedGroupId,
+                  );
+
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    _load();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Игрок успешно добавлен'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Ошибка при создании игрока: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.primary,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Добавить'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Отмена', style: TextStyle(color: UI.muted)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (playerNameCtrl.text.trim().isEmpty ||
-                  playerLoginCtrl.text.trim().isEmpty ||
-                  playerPasswordCtrl.text.trim().isEmpty) {
-                return;
-              }
-
-              await repo.addPlayer(
-                name: playerNameCtrl.text.trim(),
-                login: playerLoginCtrl.text.trim(),
-                password: playerPasswordCtrl.text.trim(),
-                birthDate: playerBirthDateCtrl.text.trim().isEmpty
-                    ? null
-                    : playerBirthDateCtrl.text.trim(),
-                groupId: null, // Пока без группы, можно будет переместить потом
-              );
-
-              if (mounted) {
-                Navigator.of(context).pop();
-                _load();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: UI.primary,
-              foregroundColor: UI.white,
-            ),
-            child: const Text('Добавить'),
-          ),
-        ],
       ),
     );
   }
@@ -997,15 +1542,105 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   }
 
   Future<void> _changePlayerGroup(Player player) async {
+    selectedGroupId = player.group_id;
     await showDialog(
       context: context,
-      builder: (context) => GroupSelectionDialog(
-        player: player,
-        groups: groups,
-        onGroupSelected: (group) async {
-          await repo.updatePlayer(id: player.id, groupId: group?.id);
-          _load();
-        },
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: Text(
+            'Переместить ${player.name}',
+            style: const TextStyle(color: UI.white, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Выберите команду',
+                  labelStyle: TextStyle(color: UI.muted),
+                ),
+                dropdownColor: UI.card,
+                value: selectedGroupId,
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text(
+                      'Без группы',
+                      style: TextStyle(color: UI.white),
+                    ),
+                  ),
+                  ...groups.map(
+                    (group) => DropdownMenuItem(
+                      value: group.id,
+                      child: Text(
+                        group.name,
+                        style: const TextStyle(color: UI.white),
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedGroupId = value;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+            ),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  print(
+                    'Обновляем игрока ${player.name} с groupId: $selectedGroupId',
+                  );
+                  await repo.updatePlayer(
+                    id: player.id,
+                    name: player.name,
+                    birthDate: player.birth_date,
+                    login: player.login,
+                    password: player.password,
+                    avatarUrl: player.avatar_url,
+                    groupId: selectedGroupId,
+                  );
+
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    _load();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Игрок перемещен в команду${selectedGroupId != null ? ' (ID: $selectedGroupId)' : ' (удален из группы)'}',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  print('Ошибка при обновлении игрока: $e');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Ошибка при перемещении игрока: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: UI.primary,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Переместить'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1073,16 +1708,20 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     }
   }
 
-  Future<void> _openTrainingScheduleDialog(Group group) async {
-    await showDialog(
-      context: context,
-      builder: (context) => TrainingScheduleDialog(
-        group: group,
-        onScheduleCreated: () {
-          _load();
-        },
-      ),
-    );
+  // Future<void> _openTrainingScheduleDialog(Group group) async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) => TrainingScheduleDialog(
+  //       group: group,
+  //       onScheduleCreated: () {
+  //         _load();
+  //       },
+  //     ),
+  //   );
+  // }
+
+  Future<void> _openTrainingManagement(Group group) async {
+    context.push('/group/${group.id}');
   }
 
   Widget _buildPlayerFallbackAvatar(Player player) {

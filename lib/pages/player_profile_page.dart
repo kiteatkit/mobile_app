@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../data/supabase_repository.dart';
 import '../models/player.dart';
+import '../ui/ui_constants.dart';
 
 class PlayerProfilePage extends StatefulWidget {
   const PlayerProfilePage({super.key, required this.player});
@@ -103,73 +104,252 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Профиль игрока')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: avatarBytes != null
-                  ? MemoryImage(avatarBytes!)
-                  : (widget.player.avatar_url != null
-                        ? NetworkImage(widget.player.avatar_url!)
-                              as ImageProvider
-                        : null),
-              child: (avatarBytes == null && widget.player.avatar_url == null)
-                  ? Text(
-                      widget.player.name.isNotEmpty
-                          ? widget.player.name[0]
-                          : '?',
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _pickAvatar,
-              child: const Text('Выбрать фото'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: loginCtrl,
-              decoration: const InputDecoration(labelText: 'Логин'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: currentPassCtrl,
-              decoration: const InputDecoration(labelText: 'Текущий пароль'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: newPassCtrl,
-              decoration: const InputDecoration(labelText: 'Новый пароль'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: confirmPassCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Подтвердите пароль',
+      backgroundColor: UI.background,
+      appBar: AppBar(
+        backgroundColor: UI.background,
+        foregroundColor: UI.white,
+        title: Text(
+          'Профиль игрока',
+          style: TextStyle(
+            fontSize: UI.getTitleFontSize(context),
+            color: UI.white,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: UI.getScreenPadding(context),
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+
+              // Аватар
+              Center(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: UI.isSmallScreen(context) ? 50 : 60,
+                      backgroundImage: avatarBytes != null
+                          ? MemoryImage(avatarBytes!)
+                          : (widget.player.avatar_url != null
+                                ? NetworkImage(widget.player.avatar_url!)
+                                      as ImageProvider
+                                : null),
+                      child:
+                          (avatarBytes == null &&
+                              widget.player.avatar_url == null)
+                          ? Text(
+                              widget.player.name.isNotEmpty
+                                  ? widget.player.name[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontSize: UI.isSmallScreen(context) ? 32 : 40,
+                                fontWeight: FontWeight.bold,
+                                color: UI.white,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: UI.getButtonHeight(context),
+                      child: OutlinedButton.icon(
+                        onPressed: _pickAvatar,
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: UI.border),
+                          foregroundColor: UI.white,
+                        ),
+                        icon: const Icon(Icons.camera_alt, size: 16),
+                        label: Text(
+                          'Выбрать фото',
+                          style: TextStyle(
+                            fontSize: UI.getBodyFontSize(context),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              obscureText: true,
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              Text(error!, style: const TextStyle(color: Colors.red)),
+
+              const SizedBox(height: 32),
+
+              // Форма редактирования
+              Container(
+                padding: UI.getCardPadding(context),
+                decoration: BoxDecoration(
+                  color: UI.card,
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                  border: Border.all(color: UI.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Личная информация',
+                      style: TextStyle(
+                        fontSize: UI.getSubtitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                        color: UI.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: loginCtrl,
+                      style: const TextStyle(color: UI.white),
+                      decoration: InputDecoration(
+                        labelText: 'Логин',
+                        labelStyle: const TextStyle(color: UI.muted),
+                        filled: true,
+                        fillColor: UI.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(UI.radiusSm),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Смена пароля',
+                      style: TextStyle(
+                        fontSize: UI.getSubtitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                        color: UI.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Оставьте поля пустыми, если не хотите менять пароль',
+                      style: TextStyle(
+                        fontSize: UI.isSmallScreen(context) ? 12 : 14,
+                        color: UI.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: currentPassCtrl,
+                      style: const TextStyle(color: UI.white),
+                      decoration: InputDecoration(
+                        labelText: 'Текущий пароль',
+                        labelStyle: const TextStyle(color: UI.muted),
+                        filled: true,
+                        fillColor: UI.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(UI.radiusSm),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: newPassCtrl,
+                      style: const TextStyle(color: UI.white),
+                      decoration: InputDecoration(
+                        labelText: 'Новый пароль',
+                        labelStyle: const TextStyle(color: UI.muted),
+                        filled: true,
+                        fillColor: UI.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(UI.radiusSm),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmPassCtrl,
+                      style: const TextStyle(color: UI.white),
+                      decoration: InputDecoration(
+                        labelText: 'Подтвердите пароль',
+                        labelStyle: const TextStyle(color: UI.muted),
+                        filled: true,
+                        fillColor: UI.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(UI.radiusSm),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+
+                    if (error != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(UI.radiusSm),
+                          border: Border.all(
+                            color: Colors.red.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                error!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: UI.getButtonHeight(context),
+                      child: ElevatedButton(
+                        onPressed: saving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: UI.primary,
+                          foregroundColor: UI.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(UI.radiusSm),
+                          ),
+                        ),
+                        child: saving
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                'Сохранить',
+                                style: TextStyle(
+                                  fontSize: UI.getBodyFontSize(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
             ],
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: saving ? null : _save,
-              child: saving
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Сохранить'),
-            ),
-          ],
+          ),
         ),
       ),
     );

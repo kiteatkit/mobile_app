@@ -44,8 +44,15 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/group-view',
       builder: (BuildContext context, GoRouterState state) {
-        final group = state.extra as Group;
-        return GroupViewPage(group: group);
+        if (state.extra is Map<String, dynamic>) {
+          final extra = state.extra as Map<String, dynamic>;
+          final group = extra['group'] as Group;
+          final isPlayerMode = extra['isPlayerMode'] as bool? ?? false;
+          return GroupViewPage(group: group, isPlayerMode: isPlayerMode);
+        } else {
+          final group = state.extra as Group;
+          return GroupViewPage(group: group, isPlayerMode: false);
+        }
       },
     ),
     GoRoute(

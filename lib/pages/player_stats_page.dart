@@ -109,24 +109,24 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
           ? const Center(child: CircularProgressIndicator(color: UI.primary))
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: UI.getScreenPadding(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Заголовок с кнопкой назад
                     Row(children: [const CustomBackButton()]),
-                    const SizedBox(height: 16),
+                    SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
                     // Заголовок "Статистика игрока"
                     Text(
                       'Статистика игрока',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: UI.getTitleFontSize(context),
                         fontWeight: FontWeight.bold,
                         color: UI.primary,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
                     // Профиль игрока
                     Center(
@@ -134,8 +134,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                         children: [
                           // Аватар
                           Container(
-                            width: 80,
-                            height: 80,
+                            width: UI.isSmallScreen(context) ? 70 : 80,
+                            height: UI.isSmallScreen(context) ? 70 : 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(color: UI.primary, width: 2),
@@ -146,8 +146,12 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                       widget.player.avatar_url!.isNotEmpty
                                   ? Image.network(
                                       widget.player.avatar_url!,
-                                      width: 80,
-                                      height: 80,
+                                      width: UI.isSmallScreen(context)
+                                          ? 70
+                                          : 80,
+                                      height: UI.isSmallScreen(context)
+                                          ? 70
+                                          : 80,
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) =>
@@ -161,11 +165,12 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                           // Имя игрока
                           Text(
                             widget.player.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: UI.white,
-                              fontSize: 24,
+                              fontSize: UI.getTitleFontSize(context),
                               fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
 
@@ -182,9 +187,9 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                             ),
                             child: Text(
                               '@${widget.player.login}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: UI.white,
-                                fontSize: 14,
+                                fontSize: UI.getBodyFontSize(context),
                               ),
                             ),
                           ),
@@ -194,17 +199,17 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.emoji_events,
                                 color: Colors.amber,
-                                size: 20,
+                                size: UI.getIconSize(context),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 '${widget.player.total_points} очков',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.amber,
-                                  fontSize: 16,
+                                  fontSize: UI.getBodyFontSize(context),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -213,81 +218,141 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: UI.isSmallScreen(context) ? 24 : 32),
 
                     // Карточки статистики
                     Expanded(
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            // Сетка карточек 2x2
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Общие очки',
-                                    value: '${widget.player.total_points}',
-                                    icon: Icons.emoji_events,
-                                    iconColor: Colors.amber,
+                            // Сетка карточек - адаптивная
+                            UI.isSmallScreen(context)
+                                ? Column(
+                                    children: [
+                                      _StatCard(
+                                        context: context,
+                                        title: 'Общие очки',
+                                        value: '${widget.player.total_points}',
+                                        icon: Icons.emoji_events,
+                                        iconColor: Colors.amber,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _StatCard(
+                                        context: context,
+                                        title: 'Посещено тренировок',
+                                        value:
+                                            '${widget.player.attendance_count}',
+                                        subtitle:
+                                            'Процент посещаемости: ${_attendanceRate()}%',
+                                        icon: Icons.calendar_today,
+                                        iconColor: UI.primary,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _StatCard(
+                                        context: context,
+                                        title: 'Процент посещаемости',
+                                        value: '${_attendanceRate()}%',
+                                        icon: Icons.track_changes,
+                                        iconColor: UI.primary,
+                                        showProgress: true,
+                                        progressValue: _attendanceRate() / 100,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _StatCard(
+                                        context: context,
+                                        title: 'Последние тренировки',
+                                        value: recentTrainings.isNotEmpty
+                                            ? '${recentTrainings.length}'
+                                            : '0',
+                                        subtitle: 'Последние 5 тренировок',
+                                        icon: Icons.show_chart,
+                                        iconColor: UI.primary,
+                                        showNoData: recentTrainings.isEmpty,
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Общие очки',
+                                              value:
+                                                  '${widget.player.total_points}',
+                                              icon: Icons.emoji_events,
+                                              iconColor: Colors.amber,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Посещено тренировок',
+                                              value:
+                                                  '${widget.player.attendance_count}',
+                                              subtitle:
+                                                  'Процент посещаемости: ${_attendanceRate()}%',
+                                              icon: Icons.calendar_today,
+                                              iconColor: UI.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Процент посещаемости',
+                                              value: '${_attendanceRate()}%',
+                                              icon: Icons.track_changes,
+                                              iconColor: UI.primary,
+                                              showProgress: true,
+                                              progressValue:
+                                                  _attendanceRate() / 100,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Последние тренировки',
+                                              value: recentTrainings.isNotEmpty
+                                                  ? '${recentTrainings.length}'
+                                                  : '0',
+                                              subtitle:
+                                                  'Последние 5 тренировок',
+                                              icon: Icons.show_chart,
+                                              iconColor: UI.primary,
+                                              showNoData:
+                                                  recentTrainings.isEmpty,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Посещено тренировок',
-                                    value: '${widget.player.attendance_count}',
-                                    subtitle:
-                                        'Процент посещаемости: ${_attendanceRate()}%',
-                                    icon: Icons.calendar_today,
-                                    iconColor: UI.primary,
-                                  ),
-                                ),
-                              ],
+                            SizedBox(
+                              height: UI.isSmallScreen(context) ? 16 : 24,
                             ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Процент посещаемости',
-                                    value: '${_attendanceRate()}%',
-                                    icon: Icons.track_changes,
-                                    iconColor: UI.primary,
-                                    showProgress: true,
-                                    progressValue: _attendanceRate() / 100,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Последние тренировки',
-                                    value: recentTrainings.isNotEmpty
-                                        ? '${recentTrainings.length}'
-                                        : '0',
-                                    subtitle: 'Последние 5 тренировок',
-                                    icon: Icons.show_chart,
-                                    iconColor: UI.primary,
-                                    showNoData: recentTrainings.isEmpty,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
 
                             // История посещений
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.access_time,
                                   color: UI.white,
-                                  size: 20,
+                                  size: UI.getIconSize(context),
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
+                                Text(
                                   'История посещений',
                                   style: TextStyle(
                                     color: UI.white,
-                                    fontSize: 18,
+                                    fontSize: UI.getSubtitleFontSize(context),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -306,13 +371,15 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               ),
                               child: history.isEmpty
                                   ? Padding(
-                                      padding: const EdgeInsets.all(24),
+                                      padding: UI.getCardPadding(context),
                                       child: Center(
                                         child: Text(
                                           'Нет данных о посещениях',
                                           style: TextStyle(
                                             color: UI.muted,
-                                            fontSize: 16,
+                                            fontSize: UI.getBodyFontSize(
+                                              context,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -331,7 +398,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                         final h = history[i];
                                         final ts = h.training_sessions;
                                         return Padding(
-                                          padding: const EdgeInsets.all(16),
+                                          padding: UI.getCardPadding(context),
                                           child: Row(
                                             children: [
                                               Container(
@@ -352,21 +419,31 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                   children: [
                                                     Text(
                                                       ts?.title ?? 'Тренировка',
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         color: UI.white,
-                                                        fontSize: 16,
+                                                        fontSize: UI
+                                                            .getBodyFontSize(
+                                                              context,
+                                                            ),
                                                         fontWeight:
                                                             FontWeight.w500,
                                                       ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                     const SizedBox(height: 4),
                                                     Text(
                                                       ts != null
                                                           ? _formatDate(ts.date)
                                                           : '',
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         color: UI.muted,
-                                                        fontSize: 14,
+                                                        fontSize:
+                                                            UI.isSmallScreen(
+                                                              context,
+                                                            )
+                                                            ? 12
+                                                            : 14,
                                                       ),
                                                     ),
                                                   ],
@@ -380,7 +457,10 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                   color: h.attended
                                                       ? Colors.green
                                                       : Colors.red,
-                                                  fontSize: 14,
+                                                  fontSize:
+                                                      UI.isSmallScreen(context)
+                                                      ? 12
+                                                      : 14,
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
@@ -404,6 +484,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
+    required this.context,
     required this.title,
     required this.value,
     this.subtitle,
@@ -414,6 +495,7 @@ class _StatCard extends StatelessWidget {
     this.showNoData = false,
   });
 
+  final BuildContext context;
   final String title;
   final String value;
   final String? subtitle;
@@ -426,7 +508,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: UI.getCardPadding(context),
       decoration: BoxDecoration(
         color: UI.card,
         borderRadius: BorderRadius.circular(UI.radiusLg),
@@ -440,26 +522,38 @@ class _StatCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: UI.white,
-                    fontSize: 14,
+                    fontSize: UI.isSmallScreen(context) ? 12 : 14,
                     fontWeight: FontWeight.w500,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (icon != null)
-                Icon(icon, color: iconColor ?? UI.primary, size: 16),
+                Icon(
+                  icon,
+                  color: iconColor ?? UI.primary,
+                  size: UI.getIconSize(context),
+                ),
             ],
           ),
           const SizedBox(height: 12),
           if (showNoData)
             Row(
               children: [
-                Icon(Icons.close, color: Colors.red, size: 16),
+                Icon(
+                  Icons.close,
+                  color: Colors.red,
+                  size: UI.getIconSize(context),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Нет данных',
-                  style: TextStyle(color: UI.muted, fontSize: 12),
+                  style: TextStyle(
+                    color: UI.muted,
+                    fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                  ),
                 ),
               ],
             )
@@ -468,7 +562,7 @@ class _StatCard extends StatelessWidget {
               value,
               style: TextStyle(
                 color: UI.primary,
-                fontSize: 20,
+                fontSize: UI.isSmallScreen(context) ? 18 : 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -476,7 +570,11 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle!,
-              style: const TextStyle(color: UI.white, fontSize: 12),
+              style: TextStyle(
+                color: UI.white,
+                fontSize: UI.isSmallScreen(context) ? 10 : 12,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
           if (showProgress) ...[

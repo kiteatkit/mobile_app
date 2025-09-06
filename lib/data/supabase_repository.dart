@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
 
 import '../supabase_client.dart';
 import '../models/group.dart';
@@ -37,35 +38,57 @@ class SupabaseRepository {
 
   Future<Group> createGroup({
     required String name,
-    String? description,
-    String color = '#3B82F6',
+    required String color,
   }) async {
-    final data = await _client
-        .from('groups')
-        .insert({'name': name, 'description': description, 'color': color})
-        .select()
-        .single();
-    final group = Group.fromJson(Map<String, dynamic>.from(data));
-    _invalidateCache();
-    return group;
+    try {
+      // Проверяем подключение к интернету
+      await _checkInternetConnection();
+
+      final group = await _retryOperation(() async {
+        final data = await _client
+            .from('groups')
+            .insert({'name': name, 'color': color})
+            .select()
+            .single();
+        return Group.fromJson(Map<String, dynamic>.from(data));
+      });
+
+      _invalidateCache();
+      return group;
+    } catch (e) {
+      await _logError('создание команды', e);
+      throw Exception('Ошибка создания команды: $e');
+    }
   }
 
   Future<void> updateGroup({
     required String id,
     String? name,
-    String? description,
     String? color,
   }) async {
     final payload = <String, dynamic>{};
     if (name != null) payload['name'] = name;
-    if (description != null) payload['description'] = description;
     if (color != null) payload['color'] = color;
     if (payload.isEmpty) return;
     await _client.from('groups').update(payload).eq('id', id);
   }
 
   Future<void> deleteGroup(String id) async {
-    await _client.from('groups').delete().eq('id', id);
+    try {
+      // Сначала удаляем всех игроков из группы (устанавливаем group_id в null)
+      await _client
+          .from('players')
+          .update({'group_id': null})
+          .eq('group_id', id);
+
+      // Затем удаляем саму группу
+      await _client.from('groups').delete().eq('id', id);
+
+      // Очищаем кэш
+      _invalidateCache();
+    } catch (e) {
+      throw Exception('Не удалось удалить группу: ${e.toString()}');
+    }
   }
 
   Future<List<Player>> getPlayers({String? groupId}) async {
@@ -147,15 +170,49 @@ class SupabaseRepository {
 
   Future<TrainingSession> createTrainingSession({
     required DateTime date,
-    required String title,
   }) async {
-    final dateStr = _formatDate(date);
-    final data = await _client
-        .from('training_sessions')
-        .insert({'date': dateStr, 'title': title})
-        .select()
-        .single();
-    return TrainingSession.fromJson(Map<String, dynamic>.from(data));
+    try {
+      await _checkInternetConnection();
+
+      final dateStr = _formatDate(date);
+      final title =
+          '${date.day}.${date.month}.${date.year}'; // Используем дату как название
+      final data = await _client
+          .from('training_sessions')
+          .insert({'date': dateStr, 'title': title})
+          .select()
+          .single();
+
+      final trainingSession = TrainingSession.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+
+      // Автоматически создаем записи посещения для всех игроков с 1 баллом
+      final players = await getPlayers();
+      if (players.isNotEmpty) {
+        final attendanceRecords = players
+            .map(
+              (player) => {
+                'session_id': trainingSession.id,
+                'player_id': player.id,
+                'points': 1,
+                'attended': true,
+              },
+            )
+            .toList();
+
+        await insertAttendanceBatch(
+          sessionId: trainingSession.id,
+          records: attendanceRecords,
+        );
+      }
+
+      _invalidateCache();
+      return trainingSession;
+    } catch (e) {
+      print('Ошибка при создании тренировки: $e');
+      rethrow;
+    }
   }
 
   Future<void> insertAttendanceBatch({
@@ -181,11 +238,39 @@ class SupabaseRepository {
     required String playerId,
     required int points,
   }) async {
-    await _client
-        .from('attendance')
-        .update({'points': points, 'attended': points > 0})
-        .eq('session_id', sessionId)
-        .eq('player_id', playerId);
+    try {
+      await _checkInternetConnection();
+
+      // Сначала проверяем, существует ли запись
+      final existing = await _client
+          .from('attendance')
+          .select('id')
+          .eq('session_id', sessionId)
+          .eq('player_id', playerId)
+          .maybeSingle();
+
+      if (existing != null) {
+        // Обновляем существующую запись
+        await _client
+            .from('attendance')
+            .update({'points': points, 'attended': points > 0})
+            .eq('session_id', sessionId)
+            .eq('player_id', playerId);
+      } else {
+        // Создаем новую запись
+        await _client.from('attendance').insert({
+          'session_id': sessionId,
+          'player_id': playerId,
+          'points': points,
+          'attended': points > 0,
+        });
+      }
+
+      _invalidateCache();
+    } catch (e) {
+      print('Ошибка при обновлении баллов: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateTrainingDate({
@@ -211,18 +296,31 @@ class SupabaseRepository {
     required String password,
     String? groupId,
   }) async {
-    final data = await _client
-        .from('players')
-        .insert({
-          'name': name,
-          'birth_date': birthDate,
-          'login': login,
-          'password': password,
-          'group_id': groupId,
-        })
-        .select()
-        .single();
-    return Player.fromJson(Map<String, dynamic>.from(data));
+    try {
+      // Проверяем подключение к интернету
+      await _checkInternetConnection();
+
+      final player = await _retryOperation(() async {
+        final data = await _client
+            .from('players')
+            .insert({
+              'name': name,
+              'birth_date': birthDate,
+              'login': login,
+              'password': password,
+              'group_id': groupId,
+            })
+            .select()
+            .single();
+        return Player.fromJson(Map<String, dynamic>.from(data));
+      });
+
+      _invalidateCache();
+      return player;
+    } catch (e) {
+      await _logError('создание игрока', e);
+      throw Exception('Ошибка создания игрока: $e');
+    }
   }
 
   Future<void> updatePlayer({
@@ -234,15 +332,21 @@ class SupabaseRepository {
     String? avatarUrl,
     String? groupId,
   }) async {
-    final payload = <String, dynamic>{};
-    if (name != null) payload['name'] = name;
-    if (birthDate != null) payload['birth_date'] = birthDate;
-    if (login != null) payload['login'] = login;
-    if (password != null) payload['password'] = password;
-    if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
-    if (groupId != null) payload['group_id'] = groupId;
-    if (payload.isEmpty) return;
-    await _client.from('players').update(payload).eq('id', id);
+    try {
+      final payload = <String, dynamic>{};
+      if (name != null) payload['name'] = name;
+      if (birthDate != null) payload['birth_date'] = birthDate;
+      if (login != null) payload['login'] = login;
+      if (password != null) payload['password'] = password;
+      if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
+      // Всегда обновляем group_id, даже если он null (для удаления из группы)
+      payload['group_id'] = groupId;
+      if (payload.isEmpty) return;
+      await _client.from('players').update(payload).eq('id', id);
+      _invalidateCache();
+    } catch (e) {
+      throw Exception('Ошибка обновления игрока: $e');
+    }
   }
 
   Future<void> removePlayerFromGroup(String playerId) async {
@@ -250,8 +354,21 @@ class SupabaseRepository {
   }
 
   Future<void> deletePlayer(String playerId) async {
-    // Выполняем удаление в одной транзакции для ускорения
-    await _client.rpc('delete_player_cascade', params: {'player_id': playerId});
+    try {
+      // Удаляем связанные записи в правильном порядке
+      // Сначала удаляем записи посещаемости
+      await _client.from('attendance').delete().eq('player_id', playerId);
+
+      // Затем удаляем самого игрока
+      await _client.from('players').delete().eq('id', playerId);
+
+      // Очищаем кэш игроков
+      _cachedPlayers = null;
+      _lastCacheUpdate = null;
+    } catch (e) {
+      // Перебрасываем ошибку с более понятным сообщением
+      throw Exception('Не удалось удалить игрока: ${e.toString()}');
+    }
   }
 
   Future<String> uploadAvatar({
@@ -294,27 +411,50 @@ class SupabaseRepository {
         .toList();
   }
 
-  Future<TrainingSchedule> createTrainingSchedule({
+  Future<void> createTrainingSchedule({
     required String groupId,
     required String title,
     required List<int> weekdays,
     required String startTime,
     required String endTime,
   }) async {
-    final data = await _client
-        .from('training_schedules')
-        .insert({
-          'group_id': groupId,
-          'title': title,
-          'weekdays': weekdays,
-          'start_time': startTime,
-          'end_time': endTime,
-        })
-        .select()
-        .single();
-    final schedule = TrainingSchedule.fromJson(Map<String, dynamic>.from(data));
+    // Создаем тренировки на ближайшие 4 недели для выбранных дней недели
+    final now = DateTime.now();
+    final endDate = now.add(const Duration(days: 28)); // 4 недели вперед
+
+    for (int week = 0; week < 4; week++) {
+      for (final weekday in weekdays) {
+        // Вычисляем дату для конкретного дня недели
+        final daysUntilWeekday = (weekday - now.weekday) % 7;
+        final targetDate = now.add(
+          Duration(days: daysUntilWeekday + (week * 7)),
+        );
+
+        // Проверяем, что дата не в прошлом и не превышает 4 недели
+        if (targetDate.isAfter(now.subtract(const Duration(days: 1))) &&
+            targetDate.isBefore(endDate)) {
+          // Проверяем, не существует ли уже тренировка на этот день
+          final existingSessions = await getTrainingsInRange(
+            DateTime(targetDate.year, targetDate.month, targetDate.day),
+            DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59),
+          );
+
+          final hasExistingSession = existingSessions.any((session) {
+            final sessionDate = DateTime.parse(session.date);
+            return sessionDate.year == targetDate.year &&
+                sessionDate.month == targetDate.month &&
+                sessionDate.day == targetDate.day;
+          });
+
+          if (!hasExistingSession) {
+            // Создаем тренировку
+            await createTrainingSession(date: targetDate);
+          }
+        }
+      }
+    }
+
     _invalidateCache();
-    return schedule;
   }
 
   Future<void> updateTrainingSchedule({
@@ -376,10 +516,7 @@ class SupabaseRepository {
 
           if (!hasExistingSession) {
             // Создаем тренировку
-            await createTrainingSession(
-              date: currentDate,
-              title: schedule.title,
-            );
+            await createTrainingSession(date: currentDate);
           }
         }
 
@@ -392,5 +529,38 @@ class SupabaseRepository {
     _cachedPlayers = null;
     _cachedGroups = null;
     _lastCacheUpdate = null;
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    // Упрощённая проверка - просто возвращаем true
+    // Supabase сам обработает ошибки сети
+    return true;
+  }
+
+  Future<void> _logError(String operation, dynamic error) async {
+    print('Ошибка в $operation: $error');
+    if (error.toString().contains('Failed host lookup')) {
+      print('Проблема с DNS - проверьте подключение к интернету');
+    } else if (error.toString().contains('SocketException')) {
+      print('Проблема с сокетом - проверьте сеть');
+    }
+  }
+
+  Future<T> _retryOperation<T>(
+    Future<T> Function() operation, {
+    int maxRetries = 3,
+  }) async {
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (e) {
+        if (i == maxRetries - 1) {
+          rethrow;
+        }
+        print('Попытка ${i + 1} неудачна, повторяем через 1 секунду...');
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+    throw Exception('Все попытки исчерпаны');
   }
 }
