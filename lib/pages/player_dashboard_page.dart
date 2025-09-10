@@ -30,6 +30,25 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     _loadData();
   }
 
+  String _getCurrentMonthName() {
+    const monthsRu = [
+      'январь',
+      'февраль',
+      'март',
+      'апрель',
+      'май',
+      'июнь',
+      'июль',
+      'август',
+      'сентябрь',
+      'октябрь',
+      'ноябрь',
+      'декабрь',
+    ];
+    final now = DateTime.now();
+    return monthsRu[now.month - 1];
+  }
+
   Future<void> _loadData() async {
     try {
       final players = await _repository.getPlayers();
@@ -192,47 +211,25 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
           ],
         ),
         const SizedBox(height: 12),
-        UI.isSmallScreen(context)
-            ? Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: _buildAchievementCard(
-                      context: context,
-                      title: 'Общие очки',
-                      value: widget.player.total_points.toString(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _buildAchievementCard(
-                      context: context,
-                      title: 'Посещено тренировок',
-                      value: widget.player.attendance_count.toString(),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: _buildAchievementCard(
-                      context: context,
-                      title: 'Общие очки',
-                      value: widget.player.total_points.toString(),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildAchievementCard(
-                      context: context,
-                      title: 'Посещено тренировок',
-                      value: widget.player.attendance_count.toString(),
-                    ),
-                  ),
-                ],
+        Row(
+          children: [
+            Expanded(
+              child: _buildAchievementCard(
+                context: context,
+                title: 'Очки за ${_getCurrentMonthName()}',
+                value: widget.player.total_points.toString(),
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildAchievementCard(
+                context: context,
+                title: 'Посещено тренировок',
+                value: widget.player.attendance_count.toString(),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

@@ -85,7 +85,20 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
 
   int _monthlyPoints() {
     if (history.isEmpty) return 0;
-    return history.fold(0, (sum, attendance) => sum + attendance.points);
+
+    final now = DateTime.now();
+    final currentMonth = now.month;
+    final currentYear = now.year;
+
+    return history.fold(0, (sum, attendance) {
+      if (attendance.training_sessions == null) return sum;
+      final trainingDate = DateTime.parse(attendance.training_sessions!.date);
+      if (trainingDate.month == currentMonth &&
+          trainingDate.year == currentYear) {
+        return sum + attendance.points;
+      }
+      return sum;
+    });
   }
 
   String _formatDate(String dateStr) {
@@ -95,6 +108,48 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     } catch (e) {
       return dateStr;
     }
+  }
+
+  String _getCurrentMonthName() {
+    const monthsRu = [
+      'январь',
+      'февраль',
+      'март',
+      'апрель',
+      'май',
+      'июнь',
+      'июль',
+      'август',
+      'сентябрь',
+      'октябрь',
+      'ноябрь',
+      'декабрь',
+    ];
+    final now = DateTime.now();
+    return monthsRu[now.month - 1];
+  }
+
+  String _getPointsText(int points) {
+    if (points == 1) return '1 балл';
+    if (points >= 2 && points <= 4) return '$points балла';
+    return '$points баллов';
+  }
+
+  int _getTotalTrainingsCount() {
+    if (history.isEmpty) return 0;
+    return history.length;
+  }
+
+  String _getTrainingsText() {
+    final attended = widget.player.attendance_count;
+    final total = _getTotalTrainingsCount();
+    return '$attended ${_getTrainingWord(attended)} из $total';
+  }
+
+  String _getTrainingWord(int count) {
+    if (count == 1) return 'тренировка';
+    if (count >= 2 && count <= 4) return 'тренировки';
+    return 'тренировок';
   }
 
   Widget _buildFallbackAvatar() {
@@ -230,7 +285,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${_monthlyPoints()} очков за месяц',
+                                '${_monthlyPoints()} очков за ${_getCurrentMonthName()}',
                                 style: TextStyle(
                                   color: Colors.amber,
                                   fontSize: UI.getBodyFontSize(context),
@@ -258,7 +313,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                           Expanded(
                                             child: _StatCard(
                                               context: context,
-                                              title: 'Очки за месяц',
+                                              title:
+                                                  'Очки за ${_getCurrentMonthName()}',
                                               value: '${_monthlyPoints()}',
                                               icon: Icons.emoji_events,
                                               iconColor: Colors.amber,
@@ -269,8 +325,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                             child: _StatCard(
                                               context: context,
                                               title: 'Посещено тренировок',
-                                              value:
-                                                  '${widget.player.attendance_count}',
+                                              value: _getTrainingsText(),
                                               subtitle:
                                                   'Процент посещаемости: ${_attendanceRate()}%',
                                               icon: Icons.calendar_today,
@@ -298,7 +353,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                           Expanded(
                                             child: _StatCard(
                                               context: context,
-                                              title: 'Очки за месяц',
+                                              title:
+                                                  'Очки за ${_getCurrentMonthName()}',
                                               value: '${_monthlyPoints()}',
                                               icon: Icons.emoji_events,
                                               iconColor: Colors.amber,
@@ -309,8 +365,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                             child: _StatCard(
                                               context: context,
                                               title: 'Посещено тренировок',
-                                              value:
-                                                  '${widget.player.attendance_count}',
+                                              value: _getTrainingsText(),
                                               subtitle:
                                                   'Процент посещаемости: ${_attendanceRate()}%',
                                               icon: Icons.calendar_today,
@@ -459,20 +514,46 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                   ],
                                                 ),
                                               ),
-                                              Text(
-                                                h.attended
-                                                    ? 'Присутствовал'
-                                                    : 'Отсутствовал',
-                                                style: TextStyle(
-                                                  color: h.attended
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                                  fontSize:
-                                                      UI.isSmallScreen(context)
-                                                      ? 12
-                                                      : 14,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    h.attended
+                                                        ? 'Присутствовал'
+                                                        : 'Отсутствовал',
+                                                    style: TextStyle(
+                                                      color: h.attended
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                      fontSize:
+                                                          UI.isSmallScreen(
+                                                            context,
+                                                          )
+                                                          ? 12
+                                                          : 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  if (h.attended) ...[
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      _getPointsText(h.points),
+                                                      style: TextStyle(
+                                                        color: Colors.amber,
+                                                        fontSize:
+                                                            UI.isSmallScreen(
+                                                              context,
+                                                            )
+                                                            ? 10
+                                                            : 12,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                             ],
                                           ),
