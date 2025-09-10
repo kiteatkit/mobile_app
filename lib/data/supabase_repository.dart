@@ -170,13 +170,16 @@ class SupabaseRepository {
 
   Future<TrainingSession> createTrainingSession({
     required DateTime date,
+    String? groupId,
+    String? address,
   }) async {
     try {
       await _checkInternetConnection();
 
       final dateStr = _formatDate(date);
       final title =
-          '${date.day}.${date.month}.${date.year}'; // Используем дату как название
+          address ??
+          '${date.day}.${date.month}.${date.year}'; // Используем адрес или дату как название
       final data = await _client
           .from('training_sessions')
           .insert({'date': dateStr, 'title': title})
@@ -187,16 +190,18 @@ class SupabaseRepository {
         Map<String, dynamic>.from(data),
       );
 
-      // Автоматически создаем записи посещения для всех игроков с 1 баллом
-      final players = await getPlayers();
+      // Автоматически создаем записи посещения для всех игроков с 0 баллами
+      final players = groupId != null
+          ? await getPlayers(groupId: groupId)
+          : await getPlayers();
       if (players.isNotEmpty) {
         final attendanceRecords = players
             .map(
               (player) => {
                 'session_id': trainingSession.id,
                 'player_id': player.id,
-                'points': 1,
-                'attended': true,
+                'points': 0,
+                'attended': false,
               },
             )
             .toList();
@@ -419,19 +424,13 @@ class SupabaseRepository {
     required String endTime,
   }) async {
     // Сначала создаем расписание
-    final scheduleData = await _client
-        .from('training_schedules')
-        .insert({
-          'group_id': groupId,
-          'title': title,
-          'weekdays': weekdays,
-          'start_time': startTime,
-          'end_time': endTime,
-        })
-        .select()
-        .single();
-
-    final scheduleId = scheduleData['id'] as String;
+    await _client.from('training_schedules').insert({
+      'group_id': groupId,
+      'title': title,
+      'weekdays': weekdays,
+      'start_time': startTime,
+      'end_time': endTime,
+    });
 
     // Создаем запланированные тренировки на ближайшие 4 недели
     final now = DateTime.now();
@@ -462,14 +461,11 @@ class SupabaseRepository {
           });
 
           if (!hasExistingSession) {
-            // Создаем запланированную тренировку
-            await createScheduledTraining(
-              groupId: groupId,
+            // Создаем обычную тренировку с нулевыми баллами для всех игроков
+            await createTrainingSession(
               date: targetDate,
-              title: title,
-              startTime: startTime,
-              endTime: endTime,
-              scheduleId: scheduleId,
+              groupId: groupId,
+              address: title,
             );
           }
         }

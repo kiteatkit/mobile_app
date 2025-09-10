@@ -1,0 +1,7 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Спортивная школа",
+  "@appTitle": {
+    "description": "Название приложения"
+  }
+}

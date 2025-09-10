@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'supabase_client.dart';
 import 'router.dart';
 import 'ui/ui_constants.dart';
@@ -32,6 +33,13 @@ class MyApp extends StatelessWidget {
       title: 'BC Vikings App',
       theme: theme,
       routerConfig: appRouter,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('ru', 'RU'), Locale('en', 'US')],
+      locale: const Locale('ru', 'RU'),
     );
   }
 }

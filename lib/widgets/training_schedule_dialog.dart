@@ -19,8 +19,6 @@ class TrainingScheduleDialog extends StatefulWidget {
 
 class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
   final titleCtrl = TextEditingController();
-  final startTimeCtrl = TextEditingController();
-  final endTimeCtrl = TextEditingController();
   final repo = SupabaseRepository();
 
   List<int> selectedWeekdays = [];
@@ -39,23 +37,15 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
   @override
   void initState() {
     super.initState();
-    startTimeCtrl.text = '18:00';
-    endTimeCtrl.text = '19:30';
 
     // Добавляем слушатели для обновления состояния кнопки
     titleCtrl.addListener(_updateButtonState);
-    startTimeCtrl.addListener(_updateButtonState);
-    endTimeCtrl.addListener(_updateButtonState);
   }
 
   @override
   void dispose() {
     titleCtrl.removeListener(_updateButtonState);
-    startTimeCtrl.removeListener(_updateButtonState);
-    endTimeCtrl.removeListener(_updateButtonState);
     titleCtrl.dispose();
-    startTimeCtrl.dispose();
-    endTimeCtrl.dispose();
     super.dispose();
   }
 
@@ -73,7 +63,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
 
   String _getButtonHint() {
     if (titleCtrl.text.trim().isEmpty) {
-      return 'Введите название тренировки';
+      return 'Введите адрес тренировки';
     }
     if (selectedWeekdays.isEmpty) {
       return 'Выберите дни недели';
@@ -95,8 +85,8 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
         groupId: widget.group.id,
         title: titleCtrl.text.trim(),
         weekdays: selectedWeekdays,
-        startTime: startTimeCtrl.text.trim(),
-        endTime: endTimeCtrl.text.trim(),
+        startTime: '18:00',
+        endTime: '19:30',
       );
 
       if (mounted) {
@@ -150,12 +140,12 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Название тренировки
+              // Адрес тренировки
               TextField(
                 controller: titleCtrl,
                 style: const TextStyle(color: UI.white),
                 decoration: InputDecoration(
-                  labelText: 'Название тренировки',
+                  labelText: 'Адрес тренировки',
                   labelStyle: const TextStyle(color: UI.muted),
                   filled: true,
                   fillColor: UI.background,
@@ -166,84 +156,6 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Время тренировки
-              UI.isSmallScreen(context)
-                  ? Column(
-                      children: [
-                        TextField(
-                          controller: startTimeCtrl,
-                          style: const TextStyle(color: UI.white),
-                          decoration: InputDecoration(
-                            labelText: 'Начало (HH:MM)',
-                            labelStyle: const TextStyle(color: UI.muted),
-                            filled: true,
-                            fillColor: UI.background,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(UI.radiusSm),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: endTimeCtrl,
-                          style: const TextStyle(color: UI.white),
-                          decoration: InputDecoration(
-                            labelText: 'Конец (HH:MM)',
-                            labelStyle: const TextStyle(color: UI.muted),
-                            filled: true,
-                            fillColor: UI.background,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(UI.radiusSm),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: startTimeCtrl,
-                            style: const TextStyle(color: UI.white),
-                            decoration: InputDecoration(
-                              labelText: 'Начало (HH:MM)',
-                              labelStyle: const TextStyle(color: UI.muted),
-                              filled: true,
-                              fillColor: UI.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  UI.radiusSm,
-                                ),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: endTimeCtrl,
-                            style: const TextStyle(color: UI.white),
-                            decoration: InputDecoration(
-                              labelText: 'Конец (HH:MM)',
-                              labelStyle: const TextStyle(color: UI.muted),
-                              filled: true,
-                              fillColor: UI.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  UI.radiusSm,
-                                ),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-              const SizedBox(height: 20),
 
               // Дни недели
               Text(
@@ -303,37 +215,6 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
                     ),
                   );
                 },
-              ),
-
-              const SizedBox(height: 16),
-
-              // Информация о создании тренировок
-              Container(
-                padding: UI.getCardPadding(context),
-                decoration: BoxDecoration(
-                  color: UI.background,
-                  borderRadius: BorderRadius.circular(UI.radiusSm),
-                  border: Border.all(color: UI.border),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info,
-                      color: UI.primary,
-                      size: UI.getIconSize(context),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Расписание сохранено. Тренировки будут создаваться только в выбранный день и время по требованию.',
-                        style: TextStyle(
-                          color: UI.muted,
-                          fontSize: UI.isSmallScreen(context) ? 11 : 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

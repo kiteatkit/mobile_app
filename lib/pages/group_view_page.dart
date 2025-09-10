@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../ui/ui_constants.dart';
 
 import '../data/supabase_repository.dart';
@@ -8,7 +10,7 @@ import '../models/training_session.dart';
 import '../models/attendance.dart';
 import '../widgets/back_button.dart';
 import '../widgets/training_schedule_dialog.dart';
-import '../widgets/scheduled_trainings_dialog.dart';
+// import '../widgets/scheduled_trainings_dialog.dart';
 
 class GroupViewPage extends StatefulWidget {
   const GroupViewPage({
@@ -62,7 +64,11 @@ class _GroupViewPageState extends State<GroupViewPage>
     if (!mounted) return;
     setState(() {
       players = p;
-      trainings = ts;
+      // Сортируем тренировки от старых к новым
+      trainings = ts
+        ..sort(
+          (a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)),
+        );
       attendanceMap = {for (final r in a) '${r.session_id}_${r.player_id}': r};
       _updateLeader();
       loading = false;
@@ -116,9 +122,9 @@ class _GroupViewPageState extends State<GroupViewPage>
     return '${monthsRu[d.month - 1]} ${d.year} г.';
   }
 
-  String _formatTrainingDate(String dateStr) {
+  String _formatTrainingDateFull(String dateStr) {
     final date = DateTime.parse(dateStr);
-    return '${date.day}.${date.month}';
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 
   @override
@@ -174,48 +180,22 @@ class _GroupViewPageState extends State<GroupViewPage>
                           SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
                           // Карточки статистики
-                          UI.isSmallScreen(context)
-                              ? Column(
-                                  children: [
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: _buildStatCard(
-                                        context: context,
-                                        icon: Icons.emoji_events,
-                                        value: players.isEmpty
-                                            ? '0.0'
-                                            : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
-                                        label: 'Средний балл команды',
-                                      ),
-                                    ),
-                                    if (_topPlayers.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: _buildTopPlayersCard(context),
-                                      ),
-                                    ],
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildStatCard(
-                                        context: context,
-                                        icon: Icons.emoji_events,
-                                        value: players.isEmpty
-                                            ? '0.0'
-                                            : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
-                                        label: 'Средний балл команды',
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    if (_topPlayers.isNotEmpty)
-                                      Expanded(
-                                        child: _buildTopPlayersCard(context),
-                                      ),
-                                  ],
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  context: context,
+                                  icon: Icons.emoji_events,
+                                  value: players.isEmpty
+                                      ? '0.0'
+                                      : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
+                                  label: 'Средний балл команды',
                                 ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: _buildTopPlayersCard(context)),
+                            ],
+                          ),
 
                           SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
@@ -243,8 +223,8 @@ class _GroupViewPageState extends State<GroupViewPage>
                                         Expanded(
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 8,
+                                              horizontal: 8,
+                                              vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
                                               color: UI.card,
@@ -263,7 +243,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               icon: const Icon(
                                                 Icons.keyboard_arrow_down,
                                                 color: UI.white,
-                                                size: 16,
+                                                size: 12,
                                               ),
                                               items: List.generate(12, (i) {
                                                 final d = DateTime(
@@ -337,7 +317,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                         height: 36,
                                                         child: ElevatedButton.icon(
                                                           onPressed: () =>
-                                                              _openScheduledTrainingsDialog(),
+                                                              _openTrainingScheduleDialog(),
                                                           style: ElevatedButton.styleFrom(
                                                             backgroundColor:
                                                                 UI.primary,
@@ -351,11 +331,11 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                             ),
                                                           ),
                                                           icon: const Icon(
-                                                            Icons.queue,
+                                                            Icons.schedule,
                                                             size: 14,
                                                           ),
                                                           label: const Text(
-                                                            'Очередь',
+                                                            'Расписание',
                                                             style: TextStyle(
                                                               fontSize: 12,
                                                             ),
@@ -364,36 +344,6 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                       ),
                                                     ),
                                                   ],
-                                                ),
-                                                const SizedBox(height: 8),
-                                                SizedBox(
-                                                  width: double.infinity,
-                                                  height: 36,
-                                                  child: ElevatedButton.icon(
-                                                    onPressed: () =>
-                                                        _openTrainingScheduleDialog(),
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor:
-                                                          UI.primary,
-                                                      foregroundColor: UI.white,
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              6,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                    icon: const Icon(
-                                                      Icons.schedule,
-                                                      size: 14,
-                                                    ),
-                                                    label: const Text(
-                                                      'Расписание',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ),
                                                 ),
                                               ],
                                             )
@@ -430,38 +380,38 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: SizedBox(
-                                                    height: 40,
-                                                    child: ElevatedButton.icon(
-                                                      onPressed: () =>
-                                                          _openScheduledTrainingsDialog(),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            UI.primary,
-                                                        foregroundColor:
-                                                            UI.white,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      icon: const Icon(
-                                                        Icons.queue,
-                                                        size: 16,
-                                                      ),
-                                                      label: const Text(
-                                                        'Очередь',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
+                                                // const SizedBox(width: 8),
+                                                // Expanded(
+                                                //   child: SizedBox(
+                                                //     height: 40,
+                                                //     child: ElevatedButton.icon(
+                                                //       onPressed: () =>
+                                                //           _openScheduledTrainingsDialog(),
+                                                //       style: ElevatedButton.styleFrom(
+                                                //         backgroundColor:
+                                                //             UI.primary,
+                                                //         foregroundColor:
+                                                //             UI.white,
+                                                //         shape: RoundedRectangleBorder(
+                                                //           borderRadius:
+                                                //               BorderRadius.circular(
+                                                //                 8,
+                                                //               ),
+                                                //         ),
+                                                //       ),
+                                                //       icon: const Icon(
+                                                //         Icons.queue,
+                                                //         size: 16,
+                                                //       ),
+                                                //       label: const Text(
+                                                //         'Очередь',
+                                                //         style: TextStyle(
+                                                //           fontSize: 14,
+                                                //         ),
+                                                //       ),
+                                                //     ),
+                                                //   ),
+                                                // ),
                                                 const SizedBox(width: 8),
                                                 Expanded(
                                                   child: SizedBox(
@@ -517,8 +467,8 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
+                                        horizontal: 8,
+                                        vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
                                         color: UI.card,
@@ -534,7 +484,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                         icon: const Icon(
                                           Icons.keyboard_arrow_down,
                                           color: UI.white,
-                                          size: 16,
+                                          size: 12,
                                         ),
                                         items: List.generate(12, (i) {
                                           final d = DateTime(
@@ -581,30 +531,30 @@ class _GroupViewPageState extends State<GroupViewPage>
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        height: 40,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () =>
-                                              _openScheduledTrainingsDialog(),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: UI.primary,
-                                            foregroundColor: UI.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                          ),
-                                          icon: const Icon(
-                                            Icons.queue,
-                                            size: 16,
-                                          ),
-                                          label: const Text(
-                                            'Очередь',
-                                            style: TextStyle(fontSize: 14),
-                                          ),
-                                        ),
-                                      ),
+                                      // const SizedBox(width: 8),
+                                      // SizedBox(
+                                      //   height: 40,
+                                      //   child: ElevatedButton.icon(
+                                      //     onPressed: () =>
+                                      //         _openScheduledTrainingsDialog(),
+                                      //     style: ElevatedButton.styleFrom(
+                                      //       backgroundColor: UI.primary,
+                                      //       foregroundColor: UI.white,
+                                      //       shape: RoundedRectangleBorder(
+                                      //         borderRadius:
+                                      //             BorderRadius.circular(8),
+                                      //       ),
+                                      //     ),
+                                      //     icon: const Icon(
+                                      //       Icons.queue,
+                                      //       size: 16,
+                                      //     ),
+                                      //     label: const Text(
+                                      //       'Очередь',
+                                      //       style: TextStyle(fontSize: 14),
+                                      //     ),
+                                      //   ),
+                                      // ),
                                       const SizedBox(width: 8),
                                       SizedBox(
                                         height: 40,
@@ -672,7 +622,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             ? 160
                                             : 250,
                                         padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
+                                          vertical: 8,
                                         ),
                                         child: Text(
                                           'Игрок',
@@ -693,7 +643,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               ? 120
                                               : 160,
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 16,
+                                            vertical: 8,
                                           ),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -702,23 +652,70 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(
-                                                    Icons.calendar_today,
-                                                    color: UI.muted,
-                                                    size:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 16
-                                                        : 20,
-                                                  ),
-                                                  SizedBox(
-                                                    width:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 2
-                                                        : 4,
+                                                  Expanded(
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          _formatTrainingDateFull(
+                                                            training.date,
+                                                          ),
+                                                          style: TextStyle(
+                                                            color: UI.muted,
+                                                            fontSize:
+                                                                UI.isSmallScreen(
+                                                                  context,
+                                                                )
+                                                                ? 11
+                                                                : 13,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          maxLines: 1,
+                                                        ),
+                                                        if (training
+                                                                .title
+                                                                .isNotEmpty &&
+                                                            training.title !=
+                                                                _formatTrainingDateFull(
+                                                                  training.date,
+                                                                )) ...[
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
+                                                          Text(
+                                                            training.title,
+                                                            style: TextStyle(
+                                                              color: UI.muted
+                                                                  .withOpacity(
+                                                                    0.7,
+                                                                  ),
+                                                              fontSize:
+                                                                  UI.isSmallScreen(
+                                                                    context,
+                                                                  )
+                                                                  ? 9
+                                                                  : 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .normal,
+                                                            ),
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            maxLines: 1,
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
                                                   ),
                                                   if (!widget.isPlayerMode)
                                                     PopupMenuButton<String>(
@@ -758,39 +755,6 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                       ],
                                                     ),
                                                 ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                training.title,
-                                                style: TextStyle(
-                                                  color: UI.muted,
-                                                  fontSize:
-                                                      UI.isSmallScreen(context)
-                                                      ? 8
-                                                      : 11,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                _formatTrainingDate(
-                                                  training.date,
-                                                ),
-                                                style: TextStyle(
-                                                  color: UI.muted.withOpacity(
-                                                    0.7,
-                                                  ),
-                                                  fontSize:
-                                                      UI.isSmallScreen(context)
-                                                      ? 11
-                                                      : 13,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
                                               ),
                                             ],
                                           ),
@@ -934,56 +898,96 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                       ),
                                                     ),
                                                   )
-                                                : GestureDetector(
-                                                    onTap: () =>
-                                                        _editPlayerPoints(
-                                                          player,
-                                                          training,
-                                                        ),
-                                                    child: Container(
-                                                      height:
-                                                          UI.isSmallScreen(
-                                                            context,
-                                                          )
-                                                          ? 28
-                                                          : 32,
-                                                      decoration: BoxDecoration(
-                                                        color: UI.primary
-                                                            .withOpacity(0.1),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              UI.isSmallScreen(
-                                                                    context,
-                                                                  )
-                                                                  ? 4
-                                                                  : 6,
-                                                            ),
-                                                        border: Border.all(
-                                                          color: UI.primary
-                                                              .withOpacity(0.3),
-                                                          width: 1,
-                                                        ),
+                                                : Row(
+                                                    children: [
+                                                      // Чекбокс для быстрого выставления 1 балла
+                                                      Checkbox(
+                                                        value:
+                                                            trainingPoints > 0,
+                                                        onChanged: (bool? value) {
+                                                          if (value == true) {
+                                                            _setPlayerPoints(
+                                                              player,
+                                                              training,
+                                                              1,
+                                                            );
+                                                          } else {
+                                                            _setPlayerPoints(
+                                                              player,
+                                                              training,
+                                                              0,
+                                                            );
+                                                          }
+                                                        },
+                                                        activeColor: UI.primary,
+                                                        checkColor: UI.white,
+                                                        materialTapTargetSize:
+                                                            MaterialTapTargetSize
+                                                                .shrinkWrap,
                                                       ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          trainingPoints
-                                                              .toString(),
-                                                          style: TextStyle(
-                                                            color: UI.primary,
-                                                            fontSize:
+                                                      // Кнопка для редактирования баллов
+                                                      Expanded(
+                                                        child: GestureDetector(
+                                                          onTap: () =>
+                                                              _editPlayerPoints(
+                                                                player,
+                                                                training,
+                                                              ),
+                                                          child: Container(
+                                                            height:
                                                                 UI.isSmallScreen(
                                                                   context,
                                                                 )
-                                                                ? 10
-                                                                : 14,
-                                                            fontWeight:
-                                                                FontWeight.bold,
+                                                                ? 28
+                                                                : 32,
+                                                            decoration: BoxDecoration(
+                                                              color: UI.primary
+                                                                  .withOpacity(
+                                                                    0.1,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    UI.isSmallScreen(
+                                                                          context,
+                                                                        )
+                                                                        ? 4
+                                                                        : 6,
+                                                                  ),
+                                                              border: Border.all(
+                                                                color: UI
+                                                                    .primary
+                                                                    .withOpacity(
+                                                                      0.3,
+                                                                    ),
+                                                                width: 1,
+                                                              ),
+                                                            ),
+                                                            child: Center(
+                                                              child: Text(
+                                                                trainingPoints
+                                                                    .toString(),
+                                                                style: TextStyle(
+                                                                  color: UI
+                                                                      .primary,
+                                                                  fontSize:
+                                                                      UI.isSmallScreen(
+                                                                        context,
+                                                                      )
+                                                                      ? 10
+                                                                      : 14,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
+                                                            ),
                                                           ),
-                                                          textAlign:
-                                                              TextAlign.center,
                                                         ),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ),
                                           );
                                         }),
@@ -1056,6 +1060,7 @@ class _GroupViewPageState extends State<GroupViewPage>
     required String label,
   }) {
     return Container(
+      height: UI.isSmallScreen(context) ? 140 : 160,
       padding: UI.getCardPadding(context),
       decoration: BoxDecoration(
         color: UI.card,
@@ -1063,6 +1068,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         border: Border.all(color: UI.border),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: UI.primary, size: UI.getIconSize(context) + 4),
           const SizedBox(height: 8),
@@ -1094,6 +1100,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   Widget _buildTopPlayersCard(BuildContext context) {
     return Container(
+      height: UI.isSmallScreen(context) ? 140 : 160,
       padding: UI.getCardPadding(context),
       decoration: BoxDecoration(
         color: UI.card,
@@ -1101,6 +1108,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         border: Border.all(color: UI.border),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.military_tech,
@@ -1118,52 +1126,107 @@ class _GroupViewPageState extends State<GroupViewPage>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          ..._topPlayers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final player = entry.value;
-            final average = _monthlyAverage(player.id);
-            final medalColors = [
-              Colors.amber, // Золото
-              Colors.grey[400]!, // Серебро
-              Colors.orange[700]!, // Бронза
-            ];
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.emoji_events,
-                    color: medalColors[index],
-                    size: UI.isSmallScreen(context) ? 12 : 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
+          Expanded(
+            child: _topPlayers.isEmpty
+                ? Center(
                     child: Text(
-                      player.name,
+                      'Нет данных',
                       style: TextStyle(
-                        color: UI.white,
+                        color: UI.muted,
                         fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                        fontWeight: FontWeight.w500,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: _topPlayers.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final player = entry.value;
+                      final average = _monthlyAverage(player.id);
+                      final medalColors = [
+                        Colors.amber, // Золото
+                        Colors.grey[400]!, // Серебро
+                        Colors.orange[700]!, // Бронза
+                      ];
+
+                      return Row(
+                        children: [
+                          Icon(
+                            Icons.emoji_events,
+                            color: medalColors[index],
+                            size: UI.isSmallScreen(context) ? 12 : 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              player.name,
+                              style: TextStyle(
+                                color: UI.white,
+                                fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            average.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: UI.primary,
+                              fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
-                  Text(
-                    average.toStringAsFixed(1),
-                    style: TextStyle(
-                      color: UI.primary,
-                      fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _setPlayerPoints(
+    Player player,
+    TrainingSession training,
+    int points,
+  ) async {
+    try {
+      // Обновляем или создаем запись посещения
+      await repo.updateAttendancePoints(
+        sessionId: training.id,
+        playerId: player.id,
+        points: points,
+      );
+
+      // Обновляем локальные данные только если виджет еще смонтирован
+      if (mounted) {
+        setState(() {
+          attendanceMap['${training.id}_${player.id}'] = Attendance(
+            id: attendanceMap['${training.id}_${player.id}']?.id ?? '',
+            player_id: player.id,
+            session_id: training.id,
+            attended: points > 0,
+            points: points,
+            created_at:
+                attendanceMap['${training.id}_${player.id}']?.created_at ??
+                DateTime.now().toIso8601String(),
+            training_sessions: training,
+          );
+        });
+
+        _updateLeader();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при обновлении баллов: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _editPlayerPoints(
@@ -1372,71 +1435,123 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   Future<void> _openAddTrainingDialog() async {
     final dateController = TextEditingController();
+    final addressController = TextEditingController();
     DateTime? selectedDate;
+    final dateMaskFormatter = MaskTextInputFormatter(
+      mask: '##.##.####',
+      filter: {"#": RegExp(r'[0-9]')},
+    );
 
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: UI.card,
-        title: Text(
-          'Создать тренировку',
-          style: TextStyle(
-            color: UI.white,
-            fontSize: UI.getSubtitleFontSize(context),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: Text(
+            'Создать тренировку',
+            style: TextStyle(
+              color: UI.white,
+              fontSize: UI.getSubtitleFontSize(context),
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: dateController,
-              style: const TextStyle(color: UI.white),
-              decoration: InputDecoration(
-                labelText: 'Дата тренировки',
-                labelStyle: const TextStyle(color: UI.muted),
-                filled: true,
-                fillColor: UI.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(UI.radiusSm),
-                  borderSide: BorderSide.none,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: dateController,
+                inputFormatters: [dateMaskFormatter],
+                style: const TextStyle(color: UI.white),
+                decoration: InputDecoration(
+                  labelText: 'Дата тренировки (дд.мм.гггг)',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  filled: true,
+                  fillColor: UI.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(UI.radiusSm),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today, color: UI.muted),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now().subtract(
+                          const Duration(days: 30),
+                        ),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: UI.primary,
+                                onPrimary: UI.white,
+                                surface: UI.card,
+                                onSurface: UI.white,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (date != null) {
+                        selectedDate = date;
+                        dateController.text = DateFormat(
+                          'dd.MM.yyyy',
+                        ).format(date);
+                        setDialogState(() {});
+                      }
+                    },
+                  ),
                 ),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.calendar_today, color: UI.muted),
-                  onPressed: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now().subtract(
-                        const Duration(days: 30),
-                      ),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date != null) {
+                onChanged: (value) {
+                  if (value.length == 10) {
+                    try {
+                      final date = DateFormat('dd.MM.yyyy').parse(value);
                       selectedDate = date;
-                      dateController.text =
-                          '${date.day}.${date.month}.${date.year}';
+                    } catch (e) {
+                      selectedDate = null;
                     }
-                  },
+                  } else {
+                    selectedDate = null;
+                  }
+                  setDialogState(() {});
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: addressController,
+                style: const TextStyle(color: UI.white),
+                decoration: InputDecoration(
+                  labelText: 'Адрес тренировки',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  filled: true,
+                  fillColor: UI.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(UI.radiusSm),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
-              readOnly: true,
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Отмена', style: TextStyle(color: UI.muted)),
+            ),
+            ElevatedButton(
+              onPressed: selectedDate != null
+                  ? () => Navigator.of(context).pop(true)
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: selectedDate != null ? UI.primary : UI.muted,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Создать'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Отмена', style: TextStyle(color: UI.muted)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: UI.primary,
-              foregroundColor: UI.white,
-            ),
-            child: const Text('Создать'),
-          ),
-        ],
       ),
     );
 
@@ -1450,7 +1565,13 @@ class _GroupViewPageState extends State<GroupViewPage>
           );
         } catch (e) {
           // Если нет расписания, создаем обычную тренировку
-          await repo.createTrainingSession(date: selectedDate!);
+          await repo.createTrainingSession(
+            date: selectedDate!,
+            groupId: widget.group.id,
+            address: addressController.text.trim().isNotEmpty
+                ? addressController.text.trim()
+                : null,
+          );
         }
 
         await _load(); // Перезагружаем данные
@@ -1459,7 +1580,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Тренировка на ${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year} создана',
+                'Тренировка на ${DateFormat('dd.MM.yyyy').format(selectedDate!)} создана',
               ),
               backgroundColor: UI.primary,
             ),
@@ -1490,17 +1611,17 @@ class _GroupViewPageState extends State<GroupViewPage>
     );
   }
 
-  Future<void> _openScheduledTrainingsDialog() async {
-    await showDialog(
-      context: context,
-      builder: (context) => ScheduledTrainingsDialog(
-        group: widget.group,
-        onTrainingCreated: () {
-          _load();
-        },
-      ),
-    );
-  }
+  // Future<void> _openScheduledTrainingsDialog() async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (context) => ScheduledTrainingsDialog(
+  //       group: widget.group,
+  //       onTrainingCreated: () {
+  //         _load();
+  //       },
+  //     ),
+  //   );
+  // }
 }
 
 class _PlayerInfo extends StatelessWidget {
