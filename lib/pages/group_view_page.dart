@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../ui/ui_constants.dart';
 
 import '../data/supabase_repository.dart';
@@ -8,9 +7,192 @@ import '../models/group.dart';
 import '../models/player.dart';
 import '../models/training_session.dart';
 import '../models/attendance.dart';
-import '../widgets/back_button.dart';
 import '../widgets/training_schedule_dialog.dart';
 // import '../widgets/scheduled_trainings_dialog.dart';
+
+// Класс для фиксированного заголовка таблицы
+class _TableHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final bool isSmallScreen;
+  final List<TrainingSession> trainings;
+  final String Function(String) formatTrainingDateFull;
+  final bool isPlayerMode;
+  final Function(TrainingSession) onDeleteTraining;
+  final VoidCallback onAddTraining;
+  final ScrollController horizontalScrollController;
+
+  _TableHeaderDelegate({
+    required this.isSmallScreen,
+    required this.trainings,
+    required this.formatTrainingDateFull,
+    required this.isPlayerMode,
+    required this.onDeleteTraining,
+    required this.onAddTraining,
+    required this.horizontalScrollController,
+  });
+
+  @override
+  double get minExtent => isSmallScreen ? 72 : 72;
+
+  @override
+  double get maxExtent => isSmallScreen ? 72 : 72;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: UI.card,
+        border: const Border(bottom: BorderSide(color: UI.border)),
+      ),
+      child: Row(
+        children: [
+          // Закрепленный столбец с заголовком "Игрок"
+          Container(
+            width: isSmallScreen ? 160 : 250,
+            padding: UI.getCardPadding(context),
+            decoration: const BoxDecoration(
+              border: Border(right: BorderSide(color: UI.border, width: 1)),
+            ),
+            child: Center(
+              child: Text(
+                'Игрок',
+                style: TextStyle(
+                  color: UI.muted,
+                  fontSize: isSmallScreen ? 13 : 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          // Прокручиваемая область с заголовками тренировок
+          Expanded(
+            child: SingleChildScrollView(
+              controller: horizontalScrollController,
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // Колонки тренировок - адаптивная ширина
+                  ...trainings.map(
+                    (training) => Container(
+                      width: isSmallScreen ? 120 : 160,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      formatTrainingDateFull(training.date),
+                                      style: TextStyle(
+                                        color: UI.muted,
+                                        fontSize: isSmallScreen ? 11 : 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                    if (training.title.isNotEmpty &&
+                                        training.title !=
+                                            formatTrainingDateFull(
+                                              training.date,
+                                            )) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        training.title,
+                                        style: TextStyle(
+                                          color: UI.muted.withOpacity(0.7),
+                                          fontSize: isSmallScreen ? 9 : 10,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (!isPlayerMode)
+                                PopupMenuButton<String>(
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: UI.muted,
+                                    size: isSmallScreen ? 12 : 16,
+                                  ),
+                                  onSelected: (value) {
+                                    if (value == 'delete') {
+                                      onDeleteTraining(training);
+                                    } else if (value == 'create') {
+                                      onAddTraining();
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'create',
+                                      child: Text('Создать тренировку'),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Удалить тренировку'),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Колонка итого - адаптивная ширина
+                  Container(
+                    width: isSmallScreen ? 60 : 100,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.emoji_events,
+                          color: UI.muted,
+                          size: isSmallScreen ? 12 : 16,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Средний балл',
+                          style: TextStyle(
+                            color: UI.muted,
+                            fontSize: isSmallScreen ? 8 : 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
+  }
+}
 
 class GroupViewPage extends StatefulWidget {
   const GroupViewPage({
@@ -41,6 +223,9 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   late final ScrollController _hScroll;
   late final ScrollController _vScroll;
+  late final ScrollController _tableScrollController;
+  late final ScrollController _playersScrollController;
+  late final ScrollController _headerScrollController;
 
   @override
   bool get wantKeepAlive => true;
@@ -50,6 +235,12 @@ class _GroupViewPageState extends State<GroupViewPage>
     super.initState();
     _hScroll = ScrollController();
     _vScroll = ScrollController();
+    _tableScrollController = ScrollController();
+    _playersScrollController = ScrollController();
+    _headerScrollController = ScrollController();
+
+    // Синхронизация прокрутки теперь происходит через NotificationListener
+
     _load();
   }
 
@@ -151,6 +342,9 @@ class _GroupViewPageState extends State<GroupViewPage>
   void dispose() {
     _hScroll.dispose();
     _vScroll.dispose();
+    _tableScrollController.dispose();
+    _playersScrollController.dispose();
+    _headerScrollController.dispose();
     super.dispose();
   }
 
@@ -159,336 +353,56 @@ class _GroupViewPageState extends State<GroupViewPage>
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: UI.background,
-      body: loading
-          ? const Center(child: CircularProgressIndicator(color: UI.primary))
-          : SafeArea(
-              child: SingleChildScrollView(
+      body: SafeArea(
+        top: true,
+        bottom: true,
+        left: true,
+        right: true,
+        child: loading
+            ? const Center(child: CircularProgressIndicator(color: UI.primary))
+            : CustomScrollView(
                 controller: _vScroll,
-                child: Column(
-                  children: [
-                    // Заголовок и контент с отступами
-                    Padding(
-                      padding: UI.getScreenPadding(context),
-                      child: Column(
-                        children: [
-                          // Заголовок с зеленой точкой и кнопкой закрыть
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${widget.group.name} - Игроки команды',
-                                  style: TextStyle(
-                                    color: UI.white,
-                                    fontSize: UI.getSubtitleFontSize(context),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const CustomBackButton(),
-                            ],
-                          ),
-                          SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-
-                          // Карточки статистики
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatCard(
-                                  context: context,
-                                  icon: Icons.emoji_events,
-                                  value: players.isEmpty
-                                      ? '0.0'
-                                      : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
-                                  label: 'Средний балл команды',
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(child: _buildTopPlayersCard(context)),
-                            ],
-                          ),
-
-                          SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-
-                          // Секция игроков команды
-                          UI.isSmallScreen(context)
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Игроки команды',
-                                      style: TextStyle(
-                                        color: UI.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // SliverAppBar с заголовком и статистикой
+                  SliverAppBar(
+                    expandedHeight: UI.isSmallScreen(context) ? 200 : 250,
+                    floating: false,
+                    pinned: true,
+                    snap: false,
+                    backgroundColor: UI.background,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Padding(
+                        padding: EdgeInsets.only(
+                          top: UI.getScreenPadding(context).top + 8,
+                          left: UI.getScreenPadding(context).left,
+                          right: UI.getScreenPadding(context).right,
+                          bottom: UI.getScreenPadding(context).bottom,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Заголовок с зеленой точкой
+                            Row(
+                              children: [
+                                // Кастомная кнопка "Назад" в стиле хедера
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => Navigator.of(context).pop(),
+                                    borderRadius: BorderRadius.circular(
+                                      UI.radiusLg,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'Месяц:',
-                                          style: TextStyle(color: UI.white),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: UI.card,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    UI.radiusLg,
-                                                  ),
-                                              border: Border.all(
-                                                color: UI.border,
-                                              ),
-                                            ),
-                                            child: DropdownButton<DateTime>(
-                                              dropdownColor: UI.card,
-                                              value: selectedMonth,
-                                              underline: const SizedBox(),
-                                              icon: const Icon(
-                                                Icons.keyboard_arrow_down,
-                                                color: UI.white,
-                                                size: 12,
-                                              ),
-                                              items: List.generate(12, (i) {
-                                                final d = DateTime(
-                                                  DateTime.now().year,
-                                                  DateTime.now().month - i,
-                                                  1,
-                                                );
-                                                return DropdownMenuItem(
-                                                  value: d,
-                                                  child: Text(
-                                                    _formatMonth(d),
-                                                    style: const TextStyle(
-                                                      color: UI.white,
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
-                                              onChanged: (v) {
-                                                if (v == null) return;
-                                                setState(
-                                                  () => selectedMonth = v,
-                                                );
-                                                _load();
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (!widget.isPlayerMode) ...[
-                                      const SizedBox(height: 12),
-                                      UI.isSmallScreen(context)
-                                          ? Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: SizedBox(
-                                                        height: 36,
-                                                        child: ElevatedButton.icon(
-                                                          onPressed: () =>
-                                                              _openAddTrainingDialog(),
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                UI.primary,
-                                                            foregroundColor:
-                                                                UI.white,
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    6,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          icon: const Icon(
-                                                            Icons.add,
-                                                            size: 14,
-                                                          ),
-                                                          label: const Text(
-                                                            'Тренировка',
-                                                            style: TextStyle(
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    Expanded(
-                                                      child: SizedBox(
-                                                        height: 36,
-                                                        child: ElevatedButton.icon(
-                                                          onPressed: () =>
-                                                              _openTrainingScheduleDialog(),
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                UI.primary,
-                                                            foregroundColor:
-                                                                UI.white,
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    6,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          icon: const Icon(
-                                                            Icons.schedule,
-                                                            size: 14,
-                                                          ),
-                                                          label: const Text(
-                                                            'Расписание',
-                                                            style: TextStyle(
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            )
-                                          : Row(
-                                              children: [
-                                                Expanded(
-                                                  child: SizedBox(
-                                                    height: 40,
-                                                    child: ElevatedButton.icon(
-                                                      onPressed: () =>
-                                                          _openAddTrainingDialog(),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            UI.primary,
-                                                        foregroundColor:
-                                                            UI.white,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      icon: const Icon(
-                                                        Icons.add,
-                                                        size: 16,
-                                                      ),
-                                                      label: const Text(
-                                                        'Тренировка',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                // const SizedBox(width: 8),
-                                                // Expanded(
-                                                //   child: SizedBox(
-                                                //     height: 40,
-                                                //     child: ElevatedButton.icon(
-                                                //       onPressed: () =>
-                                                //           _openScheduledTrainingsDialog(),
-                                                //       style: ElevatedButton.styleFrom(
-                                                //         backgroundColor:
-                                                //             UI.primary,
-                                                //         foregroundColor:
-                                                //             UI.white,
-                                                //         shape: RoundedRectangleBorder(
-                                                //           borderRadius:
-                                                //               BorderRadius.circular(
-                                                //                 8,
-                                                //               ),
-                                                //         ),
-                                                //       ),
-                                                //       icon: const Icon(
-                                                //         Icons.queue,
-                                                //         size: 16,
-                                                //       ),
-                                                //       label: const Text(
-                                                //         'Очередь',
-                                                //         style: TextStyle(
-                                                //           fontSize: 14,
-                                                //         ),
-                                                //       ),
-                                                //     ),
-                                                //   ),
-                                                // ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: SizedBox(
-                                                    height: 40,
-                                                    child: ElevatedButton.icon(
-                                                      onPressed: () =>
-                                                          _openTrainingScheduleDialog(),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            UI.primary,
-                                                        foregroundColor:
-                                                            UI.white,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                8,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      icon: const Icon(
-                                                        Icons.schedule,
-                                                        size: 16,
-                                                      ),
-                                                      label: const Text(
-                                                        'Расписание',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                    ],
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    const Text(
-                                      'Игроки команды',
-                                      style: TextStyle(
-                                        color: UI.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    const Text(
-                                      'Месяц:',
-                                      style: TextStyle(color: UI.white),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: UI.isSmallScreen(context)
+                                            ? 8
+                                            : 12,
+                                        vertical: UI.isSmallScreen(context)
+                                            ? 6
+                                            : 8,
                                       ),
                                       decoration: BoxDecoration(
                                         color: UI.card,
@@ -497,119 +411,304 @@ class _GroupViewPageState extends State<GroupViewPage>
                                         ),
                                         border: Border.all(color: UI.border),
                                       ),
-                                      child: DropdownButton<DateTime>(
-                                        dropdownColor: UI.card,
-                                        value: selectedMonth,
-                                        underline: const SizedBox(),
-                                        icon: const Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: UI.white,
-                                          size: 12,
-                                        ),
-                                        items: List.generate(12, (i) {
-                                          final d = DateTime(
-                                            DateTime.now().year,
-                                            DateTime.now().month - i,
-                                            1,
-                                          );
-                                          return DropdownMenuItem(
-                                            value: d,
-                                            child: Text(
-                                              _formatMonth(d),
-                                              style: const TextStyle(
-                                                color: UI.white,
-                                              ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.arrow_back_ios,
+                                            color: UI.white,
+                                            size: UI.isSmallScreen(context)
+                                                ? 14
+                                                : 16,
+                                          ),
+                                          SizedBox(
+                                            width: UI.isSmallScreen(context)
+                                                ? 2
+                                                : 4,
+                                          ),
+                                          Text(
+                                            'Назад',
+                                            style: TextStyle(
+                                              color: UI.white,
+                                              fontSize:
+                                                  UI.isSmallScreen(context)
+                                                  ? 12
+                                                  : 14,
+                                              fontWeight: FontWeight.w500,
                                             ),
-                                          );
-                                        }),
-                                        onChanged: (v) {
-                                          if (v == null) return;
-                                          setState(() => selectedMonth = v);
-                                          _load();
-                                        },
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    if (!widget.isPlayerMode) ...[
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        height: 40,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () =>
-                                              _openAddTrainingDialog(),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: UI.primary,
-                                            foregroundColor: UI.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: UI.isSmallScreen(context) ? 8 : 12,
+                                ),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${widget.group.name} - Игроки команды',
+                                    style: TextStyle(
+                                      color: UI.white,
+                                      fontSize: UI.getSubtitleFontSize(context),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: UI.isSmallScreen(context) ? 16 : 24,
+                            ),
+
+                            // Карточки статистики
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatCard(
+                                    context: context,
+                                    icon: Icons.emoji_events,
+                                    value: players.isEmpty
+                                        ? '0.0'
+                                        : (players.fold<double>(
+                                                    0,
+                                                    (s, p) =>
+                                                        s +
+                                                        _monthlyAverage(p.id),
+                                                  ) /
+                                                  players.length)
+                                              .toStringAsFixed(1),
+                                    label: 'Средний балл команды',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(child: _buildTopPlayersCard(context)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Выбор месяца
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: UI.getScreenPadding(context),
+                      child: UI.isSmallScreen(context)
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Месяц:',
+                                      style: TextStyle(color: UI.white),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: UI.card,
+                                          borderRadius: BorderRadius.circular(
+                                            UI.radiusLg,
                                           ),
-                                          icon: const Icon(Icons.add, size: 16),
-                                          label: const Text(
-                                            'Тренировка',
-                                            style: TextStyle(fontSize: 14),
+                                          border: Border.all(color: UI.border),
+                                        ),
+                                        child: DropdownButton<DateTime>(
+                                          dropdownColor: UI.card,
+                                          value: selectedMonth,
+                                          underline: const SizedBox(),
+                                          icon: const Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color: UI.white,
+                                            size: 12,
+                                          ),
+                                          items: List.generate(12, (i) {
+                                            final d = DateTime(
+                                              DateTime.now().year,
+                                              DateTime.now().month - i,
+                                              1,
+                                            );
+                                            return DropdownMenuItem(
+                                              value: d,
+                                              child: Text(
+                                                _formatMonth(d),
+                                                style: const TextStyle(
+                                                  color: UI.white,
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                          onChanged: (v) {
+                                            if (v == null) return;
+                                            setState(() => selectedMonth = v);
+                                            _load();
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                const Spacer(),
+                                const Text(
+                                  'Месяц:',
+                                  style: TextStyle(color: UI.white),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: UI.card,
+                                    borderRadius: BorderRadius.circular(
+                                      UI.radiusLg,
+                                    ),
+                                    border: Border.all(color: UI.border),
+                                  ),
+                                  child: DropdownButton<DateTime>(
+                                    dropdownColor: UI.card,
+                                    value: selectedMonth,
+                                    underline: const SizedBox(),
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: UI.white,
+                                      size: 12,
+                                    ),
+                                    items: List.generate(12, (i) {
+                                      final d = DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month - i,
+                                        1,
+                                      );
+                                      return DropdownMenuItem(
+                                        value: d,
+                                        child: Text(
+                                          _formatMonth(d),
+                                          style: const TextStyle(
+                                            color: UI.white,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                    onChanged: (v) {
+                                      if (v == null) return;
+                                      setState(() => selectedMonth = v);
+                                      _load();
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+
+                  // Кнопки управления
+                  if (!widget.isPlayerMode)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: UI.getScreenPadding(context),
+                        child: UI.isSmallScreen(context)
+                            ? Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: 36,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () =>
+                                                _openAddTrainingDialog(),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: UI.primary,
+                                              foregroundColor: UI.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            icon: const Icon(
+                                              Icons.add,
+                                              size: 14,
+                                            ),
+                                            label: const Text(
+                                              'Тренировка',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                         ),
                                       ),
-                                      // const SizedBox(width: 8),
-                                      // SizedBox(
-                                      //   height: 40,
-                                      //   child: ElevatedButton.icon(
-                                      //     onPressed: () =>
-                                      //         _openScheduledTrainingsDialog(),
-                                      //     style: ElevatedButton.styleFrom(
-                                      //       backgroundColor: UI.primary,
-                                      //       foregroundColor: UI.white,
-                                      //       shape: RoundedRectangleBorder(
-                                      //         borderRadius:
-                                      //             BorderRadius.circular(8),
-                                      //       ),
-                                      //     ),
-                                      //     icon: const Icon(
-                                      //       Icons.queue,
-                                      //       size: 16,
-                                      //     ),
-                                      //     label: const Text(
-                                      //       'Очередь',
-                                      //       style: TextStyle(fontSize: 14),
-                                      //     ),
-                                      //   ),
-                                      // ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        height: 40,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () =>
-                                              _openTrainingScheduleDialog(),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: UI.primary,
-                                            foregroundColor: UI.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: 36,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () =>
+                                                _openTrainingScheduleDialog(),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: UI.primary,
+                                              foregroundColor: UI.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
                                             ),
-                                          ),
-                                          icon: const Icon(
-                                            Icons.schedule,
-                                            size: 16,
-                                          ),
-                                          label: const Text(
-                                            'Расписание',
-                                            style: TextStyle(fontSize: 14),
+                                            icon: const Icon(
+                                              Icons.schedule,
+                                              size: 14,
+                                            ),
+                                            label: const Text(
+                                              'Расписание',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ],
-                                  ],
-                                ),
-                        ],
+                                  ),
+                                ],
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                  // Фиксированные заголовки таблицы
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _TableHeaderDelegate(
+                      isSmallScreen: UI.isSmallScreen(context),
+                      trainings: trainings,
+                      formatTrainingDateFull: _formatTrainingDateFull,
+                      isPlayerMode: widget.isPlayerMode,
+                      onDeleteTraining: _deleteTraining,
+                      onAddTraining: _openAddTrainingDialog,
+                      horizontalScrollController: _headerScrollController,
+                    ),
+                  ),
 
-                    // Таблица игроков
-                    Container(
+                  // Таблица игроков
+                  SliverToBoxAdapter(
+                    child: Container(
                       height: MediaQuery.of(context).size.height * 0.6,
                       decoration: BoxDecoration(
                         color: UI.card,
@@ -617,459 +716,85 @@ class _GroupViewPageState extends State<GroupViewPage>
                         border: Border.all(color: UI.border),
                       ),
                       child: SingleChildScrollView(
+                        controller: _headerScrollController,
                         scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: MediaQuery.of(context).size.width,
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Column(
-                              children: [
-                                // Заголовок таблицы
-                                Container(
-                                  padding: UI.getCardPadding(context),
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(color: UI.border),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Колонка игрока - адаптивная ширина
-                                      Container(
-                                        width: UI.isSmallScreen(context)
-                                            ? 160
-                                            : 250,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        child: Text(
-                                          'Игрок',
-                                          style: TextStyle(
-                                            color: UI.muted,
-                                            fontSize: UI.isSmallScreen(context)
-                                                ? 13
-                                                : 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                      // Колонки тренировок - адаптивная ширина
-                                      ...trainings.map(
-                                        (training) => Container(
-                                          width: UI.isSmallScreen(context)
-                                              ? 120
-                                              : 160,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Text(
-                                                          _formatTrainingDateFull(
-                                                            training.date,
-                                                          ),
-                                                          style: TextStyle(
-                                                            color: UI.muted,
-                                                            fontSize:
-                                                                UI.isSmallScreen(
-                                                                  context,
-                                                                )
-                                                                ? 11
-                                                                : 13,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          maxLines: 1,
-                                                        ),
-                                                        if (training
-                                                                .title
-                                                                .isNotEmpty &&
-                                                            training.title !=
-                                                                _formatTrainingDateFull(
-                                                                  training.date,
-                                                                )) ...[
-                                                          const SizedBox(
-                                                            height: 2,
-                                                          ),
-                                                          Text(
-                                                            training.title,
-                                                            style: TextStyle(
-                                                              color: UI.muted
-                                                                  .withOpacity(
-                                                                    0.7,
-                                                                  ),
-                                                              fontSize:
-                                                                  UI.isSmallScreen(
-                                                                    context,
-                                                                  )
-                                                                  ? 9
-                                                                  : 10,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                            ),
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            maxLines: 1,
-                                                          ),
-                                                        ],
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  if (!widget.isPlayerMode)
-                                                    PopupMenuButton<String>(
-                                                      icon: Icon(
-                                                        Icons.more_vert,
-                                                        color: UI.muted,
-                                                        size:
-                                                            UI.isSmallScreen(
-                                                              context,
-                                                            )
-                                                            ? 12
-                                                            : 16,
-                                                      ),
-                                                      onSelected: (value) {
-                                                        if (value == 'delete') {
-                                                          _deleteTraining(
-                                                            training,
-                                                          );
-                                                        } else if (value ==
-                                                            'create') {
-                                                          _openAddTrainingDialog();
-                                                        }
-                                                      },
-                                                      itemBuilder: (context) => [
-                                                        const PopupMenuItem(
-                                                          value: 'create',
-                                                          child: Text(
-                                                            'Создать тренировку',
-                                                          ),
-                                                        ),
-                                                        const PopupMenuItem(
-                                                          value: 'delete',
-                                                          child: Text(
-                                                            'Удалить тренировку',
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      // Колонка итого - адаптивная ширина
-                                      Container(
-                                        width: UI.isSmallScreen(context)
-                                            ? 60
-                                            : 100,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.emoji_events,
-                                              color: UI.muted,
-                                              size: UI.isSmallScreen(context)
-                                                  ? 12
-                                                  : 16,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Средний балл',
-                                              style: TextStyle(
-                                                color: UI.muted,
-                                                fontSize:
-                                                    UI.isSmallScreen(context)
-                                                    ? 8
-                                                    : 12,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Строки игроков
-                                ...players.asMap().entries.map((entry) {
-                                  final index = entry.key;
-                                  final player = entry.value;
-                                  final isTopPlayer = _topPlayers.any(
-                                    (p) => p.id == player.id,
-                                  );
+                        physics: const BouncingScrollPhysics(),
+                        child: SizedBox(
+                          width:
+                              (UI.isSmallScreen(context) ? 160 : 250) +
+                              (trainings.length *
+                                  (UI.isSmallScreen(context) ? 120.0 : 160.0)) +
+                              (UI.isSmallScreen(context) ? 60.0 : 100.0),
+                          child: ListView.builder(
+                            controller: _tableScrollController,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: players.length,
+                            itemBuilder: (context, index) {
+                              final player = players[index];
+                              final isTopPlayer = _topPlayers.any(
+                                (p) => p.id == player.id,
+                              );
 
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      border: index < players.length - 1
-                                          ? const Border(
-                                              bottom: BorderSide(
-                                                color: UI.border,
-                                                width: 0.5,
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        // Колонка игрока - адаптивная ширина
-                                        Container(
-                                          width: UI.isSmallScreen(context)
-                                              ? 160
-                                              : 250,
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal:
-                                                UI.isSmallScreen(context)
-                                                ? 12
-                                                : 20,
-                                            vertical: 16,
+                              return Container(
+                                height: UI.isSmallScreen(context) ? 100 : 120,
+                                decoration: BoxDecoration(
+                                  border: index < players.length - 1
+                                      ? const Border(
+                                          bottom: BorderSide(
+                                            color: UI.border,
+                                            width: 0.5,
                                           ),
-                                          child: _PlayerInfo(
-                                            player: player,
-                                            isLeader: isTopPlayer,
-                                            isLast: index == players.length - 1,
+                                        )
+                                      : null,
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Закрепленный столбец с игроками
+                                    Container(
+                                      width: UI.isSmallScreen(context)
+                                          ? 160
+                                          : 250,
+                                      decoration: BoxDecoration(
+                                        color: UI.card,
+                                        border: const Border(
+                                          right: BorderSide(
+                                            color: UI.border,
+                                            width: 1,
                                           ),
                                         ),
-                                        // Колонки баллов для каждой тренировки - адаптивная ширина
-                                        ...trainings.map((training) {
-                                          final trainingPoints = _pointsFor(
-                                            player.id,
-                                            training.id,
-                                          );
-                                          return Container(
-                                            width: UI.isSmallScreen(context)
-                                                ? 120
-                                                : 160,
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal:
-                                                  UI.isSmallScreen(context)
-                                                  ? 8
-                                                  : 16,
-                                              vertical: 16,
-                                            ),
-                                            child: widget.isPlayerMode
-                                                ? Container(
-                                                    height:
-                                                        UI.isSmallScreen(
-                                                          context,
-                                                        )
-                                                        ? 44
-                                                        : 48,
-                                                    decoration: BoxDecoration(
-                                                      color: UI.primary
-                                                          .withOpacity(0.1),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            UI.isSmallScreen(
-                                                                  context,
-                                                                )
-                                                                ? 4
-                                                                : 6,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: UI.primary
-                                                            .withOpacity(0.3),
-                                                        width: 1,
-                                                      ),
-                                                    ),
-                                                    child: Center(
-                                                      child: Text(
-                                                        trainingPoints
-                                                            .toString(),
-                                                        style: TextStyle(
-                                                          color: UI.primary,
-                                                          fontSize:
-                                                              UI.isSmallScreen(
-                                                                context,
-                                                              )
-                                                              ? 14
-                                                              : 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Row(
-                                                    children: [
-                                                      // Чекбокс для быстрого выставления 1 балла
-                                                      Checkbox(
-                                                        value:
-                                                            trainingPoints > 0,
-                                                        onChanged: (bool? value) {
-                                                          if (value == true) {
-                                                            _setPlayerPoints(
-                                                              player,
-                                                              training,
-                                                              1,
-                                                            );
-                                                          } else {
-                                                            _setPlayerPoints(
-                                                              player,
-                                                              training,
-                                                              0,
-                                                            );
-                                                          }
-                                                        },
-                                                        activeColor: UI.primary,
-                                                        checkColor: UI.white,
-                                                        materialTapTargetSize:
-                                                            MaterialTapTargetSize
-                                                                .shrinkWrap,
-                                                      ),
-                                                      // Кнопка для редактирования баллов
-                                                      Expanded(
-                                                        child: GestureDetector(
-                                                          onTap: () =>
-                                                              _editPlayerPoints(
-                                                                player,
-                                                                training,
-                                                              ),
-                                                          child: Container(
-                                                            height:
-                                                                UI.isSmallScreen(
-                                                                  context,
-                                                                )
-                                                                ? 28
-                                                                : 32,
-                                                            decoration: BoxDecoration(
-                                                              color: UI.primary
-                                                                  .withOpacity(
-                                                                    0.1,
-                                                                  ),
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    UI.isSmallScreen(
-                                                                          context,
-                                                                        )
-                                                                        ? 4
-                                                                        : 6,
-                                                                  ),
-                                                              border: Border.all(
-                                                                color: UI
-                                                                    .primary
-                                                                    .withOpacity(
-                                                                      0.3,
-                                                                    ),
-                                                                width: 1,
-                                                              ),
-                                                            ),
-                                                            child: Center(
-                                                              child: Text(
-                                                                trainingPoints
-                                                                    .toString(),
-                                                                style: TextStyle(
-                                                                  color: UI
-                                                                      .primary,
-                                                                  fontSize:
-                                                                      UI.isSmallScreen(
-                                                                        context,
-                                                                      )
-                                                                      ? 10
-                                                                      : 14,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .center,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                          );
-                                        }),
-                                        // Колонка итого - адаптивная ширина
-                                        Container(
-                                          width: UI.isSmallScreen(context)
-                                              ? 60
-                                              : 100,
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal:
-                                                UI.isSmallScreen(context)
-                                                ? 4
-                                                : 8,
-                                            vertical: 8,
-                                          ),
-                                          child: Container(
-                                            height: UI.isSmallScreen(context)
-                                                ? 28
-                                                : 32,
-                                            decoration: BoxDecoration(
-                                              color: UI.primary.withOpacity(
-                                                0.2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    UI.isSmallScreen(context)
-                                                        ? 4
-                                                        : 6,
-                                                  ),
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                _monthlyAverage(
-                                                  player.id,
-                                                ).toStringAsFixed(1),
-                                                style: TextStyle(
-                                                  color: UI.white,
-                                                  fontSize:
-                                                      UI.isSmallScreen(context)
-                                                      ? 10
-                                                      : 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                      child: _PlayerInfo(
+                                        player: player,
+                                        isLeader: isTopPlayer,
+                                        isLast: index == players.length - 1,
+                                      ),
                                     ),
-                                  );
-                                }),
-                              ],
-                            ),
+                                    // Столбец с баллами
+                                    Expanded(
+                                      child: _TrainingRowWidget(
+                                        player: player,
+                                        trainings: trainings,
+                                        isPlayerMode: widget.isPlayerMode,
+                                        pointsFor: _pointsFor,
+                                        monthlyAverage: _monthlyAverage,
+                                        setPlayerPoints: _setPlayerPoints,
+                                        editPlayerPoints: _editPlayerPoints,
+                                        index: index,
+                                        isLast: index == players.length - 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
+      ),
     );
   }
 
@@ -1080,7 +805,7 @@ class _GroupViewPageState extends State<GroupViewPage>
     required String label,
   }) {
     return Container(
-      height: UI.isSmallScreen(context) ? 140 : 160,
+      height: UI.isSmallScreen(context) ? 120 : 140,
       padding: UI.getCardPadding(context),
       decoration: BoxDecoration(
         color: UI.card,
@@ -1090,24 +815,26 @@ class _GroupViewPageState extends State<GroupViewPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: UI.primary, size: UI.getIconSize(context) + 4),
+          Icon(
+            icon,
+            color: UI.primary,
+            size: UI.isSmallScreen(context) ? 24 : 32,
+          ),
           const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              color: UI.primary,
-              fontSize: UI.isSmallScreen(context) ? 18 : 20,
+              color: UI.white,
+              fontSize: UI.isSmallScreen(context) ? 20 : 28,
               fontWeight: FontWeight.bold,
             ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: UI.white,
-              fontSize: UI.isSmallScreen(context) ? 10 : 12,
+              color: UI.muted,
+              fontSize: UI.isSmallScreen(context) ? 12 : 14,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -1120,7 +847,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   Widget _buildTopPlayersCard(BuildContext context) {
     return Container(
-      height: UI.isSmallScreen(context) ? 140 : 160,
+      height: UI.isSmallScreen(context) ? 120 : 140,
       padding: UI.getCardPadding(context),
       decoration: BoxDecoration(
         color: UI.card,
@@ -1128,68 +855,54 @@ class _GroupViewPageState extends State<GroupViewPage>
         border: Border.all(color: UI.border),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.military_tech,
-            color: UI.primary,
-            size: UI.getIconSize(context) + 4,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Топ-3 игроков',
-            style: TextStyle(
-              color: UI.white,
-              fontSize: UI.isSmallScreen(context) ? 10 : 12,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events,
+                color: UI.primary,
+                size: UI.isSmallScreen(context) ? 20 : 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Топ-3 игроков',
+                style: TextStyle(
+                  color: UI.white,
+                  fontSize: UI.isSmallScreen(context) ? 14 : 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _topPlayers.isEmpty
-                ? Center(
-                    child: Text(
-                      'Нет данных',
-                      style: TextStyle(
-                        color: UI.muted,
-                        fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                      ),
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: _topPlayers.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final player = entry.value;
-                      final average = _monthlyAverage(player.id);
-                      final medalColors = [
-                        Colors.amber, // Золото
-                        Colors.grey[400]!, // Серебро
-                        Colors.orange[700]!, // Бронза
-                      ];
-
-                      return Row(
+            child: Column(
+              children: _topPlayers
+                  .take(3)
+                  .map(
+                    (player) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
                         children: [
                           Icon(
                             Icons.emoji_events,
-                            color: medalColors[index],
-                            size: UI.isSmallScreen(context) ? 12 : 14,
+                            color: UI.primary,
+                            size: UI.isSmallScreen(context) ? 10 : 12,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               player.name,
                               style: TextStyle(
                                 color: UI.white,
                                 fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                                fontWeight: FontWeight.w500,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Text(
-                            average.toStringAsFixed(1),
+                            _monthlyAverage(player.id).toStringAsFixed(1),
                             style: TextStyle(
                               color: UI.primary,
                               fontSize: UI.isSmallScreen(context) ? 10 : 12,
@@ -1197,9 +910,11 @@ class _GroupViewPageState extends State<GroupViewPage>
                             ),
                           ),
                         ],
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
         ],
       ),
@@ -1212,38 +927,27 @@ class _GroupViewPageState extends State<GroupViewPage>
     int points,
   ) async {
     try {
-      // Обновляем или создаем запись посещения
       await repo.updateAttendancePoints(
         sessionId: training.id,
         playerId: player.id,
         points: points,
       );
-
-      // Обновляем локальные данные только если виджет еще смонтирован
-      if (mounted) {
-        setState(() {
-          attendanceMap['${training.id}_${player.id}'] = Attendance(
-            id: attendanceMap['${training.id}_${player.id}']?.id ?? '',
-            player_id: player.id,
-            session_id: training.id,
-            attended: points > 0,
-            points: points,
-            created_at:
-                attendanceMap['${training.id}_${player.id}']?.created_at ??
-                DateTime.now().toIso8601String(),
-            training_sessions: training,
-          );
-        });
-
+      if (!mounted) return;
+      setState(() {
+        attendanceMap['${training.id}_${player.id}'] = Attendance(
+          id: '${training.id}_${player.id}',
+          session_id: training.id,
+          player_id: player.id,
+          attended: points > 0,
+          points: points,
+          created_at: DateTime.now().toIso8601String(),
+        );
         _updateLeader();
-      }
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при обновлении баллов: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -1254,409 +958,294 @@ class _GroupViewPageState extends State<GroupViewPage>
     TrainingSession training,
   ) async {
     final currentPoints = _pointsFor(player.id, training.id);
-    int selectedPoints = currentPoints;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: UI.card,
-          title: Text(
-            'Редактировать баллы',
-            style: TextStyle(
-              color: UI.white,
-              fontSize: UI.getSubtitleFontSize(context),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${player.name} - ${training.title}',
-                style: TextStyle(
-                  color: UI.muted,
-                  fontSize: UI.getBodyFontSize(context),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Селектор баллов от 0 до 5
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: UI.background,
-                  borderRadius: BorderRadius.circular(UI.radiusSm),
-                  border: Border.all(color: UI.border),
-                ),
-                child: DropdownButton<int>(
-                  value: selectedPoints,
-                  dropdownColor: UI.card,
-                  underline: const SizedBox(),
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: UI.white,
-                    size: 16,
-                  ),
-                  style: const TextStyle(color: UI.white),
-                  items: List.generate(6, (i) {
-                    return DropdownMenuItem<int>(
-                      value: i,
-                      child: Text(
-                        i.toString(),
-                        style: const TextStyle(color: UI.white),
-                      ),
-                    );
-                  }),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() {
-                        selectedPoints = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Отмена', style: TextStyle(color: UI.muted)),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: UI.primary,
-                foregroundColor: UI.white,
-              ),
-              child: const Text('Сохранить'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (result == true) {
-      final newPoints = selectedPoints;
-
-      try {
-        // Обновляем или создаем запись посещения
-        await repo.updateAttendancePoints(
-          sessionId: training.id,
-          playerId: player.id,
-          points: newPoints,
-        );
-
-        // Обновляем локальные данные только если виджет еще смонтирован
-        if (mounted) {
-          setState(() {
-            attendanceMap['${training.id}_${player.id}'] = Attendance(
-              id: attendanceMap['${training.id}_${player.id}']?.id ?? '',
-              player_id: player.id,
-              session_id: training.id,
-              attended:
-                  true, // Всегда считаем присутствовавшим при редактировании баллов
-              points: newPoints,
-              created_at:
-                  attendanceMap['${training.id}_${player.id}']?.created_at ??
-                  DateTime.now().toIso8601String(),
-              training_sessions: training,
-            );
-          });
-
-          _updateLeader();
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Баллы обновлены для ${player.name}'),
-              backgroundColor: UI.primary,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка при обновлении баллов: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _deleteTraining(TrainingSession training) async {
-    final confirmed = await showDialog<bool>(
+    final result = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: UI.card,
         title: Text(
-          'Удалить тренировку',
-          style: TextStyle(
-            color: UI.white,
-            fontSize: UI.getSubtitleFontSize(context),
-          ),
-        ),
-        content: Text(
-          'Вы уверены, что хотите удалить тренировку "${training.title}"?',
+          '${player.name} - ${training.title}',
           style: TextStyle(
             color: UI.muted,
             fontSize: UI.getBodyFontSize(context),
           ),
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Выберите количество баллов:',
+              style: TextStyle(
+                color: UI.white,
+                fontSize: UI.getBodyFontSize(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: UI.background,
+                borderRadius: BorderRadius.circular(UI.radiusSm),
+                border: Border.all(color: UI.border),
+              ),
+              child: DropdownButton<int>(
+                dropdownColor: UI.card,
+                value: currentPoints,
+                underline: const SizedBox(),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: UI.white,
+                  size: 16,
+                ),
+                items: List.generate(6, (i) {
+                  return DropdownMenuItem(
+                    value: i,
+                    child: Text(
+                      i.toString(),
+                      style: const TextStyle(color: UI.white),
+                    ),
+                  );
+                }),
+                onChanged: (value) {
+                  if (value != null) {
+                    Navigator.of(context).pop(value);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Отмена', style: TextStyle(color: UI.muted)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: UI.white,
-            ),
-            child: const Text('Удалить'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена', style: TextStyle(color: UI.muted)),
           ),
         ],
       ),
     );
+    if (result != null) {
+      await _setPlayerPoints(player, training, result);
+    }
+  }
 
-    if (confirmed == true) {
-      try {
-        await repo.deleteTrainingSession(training.id);
-        await _load(); // Перезагружаем данные
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Тренировка "${training.title}" удалена'),
-              backgroundColor: UI.primary,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка при удалении тренировки: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+  Future<void> _deleteTraining(TrainingSession training) async {
+    try {
+      await repo.deleteTrainingSession(training.id);
+      if (!mounted) return;
+      setState(() {
+        trainings.removeWhere((t) => t.id == training.id);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Тренировка "${training.title}" удалена'),
+            backgroundColor: UI.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
 
   Future<void> _openAddTrainingDialog() async {
-    final dateController = TextEditingController();
-    final addressController = TextEditingController();
-    DateTime? selectedDate;
-    final dateMaskFormatter = MaskTextInputFormatter(
-      mask: '##.##.####',
-      filter: {"#": RegExp(r'[0-9]')},
-    );
-
-    final result = await showDialog<bool>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: UI.card,
-          title: Text(
-            'Создать тренировку',
-            style: TextStyle(
-              color: UI.white,
-              fontSize: UI.getSubtitleFontSize(context),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: dateController,
-                inputFormatters: [dateMaskFormatter],
-                style: const TextStyle(color: UI.white),
-                decoration: InputDecoration(
-                  labelText: 'Дата тренировки (дд.мм.гггг)',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  filled: true,
-                  fillColor: UI.card,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_today, color: UI.muted),
-                    onPressed: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime.now().subtract(
-                          const Duration(days: 30),
-                        ),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: const ColorScheme.dark(
-                                primary: UI.primary,
-                                onPrimary: UI.white,
-                                surface: UI.card,
-                                onSurface: UI.white,
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (date != null) {
-                        selectedDate = date;
-                        dateController.text = DateFormat(
-                          'dd.MM.yyyy',
-                        ).format(date);
-                        setDialogState(() {});
-                      }
-                    },
-                  ),
-                ),
-                onChanged: (value) {
-                  if (value.length == 10) {
-                    try {
-                      final date = DateFormat('dd.MM.yyyy').parse(value);
-                      selectedDate = date;
-                    } catch (e) {
-                      selectedDate = null;
-                    }
-                  } else {
-                    selectedDate = null;
-                  }
-                  setDialogState(() {});
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: addressController,
-                style: const TextStyle(color: UI.white),
-                decoration: InputDecoration(
-                  labelText: 'Адрес тренировки',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  filled: true,
-                  fillColor: UI.card,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Отмена', style: TextStyle(color: UI.muted)),
-            ),
-            ElevatedButton(
-              onPressed: selectedDate != null
-                  ? () => Navigator.of(context).pop(true)
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selectedDate != null ? UI.primary : UI.muted,
-                foregroundColor: UI.white,
-              ),
-              child: const Text('Создать'),
-            ),
-          ],
-        ),
-      ),
+      builder: (context) => _AddTrainingDialog(group: widget.group),
     );
-
-    if (result == true && selectedDate != null) {
-      try {
-        // Если указан адрес, создаем обычную тренировку
-        if (addressController.text.trim().isNotEmpty) {
-          await repo.createTrainingSession(
-            date: selectedDate!,
-            groupId: widget.group.id,
-            address: addressController.text.trim(),
-          );
-        } else {
-          // Если адрес не указан, пытаемся создать тренировку на основе расписания
-          try {
-            await repo.createTrainingFromSchedule(
-              groupId: widget.group.id,
-              date: selectedDate!,
-            );
-          } catch (e) {
-            // Если нет расписания, создаем обычную тренировку без адреса
-            await repo.createTrainingSession(
-              date: selectedDate!,
-              groupId: widget.group.id,
-              address: null,
-            );
-          }
-        }
-
-        await _load(); // Перезагружаем данные
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Тренировка на ${DateFormat('dd.MM.yyyy').format(selectedDate!)} создана',
-              ),
-              backgroundColor: UI.primary,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка при создании тренировки: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
+    if (result != null && mounted) {
+      await _load();
     }
   }
 
   Future<void> _openTrainingScheduleDialog() async {
     await showDialog(
       context: context,
-      builder: (context) => TrainingScheduleDialog(
-        group: widget.group,
-        onScheduleCreated: () {
-          _load();
-        },
-      ),
+      builder: (context) => TrainingScheduleDialog(group: widget.group),
     );
   }
+}
 
-  // Future<void> _openScheduledTrainingsDialog() async {
-  //   await showDialog(
-  //     context: context,
-  //     builder: (context) => ScheduledTrainingsDialog(
-  //       group: widget.group,
-  //       onTrainingCreated: () {
-  //         _load();
-  //       },
-  //     ),
-  //   );
-  // }
+class _AddTrainingDialog extends StatefulWidget {
+  const _AddTrainingDialog({required this.group});
+
+  final Group group;
+
+  @override
+  State<_AddTrainingDialog> createState() => _AddTrainingDialogState();
+}
+
+class _AddTrainingDialogState extends State<_AddTrainingDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _locationController = TextEditingController();
+  DateTime? selectedDate;
+  final repo = SupabaseRepository();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: UI.card,
+      title: const Text(
+        'Создать тренировку',
+        style: TextStyle(color: UI.white),
+      ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _titleController,
+              style: const TextStyle(color: UI.white),
+              decoration: const InputDecoration(
+                labelText: 'Название тренировки',
+                labelStyle: TextStyle(color: UI.muted),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: UI.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: UI.primary),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Введите название тренировки';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _locationController,
+              style: const TextStyle(color: UI.white),
+              decoration: const InputDecoration(
+                labelText: 'Место проведения',
+                labelStyle: TextStyle(color: UI.muted),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: UI.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: UI.primary),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Введите место проведения';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null) {
+                  setState(() => selectedDate = date);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: UI.border),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: UI.muted, size: 20),
+                    const SizedBox(width: 12),
+                    Text(
+                      selectedDate == null
+                          ? 'Выберите дату'
+                          : DateFormat('dd.MM.yyyy').format(selectedDate!),
+                      style: TextStyle(
+                        color: selectedDate == null ? UI.muted : UI.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (selectedDate == null)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Выберите дату тренировки',
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate() && selectedDate != null) {
+              try {
+                await repo.createTrainingSession(
+                  groupId: widget.group.id,
+                  address: _locationController.text,
+                  date: selectedDate!,
+                );
+                if (mounted) {
+                  Navigator.of(context).pop({
+                    'title': _titleController.text,
+                    'location': _locationController.text,
+                    'date': selectedDate!,
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Тренировка на ${DateFormat('dd.MM.yyyy').format(selectedDate!)} создана',
+                      ),
+                      backgroundColor: UI.primary,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Ошибка: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: UI.primary,
+            foregroundColor: UI.white,
+          ),
+          child: const Text('Создать'),
+        ),
+      ],
+    );
+  }
 }
 
 class _PlayerInfo extends StatelessWidget {
@@ -1672,103 +1261,193 @@ class _PlayerInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = UI.isSmallScreen(context) ? 32.0 : 40.0;
-    final iconSize = UI.isSmallScreen(context) ? 16.0 : 18.0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isLeader ? UI.primary.withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(UI.isSmallScreen(context) ? 4 : 6),
-      ),
-      child: Row(
+    return Padding(
+      padding: UI.getCardPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Аватар игрока
-          Container(
-            width: avatarSize,
-            height: avatarSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isLeader ? UI.primary : UI.border,
-                width: 1,
-              ),
-            ),
-            child: ClipOval(
-              child: player.avatar_url != null && player.avatar_url!.isNotEmpty
-                  ? Image.network(
-                      player.avatar_url!,
-                      width: avatarSize,
-                      height: avatarSize,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildPlayerFallbackAvatar(player, avatarSize),
-                    )
-                  : _buildPlayerFallbackAvatar(player, avatarSize),
-            ),
-          ),
-          SizedBox(width: UI.isSmallScreen(context) ? 12 : 16),
-          // Информация об игроке
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        player.name,
-                        style: TextStyle(
-                          color: UI.white,
-                          fontSize: UI.isSmallScreen(context) ? 14 : 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                    if (isLeader) ...[
-                      SizedBox(width: UI.isSmallScreen(context) ? 2 : 4),
-                      Icon(
-                        Icons.military_tech,
-                        color: UI.primary,
-                        size: iconSize,
-                      ),
-                    ],
-                  ],
+          Row(
+            children: [
+              if (isLeader)
+                Icon(
+                  Icons.emoji_events,
+                  color: UI.primary,
+                  size: UI.isSmallScreen(context) ? 12 : 16,
                 ),
-                SizedBox(height: UI.isSmallScreen(context) ? 1 : 2),
-                Text(
-                  '@${player.login}',
+              if (isLeader) const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  player.name,
                   style: TextStyle(
-                    color: UI.muted,
-                    fontSize: UI.isSmallScreen(context) ? 11 : 13,
+                    color: UI.white,
+                    fontSize: UI.isSmallScreen(context) ? 12 : 14,
+                    fontWeight: isLeader ? FontWeight.bold : FontWeight.normal,
                   ),
                   overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (!isLast) const SizedBox(height: 8),
         ],
       ),
     );
   }
+}
 
-  Widget _buildPlayerFallbackAvatar(Player player, double size) {
+// Оптимизированный виджет для строки таблицы с тренировками
+class _TrainingRowWidget extends StatelessWidget {
+  const _TrainingRowWidget({
+    required this.player,
+    required this.trainings,
+    required this.isPlayerMode,
+    required this.pointsFor,
+    required this.monthlyAverage,
+    required this.setPlayerPoints,
+    required this.editPlayerPoints,
+    required this.index,
+    required this.isLast,
+  });
+
+  final Player player;
+  final List<TrainingSession> trainings;
+  final bool isPlayerMode;
+  final int Function(String, String) pointsFor;
+  final double Function(String) monthlyAverage;
+  final Function(Player, TrainingSession, int) setPlayerPoints;
+  final Function(Player, TrainingSession) editPlayerPoints;
+  final int index;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = UI.isSmallScreen(context);
+    final rowHeight = isSmallScreen ? 100.0 : 120.0;
+
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
-      child: Center(
-        child: Text(
-          player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
-          style: TextStyle(
-            color: UI.white,
-            fontSize: size * 0.5,
-            fontWeight: FontWeight.bold,
+      height: rowHeight,
+      decoration: BoxDecoration(
+        border: !isLast
+            ? const Border(bottom: BorderSide(color: UI.border, width: 0.5))
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Колонки баллов для каждой тренировки - адаптивная ширина
+          ...trainings.map((training) {
+            final trainingPoints = pointsFor(player.id, training.id);
+            final columnWidth = isSmallScreen ? 120.0 : 160.0;
+            final horizontalPadding = isSmallScreen ? 8.0 : 16.0;
+
+            return Container(
+              width: columnWidth,
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: 16,
+              ),
+              child: isPlayerMode
+                  ? Container(
+                      height: isSmallScreen ? 44 : 48,
+                      decoration: BoxDecoration(
+                        color: UI.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(
+                          isSmallScreen ? 4 : 6,
+                        ),
+                        border: Border.all(
+                          color: UI.primary.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          trainingPoints.toString(),
+                          style: TextStyle(
+                            color: UI.primary,
+                            fontSize: isSmallScreen ? 14 : 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        // Чекбокс для быстрого выставления 1 балла
+                        Checkbox(
+                          value: trainingPoints > 0,
+                          onChanged: (bool? value) {
+                            if (value == true) {
+                              setPlayerPoints(player, training, 1);
+                            } else {
+                              setPlayerPoints(player, training, 0);
+                            }
+                          },
+                          activeColor: UI.primary,
+                          checkColor: UI.white,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        // Кнопка для редактирования баллов
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => editPlayerPoints(player, training),
+                            child: Container(
+                              height: isSmallScreen ? 28 : 32,
+                              decoration: BoxDecoration(
+                                color: UI.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(
+                                  isSmallScreen ? 4 : 6,
+                                ),
+                                border: Border.all(
+                                  color: UI.primary.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  trainingPoints.toString(),
+                                  style: TextStyle(
+                                    color: UI.primary,
+                                    fontSize: isSmallScreen ? 10 : 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            );
+          }),
+          // Колонка итого - адаптивная ширина
+          Container(
+            width: isSmallScreen ? 60 : 100,
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 4 : 8,
+              vertical: 8,
+            ),
+            child: Container(
+              height: isSmallScreen ? 28 : 32,
+              decoration: BoxDecoration(
+                color: UI.primary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(isSmallScreen ? 4 : 6),
+              ),
+              child: Center(
+                child: Text(
+                  monthlyAverage(player.id).toStringAsFixed(1),
+                  style: TextStyle(
+                    color: UI.white,
+                    fontSize: isSmallScreen ? 10 : 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
