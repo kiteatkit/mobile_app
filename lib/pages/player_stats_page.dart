@@ -272,28 +272,6 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-
-                          // Очки с иконкой трофея
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.emoji_events,
-                                color: Colors.amber,
-                                size: UI.getIconSize(context),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_monthlyPoints()} очков за ${_getCurrentMonthName()}',
-                                style: TextStyle(
-                                  color: Colors.amber,
-                                  fontSize: UI.getBodyFontSize(context),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),

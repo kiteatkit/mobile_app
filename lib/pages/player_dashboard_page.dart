@@ -464,7 +464,7 @@ class _TeamCard extends StatelessWidget {
               groupPlayers.length
         : 0.0;
 
-    final topPlayers = groupPlayers.take(2).toList();
+    final topPlayers = groupPlayers.take(3).toList();
 
     return GestureDetector(
       onTap: onTap,
@@ -549,13 +549,18 @@ class _TeamCard extends StatelessWidget {
             ...topPlayers.asMap().entries.map((entry) {
               final index = entry.key;
               final player = entry.value;
+              final medalColors = [
+                Colors.amber, // Золото
+                Colors.grey[400]!, // Серебро
+                Colors.orange[700]!, // Бронза
+              ];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   children: [
                     Icon(
-                      index == 0 ? Icons.emoji_events : Icons.star,
-                      color: index == 0 ? Colors.amber : UI.muted,
+                      Icons.emoji_events,
+                      color: medalColors[index],
                       size: UI.getIconSize(context),
                     ),
                     const SizedBox(width: 8),
