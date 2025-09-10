@@ -1197,9 +1197,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   Expanded(
                     child: TextField(
                       controller: playerLastNameCtrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Фамилия',
-                        labelStyle: TextStyle(color: UI.muted),
+                        labelStyle: const TextStyle(color: UI.muted),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.primary),
+                        ),
+                        filled: true,
+                        fillColor: UI.card,
                       ),
                       style: const TextStyle(color: UI.white),
                       onChanged: (value) {
@@ -1211,9 +1221,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   Expanded(
                     child: TextField(
                       controller: playerFirstNameCtrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Имя',
-                        labelStyle: TextStyle(color: UI.muted),
+                        labelStyle: const TextStyle(color: UI.muted),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.primary),
+                        ),
+                        filled: true,
+                        fillColor: UI.card,
                       ),
                       style: const TextStyle(color: UI.white),
                       onChanged: (value) {
@@ -1229,9 +1249,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   Expanded(
                     child: TextField(
                       controller: playerLoginCtrl,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Логин',
-                        labelStyle: TextStyle(color: UI.muted),
+                        labelStyle: const TextStyle(color: UI.muted),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.primary),
+                        ),
+                        filled: true,
+                        fillColor: UI.card,
                       ),
                       style: const TextStyle(color: UI.white),
                     ),
@@ -1259,6 +1289,16 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                       decoration: InputDecoration(
                         labelText: 'Пароль',
                         labelStyle: const TextStyle(color: UI.muted),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: UI.primary),
+                        ),
+                        filled: true,
+                        fillColor: UI.card,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePlayerPassword

@@ -119,9 +119,17 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
                           labelStyle: const TextStyle(color: Color(0xFF9A9A9A)),
                           filled: true,
                           fillColor: const Color(0xFF24201E),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                            borderSide: BorderSide.none,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF404040),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF4A90E2),
+                            ),
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(

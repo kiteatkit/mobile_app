@@ -121,10 +121,14 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                           labelText: 'Логин',
                           labelStyle: const TextStyle(color: UI.muted),
                           filled: true,
-                          fillColor: UI.background,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UI.radiusSm),
-                            borderSide: BorderSide.none,
+                          fillColor: UI.card,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.primary),
                           ),
                         ),
                       ),
@@ -137,10 +141,14 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                           labelText: 'Пароль',
                           labelStyle: const TextStyle(color: UI.muted),
                           filled: true,
-                          fillColor: UI.background,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(UI.radiusSm),
-                            borderSide: BorderSide.none,
+                          fillColor: UI.card,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.primary),
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
