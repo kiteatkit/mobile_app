@@ -79,15 +79,23 @@ class _GroupViewPageState extends State<GroupViewPage>
     return trainings.fold(0, (sum, t) => sum + _pointsFor(playerId, t.id));
   }
 
-  Player? _leader;
+  double _monthlyAverage(String playerId) {
+    final attendedTrainings = trainings
+        .where((t) => _pointsFor(playerId, t.id) > 0)
+        .length;
+    if (attendedTrainings == 0) return 0.0;
+    return _monthlyTotal(playerId) / attendedTrainings;
+  }
+
+  List<Player> _topPlayers = [];
   void _updateLeader() {
     if (players.isEmpty) {
-      _leader = null;
+      _topPlayers = [];
       return;
     }
     final copy = [...players];
-    copy.sort((a, b) => _monthlyTotal(b.id).compareTo(_monthlyTotal(a.id)));
-    _leader = copy.first;
+    copy.sort((a, b) => _monthlyAverage(b.id).compareTo(_monthlyAverage(a.id)));
+    _topPlayers = copy.take(3).toList();
   }
 
   String _formatMonth(DateTime d) {
@@ -174,23 +182,17 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       child: _buildStatCard(
                                         context: context,
                                         icon: Icons.emoji_events,
-                                        value:
-                                            '${players.fold<int>(0, (s, p) => s + _monthlyTotal(p.id))}',
-                                        label: 'Очки за месяц',
+                                        value: players.isEmpty
+                                            ? '0.0'
+                                            : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
+                                        label: 'Средний балл команды',
                                       ),
                                     ),
-                                    if (players.isNotEmpty) ...[
+                                    if (_topPlayers.isNotEmpty) ...[
                                       const SizedBox(height: 12),
                                       SizedBox(
                                         width: double.infinity,
-                                        child: _buildStatCard(
-                                          context: context,
-                                          icon: Icons.military_tech,
-                                          value: _leader?.name ?? '-',
-                                          label: _leader == null
-                                              ? 'Лидер команды'
-                                              : 'Лидер команды • ${_monthlyTotal(_leader!.id)} очков за месяц',
-                                        ),
+                                        child: _buildTopPlayersCard(context),
                                       ),
                                     ],
                                   ],
@@ -201,22 +203,16 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       child: _buildStatCard(
                                         context: context,
                                         icon: Icons.emoji_events,
-                                        value:
-                                            '${players.fold<int>(0, (s, p) => s + _monthlyTotal(p.id))}',
-                                        label: 'Очки за месяц',
+                                        value: players.isEmpty
+                                            ? '0.0'
+                                            : '${(players.fold<double>(0, (s, p) => s + _monthlyAverage(p.id)) / players.length).toStringAsFixed(1)}',
+                                        label: 'Средний балл команды',
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    if (players.isNotEmpty)
+                                    if (_topPlayers.isNotEmpty)
                                       Expanded(
-                                        child: _buildStatCard(
-                                          context: context,
-                                          icon: Icons.military_tech,
-                                          value: _leader?.name ?? '-',
-                                          label: _leader == null
-                                              ? 'Лидер команды'
-                                              : 'Лидер команды • ${_monthlyTotal(_leader!.id)} очков за месяц',
-                                        ),
+                                        child: _buildTopPlayersCard(context),
                                       ),
                                   ],
                                 ),
@@ -644,7 +640,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
                     // Таблица игроков
                     Container(
-                      height: 400, // Фиксированная высота вместо Expanded
+                      height: MediaQuery.of(context).size.height * 0.6,
                       decoration: BoxDecoration(
                         color: UI.card,
                         borderRadius: BorderRadius.circular(UI.radiusLg),
@@ -820,7 +816,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              'Итого',
+                                              'Средний балл',
                                               style: TextStyle(
                                                 color: UI.muted,
                                                 fontSize:
@@ -841,8 +837,9 @@ class _GroupViewPageState extends State<GroupViewPage>
                                 ...players.asMap().entries.map((entry) {
                                   final index = entry.key;
                                   final player = entry.value;
-                                  final isLeader = player.id == _leader?.id;
-                                  final monthlyTotal = _monthlyTotal(player.id);
+                                  final isTopPlayer = _topPlayers.any(
+                                    (p) => p.id == player.id,
+                                  );
 
                                   return Container(
                                     decoration: BoxDecoration(
@@ -871,7 +868,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                           ),
                                           child: _PlayerInfo(
                                             player: player,
-                                            isLeader: isLeader,
+                                            isLeader: isTopPlayer,
                                             isLast: index == players.length - 1,
                                           ),
                                         ),
@@ -1019,7 +1016,9 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             ),
                                             child: Center(
                                               child: Text(
-                                                monthlyTotal.toString(),
+                                                _monthlyAverage(
+                                                  player.id,
+                                                ).toStringAsFixed(1),
                                                 style: TextStyle(
                                                   color: UI.white,
                                                   fontSize:
@@ -1088,6 +1087,80 @@ class _GroupViewPageState extends State<GroupViewPage>
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopPlayersCard(BuildContext context) {
+    return Container(
+      padding: UI.getCardPadding(context),
+      decoration: BoxDecoration(
+        color: UI.card,
+        borderRadius: BorderRadius.circular(UI.radiusLg),
+        border: Border.all(color: UI.border),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.military_tech,
+            color: UI.primary,
+            size: UI.getIconSize(context) + 4,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Топ-3 игроков',
+            style: TextStyle(
+              color: UI.white,
+              fontSize: UI.isSmallScreen(context) ? 10 : 12,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          ..._topPlayers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final player = entry.value;
+            final average = _monthlyAverage(player.id);
+            final medalColors = [
+              Colors.amber, // Золото
+              Colors.grey[400]!, // Серебро
+              Colors.orange[700]!, // Бронза
+            ];
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.emoji_events,
+                    color: medalColors[index],
+                    size: UI.isSmallScreen(context) ? 12 : 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      player.name,
+                      style: TextStyle(
+                        color: UI.white,
+                        fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    average.toStringAsFixed(1),
+                    style: TextStyle(
+                      color: UI.primary,
+                      fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ],
       ),
     );
