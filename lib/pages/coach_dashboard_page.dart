@@ -37,7 +37,8 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   ];
 
   // Контроллеры для добавления игрока
-  final playerNameCtrl = TextEditingController();
+  final playerFirstNameCtrl = TextEditingController();
+  final playerLastNameCtrl = TextEditingController();
   final playerLoginCtrl = TextEditingController();
   final playerPasswordCtrl = TextEditingController();
   DateTime? selectedBirthDate;
@@ -50,21 +51,55 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     _load();
   }
 
-  String _generateLogin(String name) {
-    // Генерируем логин на основе имени
-    final cleanName = name
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-zа-я0-9]'), '')
-        .substring(0, name.length > 8 ? 8 : name.length);
+  String _generateLogin(String firstName, String lastName) {
+    // Генерируем логин на основе фамилии и имени
+    final cleanFirstName = firstName.toLowerCase().replaceAll(
+      RegExp(r'[^a-zа-я0-9]'),
+      '',
+    );
+    final cleanLastName = lastName.toLowerCase().replaceAll(
+      RegExp(r'[^a-zа-я0-9]'),
+      '',
+    );
+
+    String baseLogin = '';
+    if (cleanLastName.isNotEmpty) {
+      baseLogin += cleanLastName.substring(
+        0,
+        cleanLastName.length > 4 ? 4 : cleanLastName.length,
+      );
+    }
+    if (cleanFirstName.isNotEmpty) {
+      baseLogin += cleanFirstName.substring(
+        0,
+        cleanFirstName.length > 3 ? 3 : cleanFirstName.length,
+      );
+    }
+
+    if (baseLogin.isEmpty) {
+      baseLogin = 'player';
+    }
+
     final randomSuffix = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000))
         .toString();
-    return '$cleanName$randomSuffix';
+    return '$baseLogin$randomSuffix';
   }
 
   String _generatePassword() {
     // Генерируем пароль из 6 цифр
     final random = DateTime.now().millisecondsSinceEpoch;
     return (100000 + (random % 900000)).toString();
+  }
+
+  void _updateLogin(StateSetter setDialogState) {
+    // Автоматически генерируем логин при вводе фамилии или имени
+    final firstName = playerFirstNameCtrl.text.trim();
+    final lastName = playerLastNameCtrl.text.trim();
+
+    if (firstName.isNotEmpty || lastName.isNotEmpty) {
+      playerLoginCtrl.text = _generateLogin(firstName, lastName);
+      setDialogState(() {});
+    }
   }
 
   Future<void> _load() async {
@@ -1136,7 +1171,8 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   }
 
   Future<void> _openAddPlayerDialog({String? defaultGroupId}) async {
-    playerNameCtrl.clear();
+    playerFirstNameCtrl.clear();
+    playerLastNameCtrl.clear();
     playerLoginCtrl.clear();
     playerPasswordCtrl.text =
         _generatePassword(); // Автоматически генерируем пароль
@@ -1156,20 +1192,36 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: playerNameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Имя игрока',
-                  labelStyle: TextStyle(color: UI.muted),
-                ),
-                style: const TextStyle(color: UI.white),
-                onChanged: (value) {
-                  // Автоматически генерируем логин при вводе имени
-                  if (value.trim().isNotEmpty) {
-                    playerLoginCtrl.text = _generateLogin(value.trim());
-                    setDialogState(() {});
-                  }
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: playerLastNameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Фамилия',
+                        labelStyle: TextStyle(color: UI.muted),
+                      ),
+                      style: const TextStyle(color: UI.white),
+                      onChanged: (value) {
+                        _updateLogin(setDialogState);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: playerFirstNameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Имя',
+                        labelStyle: TextStyle(color: UI.muted),
+                      ),
+                      style: const TextStyle(color: UI.white),
+                      onChanged: (value) {
+                        _updateLogin(setDialogState);
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Row(
@@ -1187,11 +1239,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
-                      final name = playerNameCtrl.text.trim();
-                      if (name.isNotEmpty) {
-                        playerLoginCtrl.text = _generateLogin(name);
-                        setDialogState(() {});
-                      }
+                      _updateLogin(setDialogState);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
@@ -1348,7 +1396,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (playerNameCtrl.text.trim().isEmpty ||
+                final firstName = playerFirstNameCtrl.text.trim();
+                final lastName = playerLastNameCtrl.text.trim();
+
+                if (firstName.isEmpty ||
+                    lastName.isEmpty ||
                     playerLoginCtrl.text.trim().isEmpty ||
                     playerPasswordCtrl.text.trim().isEmpty) {
                   return;
@@ -1356,7 +1408,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
                 try {
                   await repo.addPlayer(
-                    name: playerNameCtrl.text.trim(),
+                    name: '$lastName $firstName',
                     login: playerLoginCtrl.text.trim(),
                     password: playerPasswordCtrl.text.trim(),
                     birthDate: selectedBirthDate != null

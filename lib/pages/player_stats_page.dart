@@ -37,22 +37,41 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     setState(() => loading = true);
 
     // Загружаем историю посещений с деталями тренировок
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
     final a = await SupabaseManager.client
         .from('attendance')
         .select('*, training_sessions(*)')
         .eq('player_id', widget.player.id)
+        .lte('training_sessions.date', today.toIso8601String().split('T')[0])
         .order('created_at', ascending: false)
         .limit(20);
 
-    // Загружаем последние 5 тренировок
-    final now = DateTime.now();
+    // Загружаем последние 5 тренировок (только прошедшие)
     final startOfMonth = DateTime(now.year, now.month, 1);
     final trainings = await repo.getTrainingsInRange(startOfMonth, now);
 
     setState(() {
-      history = (a as List)
+      final allHistory = (a as List)
           .map((e) => Attendance.fromJson(Map<String, dynamic>.from(e)))
           .toList();
+
+      // Фильтруем только прошедшие тренировки на уровне приложения
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      history = allHistory.where((h) {
+        if (h.training_sessions == null) return false;
+        final trainingDate = DateTime.parse(h.training_sessions!.date);
+        final trainingDateOnly = DateTime(
+          trainingDate.year,
+          trainingDate.month,
+          trainingDate.day,
+        );
+        return trainingDateOnly.isBefore(today.add(const Duration(days: 1)));
+      }).toList();
+
       recentTrainings = trainings.take(5).toList();
       loading = false;
     });
@@ -62,6 +81,11 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     if (history.isEmpty) return 0;
     final attended = history.where((e) => e.attended).length;
     return ((attended / history.length) * 100).round();
+  }
+
+  int _monthlyPoints() {
+    if (history.isEmpty) return 0;
+    return history.fold(0, (sum, attendance) => sum + attendance.points);
   }
 
   String _formatDate(String dateStr) {
@@ -206,7 +230,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${widget.player.total_points} очков',
+                                '${_monthlyPoints()} очков за месяц',
                                 style: TextStyle(
                                   color: Colors.amber,
                                   fontSize: UI.getBodyFontSize(context),
@@ -229,23 +253,31 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                             UI.isSmallScreen(context)
                                 ? Column(
                                     children: [
-                                      _StatCard(
-                                        context: context,
-                                        title: 'Общие очки',
-                                        value: '${widget.player.total_points}',
-                                        icon: Icons.emoji_events,
-                                        iconColor: Colors.amber,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _StatCard(
-                                        context: context,
-                                        title: 'Посещено тренировок',
-                                        value:
-                                            '${widget.player.attendance_count}',
-                                        subtitle:
-                                            'Процент посещаемости: ${_attendanceRate()}%',
-                                        icon: Icons.calendar_today,
-                                        iconColor: UI.primary,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Очки за месяц',
+                                              value: '${_monthlyPoints()}',
+                                              icon: Icons.emoji_events,
+                                              iconColor: Colors.amber,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: _StatCard(
+                                              context: context,
+                                              title: 'Посещено тренировок',
+                                              value:
+                                                  '${widget.player.attendance_count}',
+                                              subtitle:
+                                                  'Процент посещаемости: ${_attendanceRate()}%',
+                                              icon: Icons.calendar_today,
+                                              iconColor: UI.primary,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 12),
                                       _StatCard(
@@ -257,18 +289,6 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                         showProgress: true,
                                         progressValue: _attendanceRate() / 100,
                                       ),
-                                      const SizedBox(height: 12),
-                                      _StatCard(
-                                        context: context,
-                                        title: 'Последние тренировки',
-                                        value: recentTrainings.isNotEmpty
-                                            ? '${recentTrainings.length}'
-                                            : '0',
-                                        subtitle: 'Последние 5 тренировок',
-                                        icon: Icons.show_chart,
-                                        iconColor: UI.primary,
-                                        showNoData: recentTrainings.isEmpty,
-                                      ),
                                     ],
                                   )
                                 : Column(
@@ -278,9 +298,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                           Expanded(
                                             child: _StatCard(
                                               context: context,
-                                              title: 'Общие очки',
-                                              value:
-                                                  '${widget.player.total_points}',
+                                              title: 'Очки за месяц',
+                                              value: '${_monthlyPoints()}',
                                               icon: Icons.emoji_events,
                                               iconColor: Colors.amber,
                                             ),
@@ -313,22 +332,6 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                               showProgress: true,
                                               progressValue:
                                                   _attendanceRate() / 100,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: _StatCard(
-                                              context: context,
-                                              title: 'Последние тренировки',
-                                              value: recentTrainings.isNotEmpty
-                                                  ? '${recentTrainings.length}'
-                                                  : '0',
-                                              subtitle:
-                                                  'Последние 5 тренировок',
-                                              icon: Icons.show_chart,
-                                              iconColor: UI.primary,
-                                              showNoData:
-                                                  recentTrainings.isEmpty,
                                             ),
                                           ),
                                         ],
@@ -418,7 +421,9 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                       CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
-                                                      ts?.title ?? 'Тренировка',
+                                                      ts != null
+                                                          ? _formatDate(ts.date)
+                                                          : 'Тренировка',
                                                       style: TextStyle(
                                                         color: UI.white,
                                                         fontSize: UI
@@ -431,21 +436,26 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      ts != null
-                                                          ? _formatDate(ts.date)
-                                                          : '',
-                                                      style: TextStyle(
-                                                        color: UI.muted,
-                                                        fontSize:
-                                                            UI.isSmallScreen(
-                                                              context,
-                                                            )
-                                                            ? 12
-                                                            : 14,
+                                                    if (ts?.title != null &&
+                                                        ts!
+                                                            .title
+                                                            .isNotEmpty) ...[
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        ts.title,
+                                                        style: TextStyle(
+                                                          color: UI.muted,
+                                                          fontSize:
+                                                              UI.isSmallScreen(
+                                                                context,
+                                                              )
+                                                              ? 12
+                                                              : 14,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
-                                                    ),
+                                                    ],
                                                   ],
                                                 ),
                                               ),
@@ -492,7 +502,6 @@ class _StatCard extends StatelessWidget {
     this.iconColor,
     this.showProgress = false,
     this.progressValue = 0.0,
-    this.showNoData = false,
   });
 
   final BuildContext context;
@@ -503,101 +512,89 @@ class _StatCard extends StatelessWidget {
   final Color? iconColor;
   final bool showProgress;
   final double progressValue;
-  final bool showNoData;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: UI.getCardPadding(context),
-      decoration: BoxDecoration(
-        color: UI.card,
-        borderRadius: BorderRadius.circular(UI.radiusLg),
-        border: Border.all(color: UI.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: UI.white,
-                    fontSize: UI.isSmallScreen(context) ? 12 : 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (icon != null)
-                Icon(
-                  icon,
-                  color: iconColor ?? UI.primary,
-                  size: UI.getIconSize(context),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (showNoData)
+    return SizedBox(
+      height: UI.isSmallScreen(context) ? 120 : 140,
+      child: Container(
+        padding: UI.getCardPadding(context),
+        decoration: BoxDecoration(
+          color: UI.card,
+          borderRadius: BorderRadius.circular(UI.radiusLg),
+          border: Border.all(color: UI.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
             Row(
               children: [
-                Icon(
-                  Icons.close,
-                  color: Colors.red,
-                  size: UI.getIconSize(context),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Нет данных',
-                  style: TextStyle(
-                    color: UI.muted,
-                    fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: UI.white,
+                      fontSize: UI.isSmallScreen(context) ? 12 : 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (icon != null)
+                  Icon(
+                    icon,
+                    color: iconColor ?? UI.primary,
+                    size: UI.getIconSize(context),
+                  ),
               ],
-            )
-          else
-            Text(
-              value,
-              style: TextStyle(
-                color: UI.primary,
-                fontSize: UI.isSmallScreen(context) ? 18 : 20,
-                fontWeight: FontWeight.bold,
-              ),
             ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              subtitle!,
-              style: TextStyle(
-                color: UI.white,
-                fontSize: UI.isSmallScreen(context) ? 10 : 12,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          if (showProgress) ...[
-            const SizedBox(height: 8),
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: UI.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: progressValue.clamp(0.0, 1.0),
-                child: Container(
-                  decoration: BoxDecoration(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
                     color: UI.primary,
-                    borderRadius: BorderRadius.circular(2),
+                    fontSize: UI.isSmallScreen(context) ? 18 : 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      color: UI.white,
+                      fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (showProgress) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: UI.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progressValue.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: UI.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }

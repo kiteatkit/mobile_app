@@ -82,11 +82,31 @@ class _GroupViewPageState extends State<GroupViewPage>
   }
 
   int _monthlyTotal(String playerId) {
-    return trainings.fold(0, (sum, t) => sum + _pointsFor(playerId, t.id));
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return trainings
+        .where(
+          (t) => DateTime.parse(
+            t.date,
+          ).isBefore(today.add(const Duration(days: 1))),
+        )
+        .fold(0, (sum, t) => sum + _pointsFor(playerId, t.id));
   }
 
   double _monthlyAverage(String playerId) {
-    final attendedTrainings = trainings
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final pastTrainings = trainings
+        .where(
+          (t) => DateTime.parse(
+            t.date,
+          ).isBefore(today.add(const Duration(days: 1))),
+        )
+        .toList();
+
+    final attendedTrainings = pastTrainings
         .where((t) => _pointsFor(playerId, t.id) > 0)
         .length;
     if (attendedTrainings == 0) return 0.0;
@@ -1557,21 +1577,28 @@ class _GroupViewPageState extends State<GroupViewPage>
 
     if (result == true && selectedDate != null) {
       try {
-        // Сначала пытаемся создать тренировку на основе расписания
-        try {
-          await repo.createTrainingFromSchedule(
-            groupId: widget.group.id,
-            date: selectedDate!,
-          );
-        } catch (e) {
-          // Если нет расписания, создаем обычную тренировку
+        // Если указан адрес, создаем обычную тренировку
+        if (addressController.text.trim().isNotEmpty) {
           await repo.createTrainingSession(
             date: selectedDate!,
             groupId: widget.group.id,
-            address: addressController.text.trim().isNotEmpty
-                ? addressController.text.trim()
-                : null,
+            address: addressController.text.trim(),
           );
+        } else {
+          // Если адрес не указан, пытаемся создать тренировку на основе расписания
+          try {
+            await repo.createTrainingFromSchedule(
+              groupId: widget.group.id,
+              date: selectedDate!,
+            );
+          } catch (e) {
+            // Если нет расписания, создаем обычную тренировку без адреса
+            await repo.createTrainingSession(
+              date: selectedDate!,
+              groupId: widget.group.id,
+              address: null,
+            );
+          }
         }
 
         await _load(); // Перезагружаем данные

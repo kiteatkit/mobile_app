@@ -177,9 +177,7 @@ class SupabaseRepository {
       await _checkInternetConnection();
 
       final dateStr = _formatDate(date);
-      final title =
-          address ??
-          '${date.day}.${date.month}.${date.year}'; // Используем адрес или дату как название
+      final title = address ?? ''; // Используем адрес или пустую строку
       final data = await _client
           .from('training_sessions')
           .insert({'date': dateStr, 'title': title})
