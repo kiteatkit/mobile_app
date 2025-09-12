@@ -50,7 +50,11 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
 
     // Загружаем последние 5 тренировок (только прошедшие)
     final startOfMonth = DateTime(now.year, now.month, 1);
-    final trainings = await repo.getTrainingsInRange(startOfMonth, now);
+    final trainings = await repo.getTrainingsInRange(
+      startOfMonth,
+      now,
+      groupId: widget.player.group_id,
+    );
 
     setState(() {
       final allHistory = (a as List)

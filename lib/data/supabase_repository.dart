@@ -130,16 +130,24 @@ class SupabaseRepository {
 
   Future<List<TrainingSession>> getTrainingsInRange(
     DateTime start,
-    DateTime end,
-  ) async {
+    DateTime end, {
+    String? groupId,
+  }) async {
     final startStr = _formatDate(start);
     final endStr = _formatDate(end);
-    final data = await _client
+
+    var query = _client
         .from('training_sessions')
         .select('*')
         .gte('date', startStr)
-        .lte('date', endStr)
-        .order('date');
+        .lte('date', endStr);
+
+    // Фильтруем по группе, если указана
+    if (groupId != null) {
+      query = query.eq('group_id', groupId);
+    }
+
+    final data = await query.order('date');
     return (data as List)
         .map((e) => TrainingSession.fromJson(Map<String, dynamic>.from(e)))
         .toList();
@@ -178,9 +186,17 @@ class SupabaseRepository {
 
       final dateStr = _formatDate(date);
       final title = address ?? ''; // Используем адрес или пустую строку
+
+      final insertData = <String, dynamic>{'date': dateStr, 'title': title};
+
+      // Добавляем group_id если указан
+      if (groupId != null) {
+        insertData['group_id'] = groupId;
+      }
+
       final data = await _client
           .from('training_sessions')
-          .insert({'date': dateStr, 'title': title})
+          .insert(insertData)
           .select()
           .single();
 
@@ -449,6 +465,7 @@ class SupabaseRepository {
           final existingSessions = await getTrainingsInRange(
             DateTime(targetDate.year, targetDate.month, targetDate.day),
             DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59),
+            groupId: groupId,
           );
 
           final hasExistingSession = existingSessions.any((session) {
@@ -700,6 +717,7 @@ class SupabaseRepository {
               23,
               59,
             ),
+            groupId: groupId,
           );
 
           final hasExistingSession = existingSessions.any((session) {
@@ -711,7 +729,7 @@ class SupabaseRepository {
 
           if (!hasExistingSession) {
             // Создаем тренировку
-            await createTrainingSession(date: currentDate);
+            await createTrainingSession(date: currentDate, groupId: groupId);
           }
         }
 

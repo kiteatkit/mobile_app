@@ -454,6 +454,34 @@ class _TeamCard extends StatelessWidget {
   final List<Player> allPlayers;
   final VoidCallback onTap;
 
+  // Функция для определения медали по месту
+  Color _getMedalColor(int index, List<Player> players) {
+    if (players.isEmpty) return Colors.grey;
+
+    final currentPlayer = players[index];
+    final currentPoints = currentPlayer.total_points;
+
+    // Находим уникальные очки и сортируем их
+    final uniquePoints = players.map((p) => p.total_points).toSet().toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (uniquePoints.isEmpty) return Colors.grey;
+
+    // Определяем место по очкам
+    final place = uniquePoints.indexOf(currentPoints);
+
+    switch (place) {
+      case 0:
+        return Colors.amber; // Золото
+      case 1:
+        return Colors.grey[400]!; // Серебро
+      case 2:
+        return Colors.orange[700]!; // Бронза
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final groupPlayers = allPlayers
@@ -464,7 +492,11 @@ class _TeamCard extends StatelessWidget {
               groupPlayers.length
         : 0.0;
 
-    final topPlayers = groupPlayers.take(3).toList();
+    // Сортируем игроков по очкам (по убыванию)
+    final sortedPlayers = [...groupPlayers]
+      ..sort((a, b) => b.total_points.compareTo(a.total_points));
+
+    final topPlayers = sortedPlayers.take(3).toList();
 
     return GestureDetector(
       onTap: onTap,
@@ -549,18 +581,15 @@ class _TeamCard extends StatelessWidget {
             ...topPlayers.asMap().entries.map((entry) {
               final index = entry.key;
               final player = entry.value;
-              final medalColors = [
-                Colors.amber, // Золото
-                Colors.grey[400]!, // Серебро
-                Colors.orange[700]!, // Бронза
-              ];
+              final medalColor = _getMedalColor(index, topPlayers);
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   children: [
                     Icon(
                       Icons.emoji_events,
-                      color: medalColors[index],
+                      color: medalColor,
                       size: UI.getIconSize(context),
                     ),
                     const SizedBox(width: 8),
@@ -574,14 +603,6 @@ class _TeamCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: UI.muted,
-                        fontSize: UI.isSmallScreen(context) ? 12 : 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Text(
                       player.total_points.toString(),
                       style: TextStyle(

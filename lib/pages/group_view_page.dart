@@ -39,6 +39,10 @@ class _GroupViewPageState extends State<GroupViewPage>
   // Контроллеры для синхронизации прокрутки
   late final ScrollController _horizontalScrollController;
   late final ScrollController _verticalScrollController;
+  List<ScrollController> _columnScrollControllers = [];
+
+  // Флаг для предотвращения бесконечных циклов синхронизации
+  bool _isSyncing = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -55,6 +59,9 @@ class _GroupViewPageState extends State<GroupViewPage>
   void dispose() {
     _horizontalScrollController.dispose();
     _verticalScrollController.dispose();
+    for (final controller in _columnScrollControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -64,17 +71,40 @@ class _GroupViewPageState extends State<GroupViewPage>
     final start = DateTime(selectedMonth.year, selectedMonth.month, 1);
     final end = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
     final p = await repo.getPlayers(groupId: widget.group.id);
-    final ts = await repo.getTrainingsInRange(start, end);
+    final ts = await repo.getTrainingsInRange(
+      start,
+      end,
+      groupId: widget.group.id,
+    );
     final a = await repo.getAttendanceForSessions(ts.map((t) => t.id).toList());
 
     if (!mounted) return;
+
+    // Сортируем тренировки перед созданием контроллеров
+    final sortedTrainings = ts
+      ..sort(
+        (a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)),
+      );
+
+    // Создаем контроллеры для каждого столбца
+    for (final controller in _columnScrollControllers) {
+      controller.dispose();
+    }
+    _columnScrollControllers = List.generate(
+      sortedTrainings.length + 1, // +1 для столбца "Средний балл"
+      (index) => ScrollController(),
+    );
+
     setState(() {
       players = p;
-      trainings = ts
-        ..sort(
-          (a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)),
-        );
+      trainings = sortedTrainings;
       attendanceMap = {for (final r in a) '${r.session_id}_${r.player_id}': r};
+
+      // Очищаем кэши при обновлении данных
+      _monthlyAverageCache.clear();
+      _cachedTopPlayers = null;
+      _lastTopPlayersCacheKey = null;
+
       _updateLeader();
       loading = false;
     });
@@ -86,9 +116,28 @@ class _GroupViewPageState extends State<GroupViewPage>
     return rec.points;
   }
 
+  // Кэш для средних баллов
+  final Map<String, double> _monthlyAverageCache = {};
+  DateTime? _lastCacheUpdate;
+
   double _monthlyAverage(String playerId) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+
+    // Проверяем, нужно ли обновить кэш
+    if (_lastCacheUpdate == null ||
+        _lastCacheUpdate!.day != today.day ||
+        _lastCacheUpdate!.month != today.month) {
+      _monthlyAverageCache.clear();
+      _lastCacheUpdate = today;
+    }
+
+    // Возвращаем из кэша, если есть
+    if (_monthlyAverageCache.containsKey(playerId)) {
+      return _monthlyAverageCache[playerId]!;
+    }
+
+    // Вычисляем средний балл
     final pastTrainings = trainings
         .where(
           (t) => DateTime.parse(
@@ -96,24 +145,106 @@ class _GroupViewPageState extends State<GroupViewPage>
           ).isBefore(today.add(const Duration(days: 1))),
         )
         .toList();
-    final attendedTrainings = pastTrainings
-        .where((t) => _pointsFor(playerId, t.id) > 0)
-        .length;
-    if (attendedTrainings == 0) return 0.0;
-    return pastTrainings.fold(0, (sum, t) => sum + _pointsFor(playerId, t.id)) /
-        attendedTrainings;
+
+    if (pastTrainings.isEmpty) {
+      _monthlyAverageCache[playerId] = 0.0;
+      return 0.0;
+    }
+
+    int totalPoints = 0;
+    int attendedCount = 0;
+
+    for (final training in pastTrainings) {
+      final points = _pointsFor(playerId, training.id);
+      if (points > 0) {
+        totalPoints += points;
+        attendedCount++;
+      }
+    }
+
+    final average = attendedCount > 0 ? totalPoints / attendedCount : 0.0;
+    _monthlyAverageCache[playerId] = average;
+    return average;
   }
 
   List<Player> _topPlayers = [];
+  List<Player>? _cachedTopPlayers;
+  String? _lastTopPlayersCacheKey;
+
+  // Оптимизированная функция синхронизации прокрутки
+  void _syncVerticalScroll(double offset, int excludeIndex) {
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      // Синхронизируем левую колонку
+      if (_verticalScrollController.hasClients) {
+        _verticalScrollController.jumpTo(offset);
+      }
+
+      // Синхронизируем все столбцы данных
+      for (int i = 0; i < _columnScrollControllers.length; i++) {
+        if (i != excludeIndex && _columnScrollControllers[i].hasClients) {
+          _columnScrollControllers[i].jumpTo(offset);
+        }
+      }
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  // Функция для определения медали по месту
+  Color _getMedalColor(int index, List<Player> players) {
+    if (players.isEmpty) return Colors.grey;
+
+    final currentPlayer = players[index];
+    final currentPoints = _monthlyAverage(currentPlayer.id);
+
+    // Находим уникальные очки и сортируем их
+    final uniquePoints =
+        players.map((p) => _monthlyAverage(p.id)).toSet().toList()
+          ..sort((a, b) => b.compareTo(a));
+
+    if (uniquePoints.isEmpty) return Colors.grey;
+
+    // Определяем место по очкам
+    final place = uniquePoints.indexOf(currentPoints);
+
+    switch (place) {
+      case 0:
+        return Colors.amber; // Золото
+      case 1:
+        return Colors.grey[400]!; // Серебро
+      case 2:
+        return Colors.orange[700]!; // Бронза
+      default:
+        return Colors.grey;
+    }
+  }
 
   void _updateLeader() {
     if (players.isEmpty) {
       _topPlayers = [];
+      _cachedTopPlayers = null;
+      _lastTopPlayersCacheKey = null;
       return;
     }
+
+    // Создаем ключ кэша на основе ID игроков
+    final cacheKey = players.map((p) => p.id).join(',');
+
+    // Проверяем кэш
+    if (_cachedTopPlayers != null && _lastTopPlayersCacheKey == cacheKey) {
+      _topPlayers = _cachedTopPlayers!;
+      return;
+    }
+
     final copy = [...players];
     copy.sort((a, b) => _monthlyAverage(b.id).compareTo(_monthlyAverage(a.id)));
+
     _topPlayers = copy.take(3).toList();
+    _cachedTopPlayers = _topPlayers;
+    _lastTopPlayersCacheKey = cacheKey;
   }
 
   String _formatMonth(DateTime d) {
@@ -155,13 +286,13 @@ class _GroupViewPageState extends State<GroupViewPage>
     return Scaffold(
       backgroundColor: UI.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Верхняя часть - статистика и фильтры
-            _buildHeader(context),
+        child: CustomScrollView(
+          slivers: [
+            // Верхняя часть - статистика и фильтры (сворачивается)
+            SliverToBoxAdapter(child: _buildHeader(context)),
 
-            // Таблица с фиксированными заголовками и левой колонкой
-            Expanded(child: _buildFixedTable(context)),
+            // Таблица с фиксированными заголовками и левой колонкой (растягивается)
+            SliverFillRemaining(child: _buildFixedTable(context)),
           ],
         ),
       ),
@@ -354,7 +485,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   Widget _buildFixedTable(BuildContext context) {
     final isSmallScreen = UI.isSmallScreen(context);
-    final playerColumnWidth = isSmallScreen ? 160.0 : 250.0;
+    final playerColumnWidth = isSmallScreen ? 120.0 : 180.0;
     final trainingColumnWidth = isSmallScreen ? 120.0 : 160.0;
     final totalColumnWidth = isSmallScreen ? 60.0 : 100.0;
     final rowHeight = isSmallScreen ? 60.0 : 80.0;
@@ -403,22 +534,56 @@ class _GroupViewPageState extends State<GroupViewPage>
                     child: Row(
                       children: [
                         // Заголовки тренировок
-                        ...trainings.map(
-                          (training) => Container(
+                        ...trainings.asMap().entries.map((entry) {
+                          final training = entry.value;
+                          return Container(
                             width: trainingColumnWidth,
                             padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: UI.border),
+                                right: BorderSide(color: UI.border, width: 0.5),
+                              ),
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  _formatTrainingDateFull(training.date),
-                                  style: TextStyle(
-                                    color: UI.muted,
-                                    fontSize: isSmallScreen ? 11 : 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _formatTrainingDateFull(training.date),
+                                        style: TextStyle(
+                                          color: UI.muted,
+                                          fontSize: isSmallScreen ? 11 : 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (!widget.isPlayerMode)
+                                      PopupMenuButton<String>(
+                                        icon: Icon(
+                                          Icons.more_vert,
+                                          color: UI.muted,
+                                          size: isSmallScreen ? 12 : 16,
+                                        ),
+                                        onSelected: (value) {
+                                          if (value == 'delete') {
+                                            _deleteTraining(training);
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem(
+                                            value: 'delete',
+                                            child: Text('Удалить тренировку'),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
                                 ),
                                 if (training.title.isNotEmpty &&
                                     training.title !=
@@ -429,7 +594,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   Text(
                                     training.title,
                                     style: TextStyle(
-                                      color: UI.muted.withValues(alpha: 0.7),
+                                      color: UI.muted.withOpacity(0.7),
                                       fontSize: isSmallScreen ? 9 : 10,
                                     ),
                                     textAlign: TextAlign.center,
@@ -438,8 +603,8 @@ class _GroupViewPageState extends State<GroupViewPage>
                                 ],
                               ],
                             ),
-                          ),
-                        ),
+                          );
+                        }),
 
                         // Заголовок колонки "Средний балл"
                         Container(
@@ -484,231 +649,284 @@ class _GroupViewPageState extends State<GroupViewPage>
                   decoration: const BoxDecoration(
                     border: Border(right: BorderSide(color: UI.border)),
                   ),
-                  child: ListView.builder(
-                    controller: _verticalScrollController,
-                    itemCount: players.length,
-                    itemBuilder: (context, index) {
-                      final player = players[index];
-                      final isTopPlayer = _topPlayers.any(
-                        (p) => p.id == player.id,
-                      );
-
-                      return Container(
-                        height: rowHeight,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          border: index < players.length - 1
-                              ? const Border(
-                                  bottom: BorderSide(
-                                    color: UI.border,
-                                    width: 0.5,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        child: Row(
-                          children: [
-                            if (isTopPlayer) ...[
-                              Icon(
-                                Icons.emoji_events,
-                                color: UI.primary,
-                                size: isSmallScreen ? 12 : 16,
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Expanded(
-                              child: Text(
-                                player.name,
-                                style: TextStyle(
-                                  color: UI.white,
-                                  fontSize: isSmallScreen ? 12 : 14,
-                                  fontWeight: isTopPlayer
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (scrollNotification) {
+                      // Синхронизируем вертикальную прокрутку всех столбцов
+                      if (scrollNotification is ScrollUpdateNotification) {
+                        _syncVerticalScroll(
+                          scrollNotification.metrics.pixels,
+                          -1,
+                        );
+                      }
+                      return false;
                     },
+                    child: ListView.builder(
+                      controller: _verticalScrollController,
+                      itemCount: players.length,
+                      itemBuilder: (context, index) {
+                        final player = players[index];
+                        final isTopPlayer = _topPlayers.any(
+                          (p) => p.id == player.id,
+                        );
+
+                        return Container(
+                          height: rowHeight,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            border: index < players.length - 1
+                                ? const Border(
+                                    bottom: BorderSide(
+                                      color: UI.border,
+                                      width: 0.5,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              if (isTopPlayer) ...[
+                                Icon(
+                                  Icons.emoji_events,
+                                  color: UI.primary,
+                                  size: isSmallScreen ? 12 : 16,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  player.name,
+                                  style: TextStyle(
+                                    color: UI.white,
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                    fontWeight: isTopPlayer
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.visible,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
 
-                // ПРОКРУЧИВАЕМАЯ ОБЛАСТЬ С ДАННЫМИ
+                // ПРОКРУЧИВАЕМЫЕ СТОЛБЦЫ С ДАННЫМИ
                 Expanded(
                   child: SingleChildScrollView(
                     controller: _horizontalScrollController,
                     scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width:
-                          (trainings.length * trainingColumnWidth) +
-                          totalColumnWidth,
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (scrollNotification) {
-                          // Синхронизируем вертикальную прокрутку с левой колонкой
-                          if (scrollNotification is ScrollUpdateNotification) {
-                            _verticalScrollController.jumpTo(
-                              scrollNotification.metrics.pixels,
-                            );
-                          }
-                          return false;
-                        },
-                        child: ListView.builder(
-                          itemCount: players.length,
-                          itemBuilder: (context, index) {
-                            final player = players[index];
+                    child: Row(
+                      children: [
+                        // Столбцы тренировок
+                        ...trainings.asMap().entries.map((entry) {
+                          final trainingIndex = entry.key;
+                          final training = entry.value;
 
-                            return Container(
-                              height: rowHeight,
-                              decoration: BoxDecoration(
-                                border: index < players.length - 1
-                                    ? const Border(
-                                        bottom: BorderSide(
-                                          color: UI.border,
-                                          width: 0.5,
-                                        ),
-                                      )
-                                    : null,
+                          return Container(
+                            width: trainingColumnWidth,
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                right: BorderSide(color: UI.border, width: 0.5),
                               ),
-                              child: Row(
-                                children: [
-                                  // Баллы по тренировкам
-                                  ...trainings.map((training) {
-                                    final points = _pointsFor(
-                                      player.id,
-                                      training.id,
-                                    );
+                            ),
+                            child: NotificationListener<ScrollNotification>(
+                              onNotification: (scrollNotification) {
+                                // Синхронизируем вертикальную прокрутку всех столбцов
+                                if (scrollNotification
+                                    is ScrollUpdateNotification) {
+                                  _syncVerticalScroll(
+                                    scrollNotification.metrics.pixels,
+                                    trainingIndex,
+                                  );
+                                }
+                                return false;
+                              },
+                              child: ListView.builder(
+                                controller:
+                                    _columnScrollControllers[trainingIndex],
+                                itemCount: players.length,
+                                itemBuilder: (context, playerIndex) {
+                                  final player = players[playerIndex];
+                                  final points = _pointsFor(
+                                    player.id,
+                                    training.id,
+                                  );
 
-                                    return Container(
-                                      width: trainingColumnWidth,
-                                      padding: const EdgeInsets.all(8),
-                                      child: widget.isPlayerMode
-                                          ? Container(
-                                              height: isSmallScreen ? 36 : 44,
-                                              decoration: BoxDecoration(
-                                                color: UI.primary.withValues(
-                                                  alpha: 0.1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: UI.primary.withValues(
-                                                    alpha: 0.3,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  points.toString(),
-                                                  style: TextStyle(
-                                                    color: UI.primary,
-                                                    fontSize: isSmallScreen
-                                                        ? 14
-                                                        : 18,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
+                                  return Container(
+                                    height: rowHeight,
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      border: playerIndex < players.length - 1
+                                          ? const Border(
+                                              bottom: BorderSide(
+                                                color: UI.border,
+                                                width: 0.5,
                                               ),
                                             )
-                                          : Row(
-                                              children: [
-                                                Checkbox(
-                                                  value: points > 0,
-                                                  onChanged: (value) {
-                                                    _setPlayerPoints(
-                                                      player,
-                                                      training,
-                                                      value == true ? 1 : 0,
-                                                    );
-                                                  },
-                                                  activeColor: UI.primary,
-                                                  materialTapTargetSize:
-                                                      MaterialTapTargetSize
-                                                          .shrinkWrap,
+                                          : null,
+                                    ),
+                                    child: widget.isPlayerMode
+                                        ? Container(
+                                            height: isSmallScreen ? 36 : 44,
+                                            decoration: BoxDecoration(
+                                              color: UI.primary.withOpacity(
+                                                0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: UI.primary.withOpacity(
+                                                  0.3,
                                                 ),
-                                                Expanded(
-                                                  child: GestureDetector(
-                                                    onTap: () =>
-                                                        _editPlayerPoints(
-                                                          player,
-                                                          training,
-                                                        ),
-                                                    child: Container(
-                                                      height: isSmallScreen
-                                                          ? 28
-                                                          : 32,
-                                                      decoration: BoxDecoration(
-                                                        color: UI.primary
-                                                            .withValues(
-                                                              alpha: 0.1,
-                                                            ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              6,
-                                                            ),
-                                                        border: Border.all(
-                                                          color: UI.primary
-                                                              .withValues(
-                                                                alpha: 0.3,
-                                                              ),
-                                                        ),
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                points.toString(),
+                                                style: TextStyle(
+                                                  color: UI.primary,
+                                                  fontSize: isSmallScreen
+                                                      ? 14
+                                                      : 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Row(
+                                            children: [
+                                              Checkbox(
+                                                value: points > 0,
+                                                onChanged: (value) {
+                                                  _setPlayerPoints(
+                                                    player,
+                                                    training,
+                                                    value == true ? 1 : 0,
+                                                  );
+                                                },
+                                                activeColor: UI.primary,
+                                                materialTapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: () =>
+                                                      _editPlayerPoints(
+                                                        player,
+                                                        training,
                                                       ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          points.toString(),
-                                                          style: TextStyle(
-                                                            color: UI.primary,
-                                                            fontSize:
-                                                                isSmallScreen
-                                                                ? 12
-                                                                : 14,
-                                                            fontWeight:
-                                                                FontWeight.bold,
+                                                  child: Container(
+                                                    height: isSmallScreen
+                                                        ? 28
+                                                        : 32,
+                                                    decoration: BoxDecoration(
+                                                      color: UI.primary
+                                                          .withOpacity(0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
                                                           ),
+                                                      border: Border.all(
+                                                        color: UI.primary
+                                                            .withOpacity(0.3),
+                                                      ),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        points.toString(),
+                                                        style: TextStyle(
+                                                          color: UI.primary,
+                                                          fontSize:
+                                                              isSmallScreen
+                                                              ? 12
+                                                              : 14,
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                    );
-                                  }),
-
-                                  // Средний балл
-                                  Container(
-                                    width: totalColumnWidth,
-                                    padding: const EdgeInsets.all(8),
-                                    child: Container(
-                                      height: isSmallScreen ? 28 : 32,
-                                      decoration: BoxDecoration(
-                                        color: UI.primary.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          _monthlyAverage(
-                                            player.id,
-                                          ).toStringAsFixed(1),
-                                          style: TextStyle(
-                                            color: UI.white,
-                                            fontSize: isSmallScreen ? 10 : 14,
-                                            fontWeight: FontWeight.bold,
+                                              ),
+                                            ],
                                           ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        }),
+
+                        // Столбец "Средний балл"
+                        Container(
+                          width: totalColumnWidth,
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: UI.border, width: 0.5),
+                            ),
+                          ),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (scrollNotification) {
+                              // Синхронизируем вертикальную прокрутку всех столбцов
+                              if (scrollNotification
+                                  is ScrollUpdateNotification) {
+                                _syncVerticalScroll(
+                                  scrollNotification.metrics.pixels,
+                                  trainings.length,
+                                );
+                              }
+                              return false;
+                            },
+                            child: ListView.builder(
+                              controller:
+                                  _columnScrollControllers[trainings.length],
+                              itemCount: players.length,
+                              itemBuilder: (context, playerIndex) {
+                                final player = players[playerIndex];
+
+                                return Container(
+                                  height: rowHeight,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    border: playerIndex < players.length - 1
+                                        ? const Border(
+                                            bottom: BorderSide(
+                                              color: UI.border,
+                                              width: 0.5,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  child: Container(
+                                    height: isSmallScreen ? 28 : 32,
+                                    decoration: BoxDecoration(
+                                      color: UI.primary.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _monthlyAverage(
+                                          player.id,
+                                        ).toStringAsFixed(1),
+                                        style: TextStyle(
+                                          color: UI.white,
+                                          fontSize: isSmallScreen ? 10 : 14,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -800,42 +1018,48 @@ class _GroupViewPageState extends State<GroupViewPage>
           const SizedBox(height: 8),
           Expanded(
             child: Column(
-              children: _topPlayers
-                  .take(3)
-                  .map(
-                    (player) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.emoji_events,
-                            color: UI.primary,
-                            size: UI.isSmallScreen(context) ? 10 : 12,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              player.name,
-                              style: TextStyle(
-                                color: UI.white,
-                                fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Text(
-                            _monthlyAverage(player.id).toStringAsFixed(1),
-                            style: TextStyle(
-                              color: UI.primary,
-                              fontSize: UI.isSmallScreen(context) ? 10 : 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+              children: _topPlayers.take(3).toList().asMap().entries.map((
+                entry,
+              ) {
+                final index = entry.key;
+                final player = entry.value;
+                final medalColor = _getMedalColor(
+                  index,
+                  _topPlayers,
+                ); // Исправлено
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.emoji_events,
+                        color: medalColor,
+                        size: UI.isSmallScreen(context) ? 10 : 12,
                       ),
-                    ),
-                  )
-                  .toList(),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          player.name,
+                          style: TextStyle(
+                            color: UI.white,
+                            fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        _monthlyAverage(player.id).toStringAsFixed(1),
+                        style: TextStyle(
+                          color: UI.primary,
+                          fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -864,6 +1088,12 @@ class _GroupViewPageState extends State<GroupViewPage>
           points: points,
           created_at: DateTime.now().toIso8601String(),
         );
+
+        // Очищаем кэш средних баллов для этого игрока
+        _monthlyAverageCache.remove(player.id);
+        _cachedTopPlayers = null;
+        _lastTopPlayersCacheKey = null;
+
         _updateLeader();
       });
     } catch (e) {
@@ -962,8 +1192,76 @@ class _GroupViewPageState extends State<GroupViewPage>
   Future<void> _openTrainingScheduleDialog() async {
     await showDialog(
       context: context,
-      builder: (context) => TrainingScheduleDialog(group: widget.group),
+      builder: (context) => TrainingScheduleDialog(
+        group: widget.group,
+        onScheduleCreated: () {
+          // Обновляем данные после создания расписания
+          _load();
+        },
+      ),
     );
+  }
+
+  Future<void> _deleteTraining(TrainingSession training) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: UI.card,
+        title: Text(
+          'Удалить тренировку',
+          style: TextStyle(
+            color: UI.white,
+            fontSize: UI.getSubtitleFontSize(context),
+          ),
+        ),
+        content: Text(
+          'Вы уверены, что хотите удалить тренировку "${training.title}"?',
+          style: TextStyle(
+            color: UI.muted,
+            fontSize: UI.getBodyFontSize(context),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Отмена', style: TextStyle(color: UI.muted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: UI.white,
+            ),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await repo.deleteTrainingSession(training.id);
+        await _load(); // Перезагружаем данные
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Тренировка "${training.title}" удалена'),
+              backgroundColor: UI.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ошибка при удалении тренировки: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -977,15 +1275,14 @@ class _AddTrainingDialog extends StatefulWidget {
 }
 
 class _AddTrainingDialogState extends State<_AddTrainingDialog> {
+  // Добавлен _
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   DateTime? selectedDate;
   final repo = SupabaseRepository();
 
   @override
   void dispose() {
-    _titleController.dispose();
     _locationController.dispose();
     super.dispose();
   }
@@ -1003,27 +1300,6 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
-              controller: _titleController,
-              style: const TextStyle(color: UI.white),
-              decoration: const InputDecoration(
-                labelText: 'Название тренировки',
-                labelStyle: TextStyle(color: UI.muted),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: UI.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: UI.primary),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Введите название тренировки';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
             TextFormField(
               controller: _locationController,
               style: const TextStyle(color: UI.white),
@@ -1110,7 +1386,6 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                 );
                 if (mounted) {
                   Navigator.of(context).pop({
-                    'title': _titleController.text,
                     'location': _locationController.text,
                     'date': selectedDate!,
                   });

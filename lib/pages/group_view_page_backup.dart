@@ -51,7 +51,7 @@ class _TableHeaderDelegate extends SliverPersistentHeaderDelegate {
         children: [
           // Закрепленный столбец с заголовком "Игрок"
           Container(
-            width: isSmallScreen ? 160 : 250,
+            width: isSmallScreen ? 120 : 180,
             padding: UI.getCardPadding(context),
             decoration: const BoxDecoration(
               border: Border(right: BorderSide(color: UI.border, width: 1)),

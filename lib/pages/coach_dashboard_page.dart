@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../models/group.dart';
 import '../models/player.dart';
 import '../widgets/player_details_dialog.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 // import '../widgets/training_schedule_dialog.dart';
 
 class CoachDashboardPage extends StatefulWidget {
@@ -41,8 +42,15 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   final playerLastNameCtrl = TextEditingController();
   final playerLoginCtrl = TextEditingController();
   final playerPasswordCtrl = TextEditingController();
+  final playerBirthDateCtrl = TextEditingController();
   DateTime? selectedBirthDate;
   String? selectedGroupId;
+
+  // Маска для ввода даты рождения
+  final birthDateMaskFormatter = MaskTextInputFormatter(
+    mask: '##.##.####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
   bool _obscurePlayerPassword = true;
 
   @override
@@ -127,7 +135,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     return Scaffold(
       backgroundColor: UI.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: UI.getScreenPadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,286 +433,189 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               const SizedBox(height: 16),
 
               // Карточка списка команд
-              Expanded(
-                child: Container(
-                  padding: UI.getCardPadding(context),
-                  decoration: BoxDecoration(
-                    color: UI.card,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.groups, color: Colors.white),
-                          const SizedBox(width: 6),
-                          const Expanded(
-                            child: Text(
-                              'Команды',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
+              Container(
+                padding: UI.getCardPadding(context),
+                decoration: BoxDecoration(
+                  color: UI.card,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.groups, color: Colors.white),
+                        const SizedBox(width: 6),
+                        const Expanded(
+                          child: Text(
+                            'Команды',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
-                          GestureDetector(
-                            onTap: _openCreateGroupDialog,
-                            child: Container(
-                              height: UI.getButtonHeight(context),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: UI.gradientPrimary,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.add,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    UI.isSmallScreen(context)
-                                        ? 'Добавить'
-                                        : 'Добавить команду',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        ),
+                        GestureDetector(
+                          onTap: _openCreateGroupDialog,
+                          child: Container(
+                            height: UI.getButtonHeight(context),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              gradient: UI.gradientPrimary,
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: groups.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'Команды не найдены',
-                                  style: TextStyle(
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.add,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  UI.isSmallScreen(context)
+                                      ? 'Добавить'
+                                      : 'Добавить команду',
+                                  style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: UI.getBodyFontSize(context),
+                                    fontSize: 12,
                                   ),
                                 ),
-                              )
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                physics: const ClampingScrollPhysics(),
-                                itemCount: groups.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final g = groups[index];
-                                  final members = players
-                                      .where((p) => p.group_id == g.id)
-                                      .toList();
-                                  final totalPoints = members.fold<int>(
-                                    0,
-                                    (s, p) => s + p.total_points,
-                                  );
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    groups.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Команды не найдены',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: UI.getBodyFontSize(context),
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: groups.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final g = groups[index];
+                              final members = players
+                                  .where((p) => p.group_id == g.id)
+                                  .toList();
 
-                                  return GestureDetector(
-                                    onTap: () =>
-                                        context.push('/group-view', extra: g),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: _parseColor(g.color),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding: UI.getCardPadding(
-                                                context,
-                                              ),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                              return GestureDetector(
+                                onTap: () =>
+                                    context.push('/group-view', extra: g),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: _parseColor(g.color),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Padding(
+                                          padding: UI.getCardPadding(context),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
                                                 children: [
-                                                  Row(
-                                                    children: [
-                                                      Container(
-                                                        width: 8,
-                                                        height: 8,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                              color:
-                                                                  _parseColor(
-                                                                    g.color,
-                                                                  ),
-                                                              shape: BoxShape
-                                                                  .circle,
+                                                  Container(
+                                                    width: 8,
+                                                    height: 8,
+                                                    decoration: BoxDecoration(
+                                                      color: _parseColor(
+                                                        g.color,
+                                                      ),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      g.name,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: UI
+                                                            .getBodyFontSize(
+                                                              context,
                                                             ),
                                                       ),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  PopupMenuButton<String>(
+                                                    color: const Color(
+                                                      0xFF171412,
+                                                    ),
+                                                    icon: const Icon(
+                                                      Icons.more_vert,
+                                                      color: Colors.white,
+                                                    ),
+                                                    onSelected: (v) {
+                                                      if (v == 'edit') {
+                                                        _openEditGroupDialog(g);
+                                                      }
+                                                      // if (v == 'schedule') {
+                                                      //   _openTrainingScheduleDialog(
+                                                      //     g,
+                                                      //   );
+                                                      // }
+                                                      if (v == 'delete') {
+                                                        _confirmDeleteGroup(g);
+                                                      }
+                                                    },
+                                                    itemBuilder: (context) => [
+                                                      const PopupMenuItem(
+                                                        value: 'edit',
                                                         child: Text(
-                                                          g.name,
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: UI
-                                                                .getBodyFontSize(
-                                                                  context,
-                                                                ),
-                                                          ),
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
+                                                          'Редактировать',
                                                         ),
                                                       ),
-                                                      PopupMenuButton<String>(
-                                                        color: const Color(
-                                                          0xFF171412,
-                                                        ),
-                                                        icon: const Icon(
-                                                          Icons.more_vert,
-                                                          color: Colors.white,
-                                                        ),
-                                                        onSelected: (v) {
-                                                          if (v == 'edit') {
-                                                            _openEditGroupDialog(
-                                                              g,
-                                                            );
-                                                          }
-                                                          // if (v == 'schedule') {
-                                                          //   _openTrainingScheduleDialog(
-                                                          //     g,
-                                                          //   );
-                                                          // }
-                                                          if (v == 'delete') {
-                                                            _confirmDeleteGroup(
-                                                              g,
-                                                            );
-                                                          }
-                                                        },
-                                                        itemBuilder: (context) => [
-                                                          const PopupMenuItem(
-                                                            value: 'edit',
-                                                            child: Text(
-                                                              'Редактировать',
-                                                            ),
-                                                          ),
-                                                          // const PopupMenuItem(
-                                                          //   value: 'schedule',
-                                                          //   child: Text(
-                                                          //     'Расписание тренировок',
-                                                          //   ),
-                                                          // ),
-                                                          const PopupMenuItem(
-                                                            value: 'delete',
-                                                            child: Text(
-                                                              'Удалить',
-                                                            ),
-                                                          ),
-                                                        ],
+                                                      // const PopupMenuItem(
+                                                      //   value: 'schedule',
+                                                      //   child: Text(
+                                                      //     'Расписание тренировок',
+                                                      //   ),
+                                                      // ),
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Text('Удалить'),
                                                       ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 16),
-                                                  UI.isSmallScreen(context)
-                                                      ? Column(
-                                                          children: [
-                                                            Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .spaceEvenly,
-                                                              children: [
-                                                                Column(
-                                                                  children: [
-                                                                    const Icon(
-                                                                      Icons
-                                                                          .person,
-                                                                      color: Color(
-                                                                        0xFFFF8A00,
-                                                                      ),
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      height: 4,
-                                                                    ),
-                                                                    Text(
-                                                                      '${members.length}',
-                                                                      style: const TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                      ),
-                                                                    ),
-                                                                    const Text(
-                                                                      'Игроков',
-                                                                      style: TextStyle(
-                                                                        color: Color(
-                                                                          0xFF9A9A9A,
-                                                                        ),
-                                                                        fontSize:
-                                                                            12,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Column(
-                                                                  children: [
-                                                                    const Icon(
-                                                                      Icons
-                                                                          .emoji_events,
-                                                                      color: Color(
-                                                                        0xFFFF8A00,
-                                                                      ),
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      height: 4,
-                                                                    ),
-                                                                    Text(
-                                                                      '$totalPoints',
-                                                                      style: const TextStyle(
-                                                                        color: Colors
-                                                                            .white,
-                                                                      ),
-                                                                    ),
-                                                                    const Text(
-                                                                      'Очков за месяц',
-                                                                      style: TextStyle(
-                                                                        color: Color(
-                                                                          0xFF9A9A9A,
-                                                                        ),
-                                                                        fontSize:
-                                                                            12,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        )
-                                                      : Row(
+                                                ],
+                                              ),
+                                              const SizedBox(height: 16),
+                                              UI.isSmallScreen(context)
+                                                  ? Column(
+                                                      children: [
+                                                        Row(
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
                                                                   .spaceEvenly,
                                                           children: [
                                                             Column(
-                                                              children: const [
-                                                                Icon(
+                                                              children: [
+                                                                const Icon(
                                                                   Icons.person,
                                                                   color: Color(
                                                                     0xFFFF8A00,
                                                                   ),
                                                                 ),
-                                                                SizedBox(
+                                                                const SizedBox(
                                                                   height: 4,
                                                                 ),
-                                                              ],
-                                                            ),
-                                                            Column(
-                                                              children: [
                                                                 Text(
                                                                   '${members.length}',
                                                                   style: const TextStyle(
@@ -724,115 +635,111 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                 ),
                                                               ],
                                                             ),
-                                                            Column(
-                                                              children: const [
-                                                                Icon(
-                                                                  Icons
-                                                                      .emoji_events,
-                                                                  color: Color(
-                                                                    0xFFFF8A00,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  height: 4,
-                                                                ),
-                                                              ],
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceEvenly,
+                                                      children: [
+                                                        Column(
+                                                          children: const [
+                                                            Icon(
+                                                              Icons.person,
+                                                              color: Color(
+                                                                0xFFFF8A00,
+                                                              ),
                                                             ),
-                                                            Column(
-                                                              children: [
-                                                                Text(
-                                                                  '$totalPoints',
-                                                                  style: const TextStyle(
+                                                            SizedBox(height: 4),
+                                                          ],
+                                                        ),
+                                                        Column(
+                                                          children: [
+                                                            Text(
+                                                              '${members.length}',
+                                                              style:
+                                                                  const TextStyle(
                                                                     color: Colors
                                                                         .white,
                                                                   ),
+                                                            ),
+                                                            const Text(
+                                                              'Игроков',
+                                                              style: TextStyle(
+                                                                color: Color(
+                                                                  0xFF9A9A9A,
                                                                 ),
-                                                                const Text(
-                                                                  'Очков за месяц',
-                                                                  style: TextStyle(
-                                                                    color: Color(
-                                                                      0xFF9A9A9A,
-                                                                    ),
-                                                                    fontSize:
-                                                                        12,
-                                                                  ),
-                                                                ),
-                                                              ],
+                                                                fontSize: 12,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
-                                                  const SizedBox(height: 8),
-                                                  // Лидер команды
-                                                  if (members.isNotEmpty)
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 8,
-                                                            vertical: 6,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color: UI.background,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              4,
-                                                            ),
-                                                      ),
-                                                      child: Row(
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.military_tech,
-                                                            size: 14,
-                                                            color: Color(
-                                                              0xFFFF8A00,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          Text(
-                                                            'Лидер команды',
-                                                            style:
-                                                                const TextStyle(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 12,
-                                                                ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          Expanded(
-                                                            child: Text(
-                                                              '${members.first.name} • ${members.first.total_points} очков за месяц',
-                                                              style:
-                                                                  const TextStyle(
-                                                                    color: Color(
-                                                                      0xFF9A9A9A,
-                                                                    ),
-                                                                    fontSize:
-                                                                        12,
-                                                                  ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
+                                                      ],
                                                     ),
-                                                ],
-                                              ),
-                                            ),
+                                              const SizedBox(height: 8),
+                                              // Лидер команды
+                                              if (members.isNotEmpty)
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: UI.background,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.military_tech,
+                                                        size: 14,
+                                                        color: Color(
+                                                          0xFFFF8A00,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Лидер команды',
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Expanded(
+                                                        child: Text(
+                                                          '${members.first.name} • ${members.first.total_points} очков за месяц',
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Color(
+                                                                  0xFF9A9A9A,
+                                                                ),
+                                                                fontSize: 12,
+                                                              ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ],
                 ),
               ),
             ],
@@ -1176,6 +1083,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     playerLoginCtrl.clear();
     playerPasswordCtrl.text =
         _generatePassword(); // Автоматически генерируем пароль
+    playerBirthDateCtrl.clear();
     selectedBirthDate = null;
     selectedGroupId = defaultGroupId;
     _obscurePlayerPassword = true;
@@ -1192,56 +1100,48 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: playerLastNameCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Фамилия',
-                        labelStyle: const TextStyle(color: UI.muted),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.primary),
-                        ),
-                        filled: true,
-                        fillColor: UI.card,
-                      ),
-                      style: const TextStyle(color: UI.white),
-                      onChanged: (value) {
-                        _updateLogin(setDialogState);
-                      },
-                    ),
+              TextField(
+                controller: playerLastNameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Фамилия',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.border),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: playerFirstNameCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Имя',
-                        labelStyle: const TextStyle(color: UI.muted),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.primary),
-                        ),
-                        filled: true,
-                        fillColor: UI.card,
-                      ),
-                      style: const TextStyle(color: UI.white),
-                      onChanged: (value) {
-                        _updateLogin(setDialogState);
-                      },
-                    ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.primary),
                   ),
-                ],
+                  filled: true,
+                  fillColor: UI.card,
+                ),
+                style: const TextStyle(color: UI.white),
+                onChanged: (value) {
+                  _updateLogin(setDialogState);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: playerFirstNameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Имя',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.primary),
+                  ),
+                  filled: true,
+                  fillColor: UI.card,
+                ),
+                style: const TextStyle(color: UI.white),
+                onChanged: (value) {
+                  _updateLogin(setDialogState);
+                },
               ),
               const SizedBox(height: 12),
               Row(
@@ -1274,9 +1174,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
                       foregroundColor: UI.white,
-                      minimumSize: const Size(80, 40),
+                      minimumSize: const Size(40, 40),
+                      padding: const EdgeInsets.all(8),
                     ),
-                    child: const Text('Генерировать'),
+                    child: const Text('🎲'),
                   ),
                 ],
               ),
@@ -1326,74 +1227,63 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
                       foregroundColor: UI.white,
-                      minimumSize: const Size(80, 40),
+                      minimumSize: const Size(40, 40),
+                      padding: const EdgeInsets.all(8),
                     ),
-                    child: const Text('Генерировать'),
+                    child: const Text('🎲'),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate:
-                        selectedBirthDate ??
-                        DateTime.now().subtract(const Duration(days: 365 * 18)),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.dark(
-                            primary: UI.primary,
-                            onPrimary: UI.white,
-                            surface: UI.card,
-                            onSurface: UI.white,
-                          ),
-                        ),
-                        child: child!,
-                      );
+              TextField(
+                controller: playerBirthDateCtrl,
+                inputFormatters: [birthDateMaskFormatter],
+                style: const TextStyle(color: UI.white),
+                decoration: InputDecoration(
+                  labelText: 'Дата рождения (дд.мм.гггг)',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  filled: true,
+                  fillColor: UI.card,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.primary),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today, color: UI.muted),
+                    onPressed: () async {
+                      await _showDatePickerDialog(context, setDialogState);
                     },
-                  );
-                  if (date != null) {
-                    setDialogState(() {
-                      selectedBirthDate = date;
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: UI.card,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: UI.muted.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: UI.muted,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        selectedBirthDate != null
-                            ? '${selectedBirthDate!.day.toString().padLeft(2, '0')}.${selectedBirthDate!.month.toString().padLeft(2, '0')}.${selectedBirthDate!.year}'
-                            : 'Выберите дату рождения',
-                        style: TextStyle(
-                          color: selectedBirthDate != null
-                              ? UI.white
-                              : UI.muted,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
+                onChanged: (value) {
+                  // Парсим введенную дату
+                  if (value.length == 10) {
+                    try {
+                      final parts = value.split('.');
+                      if (parts.length == 3) {
+                        final day = int.parse(parts[0]);
+                        final month = int.parse(parts[1]);
+                        final year = int.parse(parts[2]);
+                        if (day >= 1 &&
+                            day <= 31 &&
+                            month >= 1 &&
+                            month <= 12 &&
+                            year >= 1900 &&
+                            year <= DateTime.now().year) {
+                          setDialogState(() {
+                            selectedBirthDate = DateTime(year, month, day);
+                          });
+                        }
+                      }
+                    } catch (e) {
+                      // Игнорируем ошибки парсинга
+                    }
+                  }
+                },
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -1447,12 +1337,36 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                 }
 
                 try {
+                  // Получаем дату рождения из TextField или selectedBirthDate
+                  DateTime? birthDate = selectedBirthDate;
+                  if (playerBirthDateCtrl.text.isNotEmpty &&
+                      playerBirthDateCtrl.text.length == 10) {
+                    try {
+                      final parts = playerBirthDateCtrl.text.split('.');
+                      if (parts.length == 3) {
+                        final day = int.parse(parts[0]);
+                        final month = int.parse(parts[1]);
+                        final year = int.parse(parts[2]);
+                        if (day >= 1 &&
+                            day <= 31 &&
+                            month >= 1 &&
+                            month <= 12 &&
+                            year >= 1900 &&
+                            year <= DateTime.now().year) {
+                          birthDate = DateTime(year, month, day);
+                        }
+                      }
+                    } catch (e) {
+                      // Игнорируем ошибки парсинга
+                    }
+                  }
+
                   await repo.addPlayer(
                     name: '$lastName $firstName',
                     login: playerLoginCtrl.text.trim(),
                     password: playerPasswordCtrl.text.trim(),
-                    birthDate: selectedBirthDate != null
-                        ? '${selectedBirthDate!.year}-${selectedBirthDate!.month.toString().padLeft(2, '0')}-${selectedBirthDate!.day.toString().padLeft(2, '0')}'
+                    birthDate: birthDate != null
+                        ? '${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}'
                         : null,
                     groupId: selectedGroupId,
                   );
@@ -1893,6 +1807,144 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDatePickerDialog(
+    BuildContext context,
+    StateSetter setDialogState,
+  ) async {
+    final dateController = TextEditingController();
+    final dateMaskFormatter = MaskTextInputFormatter(
+      mask: '##.##.####',
+      filter: {"#": RegExp(r'[0-9]')},
+    );
+
+    DateTime? selectedDate = selectedBirthDate;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: UI.card,
+          title: const Text(
+            'Выберите дату рождения',
+            style: TextStyle(color: UI.white, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Поле ввода с маской
+              TextField(
+                controller: dateController,
+                inputFormatters: [dateMaskFormatter],
+                style: const TextStyle(color: UI.white),
+                decoration: InputDecoration(
+                  labelText: 'Введите дату (дд.мм.гггг)',
+                  labelStyle: const TextStyle(color: UI.muted),
+                  filled: true,
+                  fillColor: UI.card,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: UI.primary),
+                  ),
+                ),
+                onChanged: (value) {
+                  if (value.length == 10) {
+                    try {
+                      final parts = value.split('.');
+                      if (parts.length == 3) {
+                        final day = int.parse(parts[0]);
+                        final month = int.parse(parts[1]);
+                        final year = int.parse(parts[2]);
+                        if (day >= 1 &&
+                            day <= 31 &&
+                            month >= 1 &&
+                            month <= 12 &&
+                            year >= 1900 &&
+                            year <= DateTime.now().year) {
+                          setState(() {
+                            selectedDate = DateTime(year, month, day);
+                          });
+                        }
+                      }
+                    } catch (e) {
+                      // Игнорируем ошибки парсинга
+                    }
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              // Кнопка для открытия календаря
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate:
+                        selectedDate ??
+                        DateTime.now().subtract(const Duration(days: 365 * 18)),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.dark(
+                            primary: UI.primary,
+                            onPrimary: UI.white,
+                            surface: UI.card,
+                            onSurface: UI.white,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (date != null) {
+                    setState(() {
+                      selectedDate = date;
+                      dateController.text =
+                          '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+                    });
+                  }
+                },
+                icon: const Icon(Icons.calendar_today),
+                label: const Text('Выбрать из календаря'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: UI.primary,
+                  foregroundColor: UI.white,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedDate != null) {
+                  setDialogState(() {
+                    selectedBirthDate = selectedDate;
+                    playerBirthDateCtrl.text =
+                        '${selectedDate!.day.toString().padLeft(2, '0')}.${selectedDate!.month.toString().padLeft(2, '0')}.${selectedDate!.year}';
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.primary,
+                foregroundColor: UI.white,
+              ),
+              child: const Text('Выбрать'),
+            ),
+          ],
         ),
       ),
     );
