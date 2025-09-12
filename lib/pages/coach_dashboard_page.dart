@@ -112,6 +112,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
   Future<void> _load() async {
     try {
+      // Принудительно очищаем кэш для получения актуальных данных
+      await repo.clearCache();
+
       final results = await Future.wait([repo.getGroups(), repo.getPlayers()]);
       setState(() {
         groups = results[0] as List<Group>;
@@ -134,6 +137,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
     return Scaffold(
       backgroundColor: UI.background,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: UI.getScreenPadding(context),
@@ -154,7 +158,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                   fontSize: UI.getTitleFontSize(context),
                                   fontWeight: FontWeight.w600,
                                 ),
-                                textAlign: TextAlign.center,
+                                textAlign: TextAlign.left,
                               ),
                             ),
                             OutlinedButton.icon(
@@ -177,7 +181,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                       children: [
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 16),
                               Text(
@@ -1097,227 +1101,260 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             'Добавить игрока',
             style: TextStyle(color: UI.white, fontSize: 18),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: playerLastNameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Фамилия',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                  filled: true,
-                  fillColor: UI.card,
-                ),
-                style: const TextStyle(color: UI.white),
-                onChanged: (value) {
-                  _updateLogin(setDialogState);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: playerFirstNameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Имя',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                  filled: true,
-                  fillColor: UI.card,
-                ),
-                style: const TextStyle(color: UI.white),
-                onChanged: (value) {
-                  _updateLogin(setDialogState);
-                },
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: playerLoginCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Логин',
-                        labelStyle: const TextStyle(color: UI.muted),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.primary),
-                        ),
-                        filled: true,
-                        fillColor: UI.card,
-                      ),
-                      style: const TextStyle(color: UI.white),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: playerLastNameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Фамилия',
+                    labelStyle: const TextStyle(color: UI.muted),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.border),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      _updateLogin(setDialogState);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: UI.primary,
-                      foregroundColor: UI.white,
-                      minimumSize: const Size(40, 40),
-                      padding: const EdgeInsets.all(8),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.primary),
                     ),
-                    child: const Text('🎲'),
+                    filled: true,
+                    fillColor: UI.card,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: playerPasswordCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Пароль',
-                        labelStyle: const TextStyle(color: UI.muted),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: UI.primary),
-                        ),
-                        filled: true,
-                        fillColor: UI.card,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePlayerPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: UI.muted,
+                  style: const TextStyle(color: UI.white),
+                  onChanged: (value) {
+                    _updateLogin(setDialogState);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: playerFirstNameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Имя',
+                    labelStyle: const TextStyle(color: UI.muted),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.primary),
+                    ),
+                    filled: true,
+                    fillColor: UI.card,
+                  ),
+                  style: const TextStyle(color: UI.white),
+                  onChanged: (value) {
+                    _updateLogin(setDialogState);
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: playerLoginCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Логин',
+                          labelStyle: const TextStyle(color: UI.muted),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.border),
                           ),
-                          onPressed: () {
-                            setDialogState(() {
-                              _obscurePlayerPassword = !_obscurePlayerPassword;
-                            });
-                          },
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.primary),
+                          ),
+                          filled: true,
+                          fillColor: UI.card,
                         ),
-                      ),
-                      style: const TextStyle(color: UI.white),
-                      obscureText: _obscurePlayerPassword,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      playerPasswordCtrl.text = _generatePassword();
-                      setDialogState(() {});
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: UI.primary,
-                      foregroundColor: UI.white,
-                      minimumSize: const Size(40, 40),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                    child: const Text('🎲'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: playerBirthDateCtrl,
-                inputFormatters: [birthDateMaskFormatter],
-                style: const TextStyle(color: UI.white),
-                decoration: InputDecoration(
-                  labelText: 'Дата рождения (дд.мм.гггг)',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  filled: true,
-                  fillColor: UI.card,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_today, color: UI.muted),
-                    onPressed: () async {
-                      await _showDatePickerDialog(context, setDialogState);
-                    },
-                  ),
-                ),
-                onChanged: (value) {
-                  // Парсим введенную дату
-                  if (value.length == 10) {
-                    try {
-                      final parts = value.split('.');
-                      if (parts.length == 3) {
-                        final day = int.parse(parts[0]);
-                        final month = int.parse(parts[1]);
-                        final year = int.parse(parts[2]);
-                        if (day >= 1 &&
-                            day <= 31 &&
-                            month >= 1 &&
-                            month <= 12 &&
-                            year >= 1900 &&
-                            year <= DateTime.now().year) {
-                          setDialogState(() {
-                            selectedBirthDate = DateTime(year, month, day);
-                          });
-                        }
-                      }
-                    } catch (e) {
-                      // Игнорируем ошибки парсинга
-                    }
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Группа',
-                  labelStyle: TextStyle(color: UI.muted),
-                ),
-                dropdownColor: UI.card,
-                initialValue: selectedGroupId,
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text(
-                      'Без группы',
-                      style: TextStyle(color: UI.white),
-                    ),
-                  ),
-                  ...groups.map(
-                    (group) => DropdownMenuItem(
-                      value: group.id,
-                      child: Text(
-                        group.name,
                         style: const TextStyle(color: UI.white),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        _updateLogin(setDialogState);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: UI.primary,
+                        foregroundColor: UI.white,
+                        minimumSize: const Size(40, 40),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      child: const Text('🎲'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: playerPasswordCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Пароль',
+                          labelStyle: const TextStyle(color: UI.muted),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: UI.primary),
+                          ),
+                          filled: true,
+                          fillColor: UI.card,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePlayerPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: UI.muted,
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                _obscurePlayerPassword =
+                                    !_obscurePlayerPassword;
+                              });
+                            },
+                          ),
+                        ),
+                        style: const TextStyle(color: UI.white),
+                        obscureText: _obscurePlayerPassword,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        playerPasswordCtrl.text = _generatePassword();
+                        setDialogState(() {});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: UI.primary,
+                        foregroundColor: UI.white,
+                        minimumSize: const Size(40, 40),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      child: const Text('🎲'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: playerBirthDateCtrl,
+                  inputFormatters: [birthDateMaskFormatter],
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: UI.white),
+                  decoration: InputDecoration(
+                    labelText: 'Дата рождения (дд.мм.гггг)',
+                    labelStyle: const TextStyle(color: UI.muted),
+                    filled: true,
+                    fillColor: UI.card,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: UI.primary),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.calendar_today, color: UI.muted),
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              selectedBirthDate ??
+                              DateTime.now().subtract(
+                                const Duration(days: 365 * 18),
+                              ),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: UI.primary,
+                                  onPrimary: UI.white,
+                                  surface: UI.card,
+                                  onSurface: UI.white,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (date != null) {
+                          setDialogState(() {
+                            selectedBirthDate = date;
+                            playerBirthDateCtrl.text =
+                                '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+                          });
+                        }
+                      },
+                    ),
                   ),
-                ],
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedGroupId = value;
-                  });
-                },
-              ),
-            ],
+                  onChanged: (value) {
+                    // Парсим введенную дату
+                    if (value.length == 10) {
+                      try {
+                        final parts = value.split('.');
+                        if (parts.length == 3) {
+                          final day = int.parse(parts[0]);
+                          final month = int.parse(parts[1]);
+                          final year = int.parse(parts[2]);
+                          if (day >= 1 &&
+                              day <= 31 &&
+                              month >= 1 &&
+                              month <= 12 &&
+                              year >= 1900 &&
+                              year <= DateTime.now().year) {
+                            setDialogState(() {
+                              selectedBirthDate = DateTime(year, month, day);
+                            });
+                          }
+                        }
+                      } catch (e) {
+                        // Игнорируем ошибки парсинга
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Группа',
+                    labelStyle: TextStyle(color: UI.muted),
+                  ),
+                  dropdownColor: UI.card,
+                  initialValue: selectedGroupId,
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text(
+                        'Без группы',
+                        style: TextStyle(color: UI.white),
+                      ),
+                    ),
+                    ...groups.map(
+                      (group) => DropdownMenuItem(
+                        value: group.id,
+                        child: Text(
+                          group.name,
+                          style: const TextStyle(color: UI.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedGroupId = value;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1807,144 +1844,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showDatePickerDialog(
-    BuildContext context,
-    StateSetter setDialogState,
-  ) async {
-    final dateController = TextEditingController();
-    final dateMaskFormatter = MaskTextInputFormatter(
-      mask: '##.##.####',
-      filter: {"#": RegExp(r'[0-9]')},
-    );
-
-    DateTime? selectedDate = selectedBirthDate;
-
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: UI.card,
-          title: const Text(
-            'Выберите дату рождения',
-            style: TextStyle(color: UI.white, fontSize: 18),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Поле ввода с маской
-              TextField(
-                controller: dateController,
-                inputFormatters: [dateMaskFormatter],
-                style: const TextStyle(color: UI.white),
-                decoration: InputDecoration(
-                  labelText: 'Введите дату (дд.мм.гггг)',
-                  labelStyle: const TextStyle(color: UI.muted),
-                  filled: true,
-                  fillColor: UI.card,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: UI.primary),
-                  ),
-                ),
-                onChanged: (value) {
-                  if (value.length == 10) {
-                    try {
-                      final parts = value.split('.');
-                      if (parts.length == 3) {
-                        final day = int.parse(parts[0]);
-                        final month = int.parse(parts[1]);
-                        final year = int.parse(parts[2]);
-                        if (day >= 1 &&
-                            day <= 31 &&
-                            month >= 1 &&
-                            month <= 12 &&
-                            year >= 1900 &&
-                            year <= DateTime.now().year) {
-                          setState(() {
-                            selectedDate = DateTime(year, month, day);
-                          });
-                        }
-                      }
-                    } catch (e) {
-                      // Игнорируем ошибки парсинга
-                    }
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              // Кнопка для открытия календаря
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate:
-                        selectedDate ??
-                        DateTime.now().subtract(const Duration(days: 365 * 18)),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.dark(
-                            primary: UI.primary,
-                            onPrimary: UI.white,
-                            surface: UI.card,
-                            onSurface: UI.white,
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (date != null) {
-                    setState(() {
-                      selectedDate = date;
-                      dateController.text =
-                          '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
-                    });
-                  }
-                },
-                icon: const Icon(Icons.calendar_today),
-                label: const Text('Выбрать из календаря'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: UI.primary,
-                  foregroundColor: UI.white,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (selectedDate != null) {
-                  setDialogState(() {
-                    selectedBirthDate = selectedDate;
-                    playerBirthDateCtrl.text =
-                        '${selectedDate!.day.toString().padLeft(2, '0')}.${selectedDate!.month.toString().padLeft(2, '0')}.${selectedDate!.year}';
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: UI.primary,
-                foregroundColor: UI.white,
-              ),
-              child: const Text('Выбрать'),
-            ),
-          ],
         ),
       ),
     );

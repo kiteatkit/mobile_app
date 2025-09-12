@@ -7,7 +7,7 @@ import 'pages/coach_login_page.dart';
 import 'pages/player_dashboard_page.dart';
 import 'models/player.dart';
 import 'models/group.dart';
-import 'pages/group_view_page.dart';
+import 'pages/group_view_page_v2.dart';
 import 'pages/player_profile_page.dart';
 import 'pages/player_stats_page.dart';
 import 'pages/coach_dashboard_page.dart';
@@ -48,10 +48,10 @@ final GoRouter appRouter = GoRouter(
           final extra = state.extra as Map<String, dynamic>;
           final group = extra['group'] as Group;
           final isPlayerMode = extra['isPlayerMode'] as bool? ?? false;
-          return GroupViewPage(group: group, isPlayerMode: isPlayerMode);
+          return GroupViewPageV2(group: group, isPlayerMode: isPlayerMode);
         } else {
           final group = state.extra as Group;
-          return GroupViewPage(group: group, isPlayerMode: false);
+          return GroupViewPageV2(group: group, isPlayerMode: false);
         }
       },
     ),

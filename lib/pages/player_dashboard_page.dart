@@ -20,6 +20,8 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
   List<Player> _allPlayers = [];
   List<Group> _groups = [];
   bool _isLoading = true;
+  bool _isRankingExpanded = false;
+  late Player _currentPlayer;
 
   @override
   bool get wantKeepAlive => true;
@@ -27,6 +29,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
   @override
   void initState() {
     super.initState();
+    _currentPlayer = widget.player;
     _loadData();
   }
 
@@ -58,6 +61,12 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
         _allPlayers = players;
         _groups = groups;
         _isLoading = false;
+        // Обновляем данные текущего игрока
+        final updatedPlayer = players.firstWhere(
+          (p) => p.id == _currentPlayer.id,
+          orElse: () => _currentPlayer,
+        );
+        _currentPlayer = updatedPlayer;
       });
     } catch (e) {
       setState(() {
@@ -112,7 +121,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
         ),
         const SizedBox(height: 8),
         Text(
-          'Добро пожаловать, ${widget.player.name}!',
+          'Добро пожаловать, ${_currentPlayer.name}!',
           style: TextStyle(
             fontSize: UI.getBodyFontSize(context),
             color: UI.white,
@@ -131,14 +140,23 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
           context: context,
           icon: Icons.person,
           text: 'Редактировать профиль',
-          onTap: () => context.push('/profile', extra: widget.player),
+          onTap: () async {
+            await context.push('/profile', extra: _currentPlayer);
+            // Принудительно очищаем кэш и обновляем данные после возврата из профиля
+            await _repository.clearCache();
+            _loadData();
+          },
         ),
         const SizedBox(height: 8),
         _buildActionButton(
           context: context,
           icon: Icons.visibility,
           text: 'Статистика',
-          onTap: () => context.push('/stats', extra: widget.player),
+          onTap: () async {
+            await context.push('/stats', extra: _currentPlayer);
+            // Обновляем данные после возврата из статистики
+            _loadData();
+          },
         ),
         const SizedBox(height: 8),
         _buildActionButton(
@@ -217,7 +235,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
               child: _buildAchievementCard(
                 context: context,
                 title: 'Очки за ${_getCurrentMonthName()}',
-                value: widget.player.total_points.toString(),
+                value: _currentPlayer.total_points.toString(),
               ),
             ),
             const SizedBox(width: 12),
@@ -225,7 +243,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
               child: _buildAchievementCard(
                 context: context,
                 title: 'Посещено тренировок',
-                value: widget.player.attendance_count.toString(),
+                value: _currentPlayer.attendance_count.toString(),
               ),
             ),
           ],
@@ -274,7 +292,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     Group? playerGroup;
     try {
       playerGroup = _groups.firstWhere(
-        (group) => group.id == widget.player.group_id,
+        (group) => group.id == _currentPlayer.group_id,
       );
     } catch (e) {
       // Группа не найдена
@@ -347,6 +365,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     final sortedPlayers = List<Player>.from(_allPlayers)
       ..sort((a, b) => b.total_points.compareTo(a.total_points));
 
+    final playersToShow = _isRankingExpanded
+        ? sortedPlayers
+        : sortedPlayers.take(10).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -366,6 +388,26 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                 color: UI.primary,
               ),
             ),
+            const Spacer(),
+            if (sortedPlayers.length > 10)
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isRankingExpanded = !_isRankingExpanded;
+                  });
+                },
+                icon: Icon(
+                  _isRankingExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                ),
+                label: Text(
+                  _isRankingExpanded ? 'Свернуть' : 'Показать всех',
+                  style: TextStyle(
+                    fontSize: UI.getBodyFontSize(context),
+                    color: UI.primary,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -378,10 +420,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
           child: Column(
             children: [
               _buildRankingHeader(context),
-              ...sortedPlayers.take(10).toList().asMap().entries.map((entry) {
+              ...playersToShow.asMap().entries.map((entry) {
                 final index = entry.key;
                 final player = entry.value;
-                final isCurrentPlayer = player.id == widget.player.id;
+                final isCurrentPlayer = player.id == _currentPlayer.id;
                 return _RankingRow(
                   context: context,
                   position: index + 1,
@@ -775,7 +817,7 @@ class _RankingRow extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: isSmall ? 50 : 60,
+            width: isSmall ? 80 : 100,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -793,13 +835,23 @@ class _RankingRow extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: group.id.isEmpty
+                        ? UI.muted.withOpacity(0.2)
+                        : _parseColor(group.color).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: group.id.isEmpty
+                          ? UI.muted
+                          : _parseColor(group.color),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     group.name,
                     style: TextStyle(
-                      color: Colors.green,
+                      color: group.id.isEmpty
+                          ? UI.muted
+                          : _parseColor(group.color),
                       fontSize: isSmall ? 8 : 10,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -829,5 +881,11 @@ class _RankingRow extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _parseColor(String hex) {
+    final value =
+        int.tryParse(hex.replaceFirst('#', ''), radix: 16) ?? 0x3B82F6;
+    return Color(0xFF000000 | value);
   }
 }

@@ -17,7 +17,7 @@ class ModeSelectPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 40),
                 const Text(
-                  'BC Vikings App',
+                  'Викинги',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,

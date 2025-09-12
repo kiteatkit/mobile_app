@@ -47,7 +47,7 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
               children: [
                 const SizedBox(height: 40),
                 const Text(
-                  'BC Vikings App',
+                  'Викинги',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,

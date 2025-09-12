@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../ui/ui_constants.dart';
 import '../data/supabase_repository.dart';
 import '../models/group.dart';
@@ -70,6 +71,10 @@ class _GroupViewPageState extends State<GroupViewPage>
     setState(() => loading = true);
     final start = DateTime(selectedMonth.year, selectedMonth.month, 1);
     final end = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
+
+    // Принудительно очищаем кэш для получения актуальных данных
+    await repo.clearCache();
+
     final p = await repo.getPlayers(groupId: widget.group.id);
     final ts = await repo.getTrainingsInRange(
       start,
@@ -267,7 +272,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
   String _formatTrainingDateFull(String dateStr) {
     final date = DateTime.parse(dateStr);
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
   }
 
   @override
@@ -486,7 +491,7 @@ class _GroupViewPageState extends State<GroupViewPage>
   Widget _buildFixedTable(BuildContext context) {
     final isSmallScreen = UI.isSmallScreen(context);
     final playerColumnWidth = isSmallScreen ? 120.0 : 180.0;
-    final trainingColumnWidth = isSmallScreen ? 120.0 : 160.0;
+    final trainingColumnWidth = isSmallScreen ? 160.0 : 200.0;
     final totalColumnWidth = isSmallScreen ? 60.0 : 100.0;
     final rowHeight = isSmallScreen ? 60.0 : 80.0;
 
@@ -501,7 +506,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         children: [
           // ФИКСИРОВАННАЯ СТРОКА ЗАГОЛОВКОВ
           Container(
-            height: 72,
+            height: isSmallScreen ? 85 : 95,
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: UI.border)),
             ),
@@ -542,65 +547,66 @@ class _GroupViewPageState extends State<GroupViewPage>
                             decoration: const BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(color: UI.border),
-                                right: BorderSide(color: UI.border, width: 0.5),
                               ),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        _formatTrainingDateFull(training.date),
-                                        style: TextStyle(
-                                          color: UI.muted,
-                                          fontSize: isSmallScreen ? 11 : 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (!widget.isPlayerMode)
-                                      PopupMenuButton<String>(
-                                        icon: Icon(
-                                          Icons.more_vert,
-                                          color: UI.muted,
-                                          size: isSmallScreen ? 12 : 16,
-                                        ),
-                                        onSelected: (value) {
-                                          if (value == 'delete') {
-                                            _deleteTraining(training);
-                                          }
-                                        },
-                                        itemBuilder: (context) => [
-                                          const PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('Удалить тренировку'),
-                                          ),
-                                        ],
-                                      ),
-                                  ],
+                                // Дата тренировки
+                                Text(
+                                  _formatTrainingDateFull(training.date),
+                                  style: TextStyle(
+                                    color: UI.muted,
+                                    fontSize: isSmallScreen ? 11 : 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
+                                const SizedBox(height: 6),
+                                // Адрес тренировки без обводки
                                 if (training.title.isNotEmpty &&
                                     training.title !=
                                         _formatTrainingDateFull(
                                           training.date,
                                         )) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    training.title,
-                                    style: TextStyle(
-                                      color: UI.muted.withOpacity(0.7),
-                                      fontSize: isSmallScreen ? 9 : 10,
+                                  Container(
+                                    decoration: const BoxDecoration(),
+                                    child: Text(
+                                      training.title,
+                                      style: TextStyle(
+                                        color: UI.muted.withOpacity(0.9),
+                                        fontSize: isSmallScreen ? 8 : 9,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  const SizedBox(height: 2),
                                 ],
+                                // Кнопка меню
+                                if (!widget.isPlayerMode)
+                                  PopupMenuButton<String>(
+                                    icon: Icon(
+                                      Icons.more_vert,
+                                      color: UI.muted,
+                                      size: isSmallScreen ? 12 : 16,
+                                    ),
+                                    onSelected: (value) {
+                                      if (value == 'delete') {
+                                        _deleteTraining(training);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text('Удалить тренировку'),
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                           );
@@ -684,6 +690,40 @@ class _GroupViewPageState extends State<GroupViewPage>
                           ),
                           child: Row(
                             children: [
+                              // Аватар игрока
+                              Container(
+                                width: isSmallScreen ? 20 : 24,
+                                height: isSmallScreen ? 20 : 24,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: UI.primary,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ClipOval(
+                                  child:
+                                      player.avatar_url != null &&
+                                          player.avatar_url!.isNotEmpty
+                                      ? Image.network(
+                                          player.avatar_url!,
+                                          width: isSmallScreen ? 20 : 24,
+                                          height: isSmallScreen ? 20 : 24,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  _buildPlayerFallbackAvatar(
+                                                    player,
+                                                    isSmallScreen,
+                                                  ),
+                                        )
+                                      : _buildPlayerFallbackAvatar(
+                                          player,
+                                          isSmallScreen,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               if (isTopPlayer) ...[
                                 Icon(
                                   Icons.emoji_events,
@@ -728,11 +768,7 @@ class _GroupViewPageState extends State<GroupViewPage>
 
                           return Container(
                             width: trainingColumnWidth,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: UI.border, width: 0.5),
-                              ),
-                            ),
+                            decoration: const BoxDecoration(),
                             child: NotificationListener<ScrollNotification>(
                               onNotification: (scrollNotification) {
                                 // Синхронизируем вертикальную прокрутку всех столбцов
@@ -865,11 +901,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                         // Столбец "Средний балл"
                         Container(
                           width: totalColumnWidth,
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              right: BorderSide(color: UI.border, width: 0.5),
-                            ),
-                          ),
+                          decoration: const BoxDecoration(),
                           child: NotificationListener<ScrollNotification>(
                             onNotification: (scrollNotification) {
                               // Синхронизируем вертикальную прокрутку всех столбцов
@@ -1263,6 +1295,25 @@ class _GroupViewPageState extends State<GroupViewPage>
       }
     }
   }
+
+  Widget _buildPlayerFallbackAvatar(Player player, bool isSmallScreen) {
+    final size = isSmallScreen ? 20.0 : 24.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      child: Center(
+        child: Text(
+          player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
+          style: TextStyle(
+            color: UI.white,
+            fontSize: isSmallScreen ? 10 : 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AddTrainingDialog extends StatefulWidget {
@@ -1278,12 +1329,20 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
   // Добавлен _
   final _formKey = GlobalKey<FormState>();
   final _locationController = TextEditingController();
+  final _dateController = TextEditingController();
   DateTime? selectedDate;
   final repo = SupabaseRepository();
+  
+  // Маска для ввода даты
+  final dateMaskFormatter = MaskTextInputFormatter(
+    mask: '##.##.####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void dispose() {
     _locationController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 
@@ -1321,52 +1380,81 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
               },
             ),
             const SizedBox(height: 16),
-            InkWell(
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (date != null) {
-                  setState(() => selectedDate = date);
+            TextField(
+              controller: _dateController,
+              inputFormatters: [dateMaskFormatter],
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: UI.white),
+              decoration: InputDecoration(
+                labelText: 'Дата тренировки (дд.мм.гггг)',
+                labelStyle: const TextStyle(color: UI.muted),
+                filled: true,
+                fillColor: UI.card,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: UI.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: UI.primary),
+                ),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.calendar_today, color: UI.muted),
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate ?? DateTime.now(),
+                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.dark(
+                              primary: UI.primary,
+                              onPrimary: UI.white,
+                              surface: UI.card,
+                              onSurface: UI.white,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (date != null) {
+                      setState(() {
+                        selectedDate = date;
+                        _dateController.text = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+                      });
+                    }
+                  },
+                ),
+              ),
+              onChanged: (value) {
+                // Парсим введенную дату
+                if (value.length == 10) {
+                  try {
+                    final parts = value.split('.');
+                    if (parts.length == 3) {
+                      final day = int.parse(parts[0]);
+                      final month = int.parse(parts[1]);
+                      final year = int.parse(parts[2]);
+                      if (day >= 1 &&
+                          day <= 31 &&
+                          month >= 1 &&
+                          month <= 12 &&
+                          year >= 1900 &&
+                          year <= DateTime.now().year + 1) {
+                        setState(() {
+                          selectedDate = DateTime(year, month, day);
+                        });
+                      }
+                    }
+                  } catch (e) {
+                    // Игнорируем ошибки парсинга
+                  }
                 }
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: UI.border),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, color: UI.muted, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      selectedDate == null
-                          ? 'Выберите дату'
-                          : DateFormat('dd.MM.yyyy').format(selectedDate!),
-                      style: TextStyle(
-                        color: selectedDate == null ? UI.muted : UI.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
-            if (selectedDate == null)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'Выберите дату тренировки',
-                  style: TextStyle(color: Colors.red, fontSize: 12),
-                ),
-              ),
           ],
         ),
       ),
@@ -1377,22 +1465,55 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
-            if (_formKey.currentState!.validate() && selectedDate != null) {
+            if (_formKey.currentState!.validate()) {
+              // Получаем дату из TextField или selectedDate
+              DateTime? trainingDate = selectedDate;
+              if (_dateController.text.isNotEmpty && _dateController.text.length == 10) {
+                try {
+                  final parts = _dateController.text.split('.');
+                  if (parts.length == 3) {
+                    final day = int.parse(parts[0]);
+                    final month = int.parse(parts[1]);
+                    final year = int.parse(parts[2]);
+                    if (day >= 1 &&
+                        day <= 31 &&
+                        month >= 1 &&
+                        month <= 12 &&
+                        year >= 1900 &&
+                        year <= DateTime.now().year + 1) {
+                      trainingDate = DateTime(year, month, day);
+                    }
+                  }
+                } catch (e) {
+                  // Игнорируем ошибки парсинга
+                }
+              }
+              
+              if (trainingDate == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Введите корректную дату тренировки'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              
               try {
                 await repo.createTrainingSession(
                   groupId: widget.group.id,
                   address: _locationController.text,
-                  date: selectedDate!,
+                  date: trainingDate,
                 );
                 if (mounted) {
                   Navigator.of(context).pop({
                     'location': _locationController.text,
-                    'date': selectedDate!,
+                    'date': trainingDate,
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Тренировка на ${DateFormat('dd.MM.yyyy').format(selectedDate!)} создана',
+                        'Тренировка на ${DateFormat('dd.MM.yyyy').format(trainingDate)} создана',
                       ),
                       backgroundColor: UI.primary,
                     ),

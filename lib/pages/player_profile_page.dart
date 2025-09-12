@@ -7,9 +7,14 @@ import '../models/player.dart';
 import '../ui/ui_constants.dart';
 
 class PlayerProfilePage extends StatefulWidget {
-  const PlayerProfilePage({super.key, required this.player});
+  const PlayerProfilePage({
+    super.key,
+    required this.player,
+    this.onPlayerUpdated,
+  });
 
   final Player player;
+  final VoidCallback? onPlayerUpdated;
 
   @override
   State<PlayerProfilePage> createState() => _PlayerProfilePageState();
@@ -27,10 +32,12 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
   String? error;
+  late Player _currentPlayer;
 
   @override
   void initState() {
     super.initState();
+    _currentPlayer = widget.player;
     loginCtrl.text = widget.player.login;
   }
 
@@ -55,13 +62,17 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
       error = null;
     });
     try {
-      String? avatarUrl = widget.player.avatar_url;
+      String? avatarUrl = _currentPlayer.avatar_url;
       if (avatarBytes != null && avatarMime != null) {
         avatarUrl = await repo.uploadAvatar(
-          playerId: widget.player.id,
+          playerId: _currentPlayer.id,
           bytes: avatarBytes!,
           contentType: avatarMime!,
         );
+        // Обновляем URL аватара в объекте игрока для немедленного отображения
+        setState(() {
+          _currentPlayer = _currentPlayer.copyWith(avatar_url: avatarUrl);
+        });
       }
 
       // Проверяем совпадение новых паролей
@@ -78,16 +89,26 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
       }
 
       await repo.updatePlayer(
-        id: widget.player.id,
+        id: _currentPlayer.id,
         login: loginCtrl.text.trim(),
         password: newPassword,
         avatarUrl: avatarUrl,
       );
 
       if (!mounted) return;
+
+      // Принудительно очищаем кэш и перезагружаем данные
+      await repo.clearCache();
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Профиль обновлён')));
+
+      // Уведомляем об обновлении игрока
+      if (widget.onPlayerUpdated != null) {
+        widget.onPlayerUpdated!();
+      }
+
       Navigator.pop(context);
     } catch (e) {
       setState(() {
@@ -132,16 +153,16 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                       radius: UI.isSmallScreen(context) ? 50 : 60,
                       backgroundImage: avatarBytes != null
                           ? MemoryImage(avatarBytes!)
-                          : (widget.player.avatar_url != null
-                                ? NetworkImage(widget.player.avatar_url!)
+                          : (_currentPlayer.avatar_url != null
+                                ? NetworkImage(_currentPlayer.avatar_url!)
                                       as ImageProvider
                                 : null),
                       child:
                           (avatarBytes == null &&
-                              widget.player.avatar_url == null)
+                              _currentPlayer.avatar_url == null)
                           ? Text(
-                              widget.player.name.isNotEmpty
-                                  ? widget.player.name[0].toUpperCase()
+                              _currentPlayer.name.isNotEmpty
+                                  ? _currentPlayer.name[0].toUpperCase()
                                   : '?',
                               style: TextStyle(
                                 fontSize: UI.isSmallScreen(context) ? 32 : 40,

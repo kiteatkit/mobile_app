@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       ),
     );
     return MaterialApp.router(
-      title: 'BC Vikings App',
+      title: 'Викинги',
       theme: theme,
       routerConfig: appRouter,
       localizationsDelegates: const [

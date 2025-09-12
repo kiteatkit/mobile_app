@@ -358,8 +358,10 @@ class SupabaseRepository {
       if (login != null) payload['login'] = login;
       if (password != null) payload['password'] = password;
       if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
-      // Всегда обновляем group_id, даже если он null (для удаления из группы)
-      payload['group_id'] = groupId;
+      // Обновляем group_id только если он явно передан
+      if (groupId != null) {
+        payload['group_id'] = groupId;
+      }
       if (payload.isEmpty) return;
       await _client.from('players').update(payload).eq('id', id);
       _invalidateCache();
@@ -369,7 +371,7 @@ class SupabaseRepository {
   }
 
   Future<void> removePlayerFromGroup(String playerId) async {
-    await _client.from('players').update({'group_id': null}).eq('id', playerId);
+    await updatePlayer(id: playerId, groupId: null);
   }
 
   Future<void> deletePlayer(String playerId) async {
@@ -447,7 +449,11 @@ class SupabaseRepository {
     });
 
     // Создаем запланированные тренировки на ближайшие 4 недели
-    final now = DateTime.now();
+    final now = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      1,
+    ); // Начало месяца
     final endDate = now.add(const Duration(days: 28)); // 4 недели вперед
 
     for (int week = 0; week < 4; week++) {
@@ -742,6 +748,10 @@ class SupabaseRepository {
     _cachedPlayers = null;
     _cachedGroups = null;
     _lastCacheUpdate = null;
+  }
+
+  Future<void> clearCache() async {
+    _invalidateCache();
   }
 
   Future<bool> _checkInternetConnection() async {
