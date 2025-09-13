@@ -754,6 +754,47 @@ class SupabaseRepository {
     _invalidateCache();
   }
 
+  // Метод для расчета процента посещаемости группы
+  Future<double> getGroupAttendancePercentage(String groupId) async {
+    try {
+      // Получаем всех игроков группы
+      final players = await getPlayers(groupId: groupId);
+      if (players.isEmpty) return 0.0;
+
+      // Получаем тренировки группы до текущей даты
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final currentDate = DateTime(now.year, now.month, now.day);
+
+      final trainings = await getTrainingsInRange(
+        startOfMonth,
+        currentDate,
+        groupId: groupId,
+      );
+
+      if (trainings.isEmpty) return 0.0;
+
+      // Получаем записи посещаемости для всех тренировок
+      final sessionIds = trainings.map((t) => t.id).toList();
+      final attendanceRecords = await getAttendanceForSessions(sessionIds);
+
+      // Считаем общее количество возможных посещений
+      final totalPossibleAttendances = players.length * trainings.length;
+      if (totalPossibleAttendances == 0) return 0.0;
+
+      // Считаем количество фактических посещений
+      final actualAttendances = attendanceRecords
+          .where((record) => record.attended == true)
+          .length;
+
+      // Возвращаем процент посещаемости
+      return (actualAttendances / totalPossibleAttendances) * 100;
+    } catch (e) {
+      print('Ошибка при расчете посещаемости группы: $e');
+      return 0.0;
+    }
+  }
+
   Future<bool> _checkInternetConnection() async {
     // Упрощённая проверка - просто возвращаем true
     // Supabase сам обработает ошибки сети

@@ -100,7 +100,7 @@ class PlayerScoreDataSource extends DataGridSource {
       child: Text(
         playerRow.player.name,
         style: const TextStyle(
-          color: UI.white,
+          color: UI.textPrimary,
           fontSize: 14,
           fontWeight: FontWeight.normal,
         ),
@@ -202,7 +202,7 @@ class PlayerScoreDataSource extends DataGridSource {
           child: Text(
             averageScore.toStringAsFixed(1),
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),

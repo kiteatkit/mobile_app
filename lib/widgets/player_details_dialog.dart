@@ -37,7 +37,7 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: UI.white,
+                      color: UI.textPrimary,
                     ),
                   )
                 : null,
@@ -48,7 +48,7 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
               'Данные игрока',
               style: TextStyle(
                 fontSize: UI.getTitleFontSize(context),
-                color: UI.white,
+                color: UI.textPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -121,7 +121,7 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
             value,
             style: TextStyle(
               fontSize: UI.getBodyFontSize(context),
-              color: UI.white,
+              color: UI.textPrimary,
             ),
           ),
         ),
@@ -157,7 +157,7 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
                   _obscurePassword ? '••••••••' : value,
                   style: TextStyle(
                     fontSize: UI.getBodyFontSize(context),
-                    color: UI.white,
+                    color: UI.textPrimary,
                   ),
                 ),
               ),

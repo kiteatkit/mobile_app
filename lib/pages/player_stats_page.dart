@@ -174,7 +174,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
               ? widget.player.name[0].toUpperCase()
               : '?',
           style: const TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: 32,
             fontWeight: FontWeight.bold,
           ),
@@ -249,7 +249,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                           Text(
                             widget.player.name,
                             style: TextStyle(
-                              color: UI.white,
+                              color: UI.textPrimary,
                               fontSize: UI.getTitleFontSize(context),
                               fontWeight: FontWeight.bold,
                             ),
@@ -271,7 +271,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                             child: Text(
                               '@${widget.player.login}',
                               style: TextStyle(
-                                color: UI.white,
+                                color: UI.textPrimary,
                                 fontSize: UI.getBodyFontSize(context),
                               ),
                             ),
@@ -384,14 +384,14 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               children: [
                                 Icon(
                                   Icons.access_time,
-                                  color: UI.white,
+                                  color: UI.textPrimary,
                                   size: UI.getIconSize(context),
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'История посещений',
                                   style: TextStyle(
-                                    color: UI.white,
+                                    color: UI.textPrimary,
                                     fontSize: UI.getSubtitleFontSize(context),
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -462,7 +462,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                           ? _formatDate(ts.date)
                                                           : 'Тренировка',
                                                       style: TextStyle(
-                                                        color: UI.white,
+                                                        color: UI.textPrimary,
                                                         fontSize: UI
                                                             .getBodyFontSize(
                                                               context,
@@ -597,7 +597,7 @@ class _StatCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                      color: UI.white,
+                      color: UI.textPrimary,
                       fontSize: UI.isSmallScreen(context) ? 12 : 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -628,7 +628,7 @@ class _StatCard extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: TextStyle(
-                      color: UI.white,
+                      color: UI.textPrimary,
                       fontSize: UI.isSmallScreen(context) ? 10 : 12,
                     ),
                     overflow: TextOverflow.ellipsis,

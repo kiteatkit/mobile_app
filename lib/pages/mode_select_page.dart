@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../ui/ui_constants.dart';
 
 class ModeSelectPage extends StatelessWidget {
   const ModeSelectPage({super.key});
@@ -7,7 +8,7 @@ class ModeSelectPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0C0B),
+      backgroundColor: UI.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -16,83 +17,204 @@ class ModeSelectPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 40),
-                const Text(
-                  'Викинги',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFF8A00),
+                // Анимированный логотип
+                BounceInAnimation(
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: UI.gradientBasketball,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            UI.cardShadow.copyWith(
+                              color: UI.primary.withOpacity(0.3),
+                              blurRadius: 30,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.sports_basketball,
+                          size: 48,
+                          color: UI.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Викинги',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: UI.fontWeightBold,
+                          color: UI.primary,
+                          letterSpacing: 1.2,
+                          fontFamily: UI.fontFamily,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Система управления баскетбольной командой',
-                  style: TextStyle(color: Color(0xFF9A9A9A)),
-                  textAlign: TextAlign.center,
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 200),
+                  child: Text(
+                    'Система управления баскетбольной командой',
+                    style: TextStyle(
+                      color: UI.textMuted,
+                      fontSize: 16,
+                      fontWeight: UI.fontWeightMedium,
+                      fontFamily: UI.fontFamily,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 32,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF171412),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Выберите режим входа',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                // Анимированная карточка
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 400),
+                  child: AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 40,
                       ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 44,
-                        child: GestureDetector(
-                          onTap: () => context.go('/login/player'),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF8A00), Color(0xFFFFC262)],
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Вход игрока',
+                      decoration: BoxDecoration(
+                        gradient: UI.gradientCard,
+                        borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+                        border: Border.all(color: UI.border),
+                        boxShadow: [UI.cardShadow],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.login, color: UI.primary, size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Выберите режим входа',
                                 style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                  color: UI.textPrimary,
+                                  fontWeight: UI.fontWeightBold,
+                                  fontFamily: UI.fontFamily,
                                 ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Кнопка входа игрока
+                          AnimatedButton(
+                            onPressed: () => context.go('/login/player'),
+                            child: Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: UI.gradientPrimary,
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                boxShadow: [UI.buttonShadow],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.person,
+                                    color: UI.textPrimary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Вход игрока',
+                                    style: TextStyle(
+                                      color: UI.textPrimary,
+                                      fontWeight: UI.fontWeightBold,
+                                      fontSize: 16,
+                                      fontFamily: UI.fontFamily,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Кнопка входа тренера
+                          AnimatedButton(
+                            onPressed: () => context.go('/login/coach'),
+                            child: Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: UI.textPrimary,
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                border: Border.all(color: UI.primary, width: 2),
+                                boxShadow: [UI.buttonShadow],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.sports,
+                                    color: UI.primary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Вход тренера',
+                                    style: TextStyle(
+                                      color: UI.primary,
+                                      fontWeight: UI.fontWeightBold,
+                                      fontSize: 16,
+                                      fontFamily: UI.fontFamily,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Дополнительная информация
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 600),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: UI.surface,
+                      borderRadius: BorderRadius.circular(UI.radiusLg),
+                      border: Border.all(color: UI.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: UI.info, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Выберите подходящий режим для входа в систему',
+                            style: TextStyle(
+                              color: UI.textMuted,
+                              fontSize: 14,
+                              fontFamily: UI.fontFamily,
+                              fontWeight: UI.fontWeightRegular,
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 44,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF24201E)),
-                            backgroundColor: const Color(0xFF0F0C0B),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () => context.go('/login/coach'),
-                          child: const Text('Вход тренера'),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

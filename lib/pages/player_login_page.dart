@@ -54,12 +54,14 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
       backgroundColor: UI.background,
       appBar: AppBar(
         backgroundColor: UI.background,
-        foregroundColor: UI.white,
+        foregroundColor: UI.black,
+        elevation: 0,
         title: Text(
           'Вход игрока',
           style: TextStyle(
             fontSize: UI.getTitleFontSize(context),
-            color: UI.white,
+            color: UI.black,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -70,182 +72,287 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Логотип
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: UI.primary,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 40,
+                // Анимированный логотип
+                BounceInAnimation(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: UI.gradientBasketball,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        UI.cardShadow.copyWith(
+                          color: UI.primary.withOpacity(0.3),
+                          blurRadius: 30,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: UI.textPrimary,
+                      size: 50,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Вход игрока',
-                  style: TextStyle(
-                    fontSize: UI.getTitleFontSize(context),
-                    fontWeight: FontWeight.bold,
-                    color: UI.primary,
+                const SizedBox(height: 32),
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 200),
+                  child: Text(
+                    'Вход игрока',
+                    style: TextStyle(
+                      fontSize: UI.getTitleFontSize(context),
+                      fontWeight: UI.fontWeightBold,
+                      color: UI.primary,
+                      fontFamily: UI.fontFamily,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Введите свои данные для входа',
-                  style: TextStyle(
-                    fontSize: UI.getBodyFontSize(context),
-                    color: UI.muted,
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 400),
+                  child: Text(
+                    'Введите свои данные для входа',
+                    style: TextStyle(
+                      fontSize: UI.getBodyFontSize(context),
+                      color: UI.textMuted,
+                      fontFamily: UI.fontFamily,
+                      fontWeight: UI.fontWeightRegular,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
 
-                // Форма входа
-                Container(
-                  padding: UI.getCardPadding(context),
-                  decoration: BoxDecoration(
-                    color: UI.card,
-                    borderRadius: BorderRadius.circular(UI.radiusLg),
-                    border: Border.all(color: UI.border),
-                  ),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _loginController,
-                        style: const TextStyle(color: UI.white),
-                        decoration: InputDecoration(
-                          labelText: 'Логин',
-                          labelStyle: const TextStyle(color: UI.muted),
-                          filled: true,
-                          fillColor: UI.card,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: UI.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: UI.primary),
-                          ),
-                        ),
+                // Анимированная форма входа
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 600),
+                  child: AnimatedCard(
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        gradient: UI.gradientCard,
+                        borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+                        border: Border.all(color: UI.border),
+                        boxShadow: [UI.cardShadow],
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: const TextStyle(color: UI.white),
-                        decoration: InputDecoration(
-                          labelText: 'Пароль',
-                          labelStyle: const TextStyle(color: UI.muted),
-                          filled: true,
-                          fillColor: UI.card,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: UI.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: UI.primary),
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: UI.muted,
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _loginController,
+                            style: TextStyle(
+                              color: UI.textPrimary,
+                              fontFamily: UI.fontFamily,
+                              fontWeight: UI.fontWeightRegular,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(UI.radiusSm),
-                            border: Border.all(
-                              color: Colors.red.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                color: Colors.red,
-                                size: 16,
+                            decoration: InputDecoration(
+                              labelText: 'Логин',
+                              labelStyle: TextStyle(
+                                color: UI.textMuted,
+                                fontFamily: UI.fontFamily,
+                                fontWeight: UI.fontWeightMedium,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _error!,
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14,
-                                  ),
+                              filled: true,
+                              fillColor: UI.surface,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                borderSide: const BorderSide(color: UI.border),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: UI.primary,
+                                  width: 2,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: UI.getButtonHeight(context),
-                        child: ElevatedButton(
-                          onPressed: _loading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: UI.primary,
-                            foregroundColor: UI.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(UI.radiusSm),
+                              prefixIcon: const Icon(
+                                Icons.person,
+                                color: UI.primary,
+                              ),
                             ),
                           ),
-                          child: _loading
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                          const SizedBox(height: 20),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            style: TextStyle(
+                              color: UI.textPrimary,
+                              fontFamily: UI.fontFamily,
+                              fontWeight: UI.fontWeightRegular,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Пароль',
+                              labelStyle: TextStyle(
+                                color: UI.textMuted,
+                                fontFamily: UI.fontFamily,
+                                fontWeight: UI.fontWeightMedium,
+                              ),
+                              filled: true,
+                              fillColor: UI.surface,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                borderSide: const BorderSide(color: UI.border),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: UI.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.lock,
+                                color: UI.primary,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: UI.muted,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: UI.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
+                                ),
+                                border: Border.all(
+                                  color: UI.primary.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    color: UI.primary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _error!,
+                                      style: const TextStyle(
+                                        color: UI.primary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                )
-                              : Text(
-                                  'Войти',
-                                  style: TextStyle(
-                                    fontSize: UI.getBodyFontSize(context),
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 32),
+                          AnimatedButton(
+                            onPressed: _loading ? null : _handleLogin,
+                            child: Container(
+                              width: double.infinity,
+                              height: UI.getButtonHeight(context) + 8,
+                              decoration: BoxDecoration(
+                                gradient: _loading ? null : UI.gradientPrimary,
+                                color: _loading ? UI.muted : null,
+                                borderRadius: BorderRadius.circular(
+                                  UI.radiusLg,
                                 ),
-                        ),
+                                boxShadow: _loading ? null : [UI.buttonShadow],
+                              ),
+                              child: _loading
+                                  ? const Center(
+                                      child: SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                UI.white,
+                                              ),
+                                        ),
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.login,
+                                          color: UI.textPrimary,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Войти',
+                                          style: TextStyle(
+                                            fontSize: UI.getBodyFontSize(
+                                              context,
+                                            ),
+                                            fontWeight: UI.fontWeightSemiBold,
+                                            color: UI.textPrimary,
+                                            fontFamily: UI.fontFamily,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: UI.getButtonHeight(context),
-                  child: OutlinedButton(
+                const SizedBox(height: 24),
+                BounceInAnimation(
+                  delay: const Duration(milliseconds: 800),
+                  child: AnimatedButton(
                     onPressed: () => context.go('/'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: UI.border),
-                      foregroundColor: UI.white,
-                    ),
-                    child: Text(
-                      'Назад',
-                      style: TextStyle(fontSize: UI.getBodyFontSize(context)),
+                    child: Container(
+                      width: double.infinity,
+                      height: UI.getButtonHeight(context),
+                      decoration: BoxDecoration(
+                        color: UI.textPrimary,
+                        borderRadius: BorderRadius.circular(UI.radiusLg),
+                        border: Border.all(color: UI.primary, width: 2),
+                        boxShadow: [UI.buttonShadow],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.arrow_back,
+                            color: UI.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Назад',
+                            style: TextStyle(
+                              fontSize: UI.getBodyFontSize(context),
+                              color: UI.primary,
+                              fontWeight: UI.fontWeightSemiBold,
+                              fontFamily: UI.fontFamily,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

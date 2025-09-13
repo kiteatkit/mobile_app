@@ -130,7 +130,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
       title: Text(
         'Расписание тренировок - ${widget.group.name}',
         style: TextStyle(
-          color: UI.white,
+          color: UI.textPrimary,
           fontSize: UI.getSubtitleFontSize(context),
         ),
       ),
@@ -143,7 +143,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
               // Адрес тренировки
               TextField(
                 controller: titleCtrl,
-                style: const TextStyle(color: UI.white),
+                style: const TextStyle(color: UI.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Адрес тренировки',
                   labelStyle: const TextStyle(color: UI.muted),
@@ -165,7 +165,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
               Text(
                 'Дни недели:',
                 style: TextStyle(
-                  color: UI.white,
+                  color: UI.textPrimary,
                   fontSize: UI.getBodyFontSize(context),
                   fontWeight: FontWeight.bold,
                 ),
@@ -209,7 +209,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
                         child: Text(
                           day['short'],
                           style: TextStyle(
-                            color: isSelected ? UI.white : UI.muted,
+                            color: isSelected ? UI.textPrimary : UI.muted,
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -242,7 +242,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
               onPressed: _canCreateSchedule ? _createSchedule : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _canCreateSchedule ? UI.primary : UI.muted,
-                foregroundColor: UI.white,
+                foregroundColor: UI.textPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(UI.radiusSm),
                 ),
@@ -253,7 +253,9 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
                       width: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          UI.textPrimary,
+                        ),
                       ),
                     )
                   : Text(

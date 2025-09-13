@@ -27,7 +27,7 @@ class CustomBackButton extends StatelessWidget {
             Text(
               text,
               style: const TextStyle(
-                color: UI.white,
+                color: UI.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

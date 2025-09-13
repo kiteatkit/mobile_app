@@ -399,7 +399,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                 child: Text(
                                   '${widget.group.name} - Игроки команды',
                                   style: TextStyle(
-                                    color: UI.white,
+                                    color: UI.textPrimary,
                                     fontSize: UI.getSubtitleFontSize(context),
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -445,7 +445,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     const Text(
                                       'Игроки команды',
                                       style: TextStyle(
-                                        color: UI.white,
+                                        color: UI.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -455,7 +455,9 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       children: [
                                         const Text(
                                           'Месяц:',
-                                          style: TextStyle(color: UI.white),
+                                          style: TextStyle(
+                                            color: UI.textPrimary,
+                                          ),
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
@@ -480,7 +482,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               underline: const SizedBox(),
                                               icon: const Icon(
                                                 Icons.keyboard_arrow_down,
-                                                color: UI.white,
+                                                color: UI.textPrimary,
                                                 size: 12,
                                               ),
                                               items: List.generate(12, (i) {
@@ -494,7 +496,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                   child: Text(
                                                     _formatMonth(d),
                                                     style: const TextStyle(
-                                                      color: UI.white,
+                                                      color: UI.textPrimary,
                                                     ),
                                                   ),
                                                 );
@@ -692,7 +694,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     const Text(
                                       'Игроки команды',
                                       style: TextStyle(
-                                        color: UI.white,
+                                        color: UI.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -700,7 +702,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     const Spacer(),
                                     const Text(
                                       'Месяц:',
-                                      style: TextStyle(color: UI.white),
+                                      style: TextStyle(color: UI.textPrimary),
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
@@ -721,7 +723,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                         underline: const SizedBox(),
                                         icon: const Icon(
                                           Icons.keyboard_arrow_down,
-                                          color: UI.white,
+                                          color: UI.textPrimary,
                                           size: 12,
                                         ),
                                         items: List.generate(12, (i) {
@@ -735,7 +737,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             child: Text(
                                               _formatMonth(d),
                                               style: const TextStyle(
-                                                color: UI.white,
+                                                color: UI.textPrimary,
                                               ),
                                             ),
                                           );
@@ -756,7 +758,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               _openAddTrainingDialog(),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: UI.primary,
-                                            foregroundColor: UI.white,
+                                            foregroundColor: UI.textPrimary,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(8),
@@ -801,7 +803,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                               _openTrainingScheduleDialog(),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: UI.primary,
-                                            foregroundColor: UI.white,
+                                            foregroundColor: UI.textPrimary,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(8),
@@ -840,7 +842,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   const Text(
                                     'Игроки команды',
                                     style: TextStyle(
-                                      color: UI.white,
+                                      color: UI.textPrimary,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -850,7 +852,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     children: [
                                       const Text(
                                         'Месяц:',
-                                        style: TextStyle(color: UI.white),
+                                        style: TextStyle(color: UI.textPrimary),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -874,7 +876,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             underline: const SizedBox(),
                                             icon: const Icon(
                                               Icons.keyboard_arrow_down,
-                                              color: UI.white,
+                                              color: UI.textPrimary,
                                               size: 12,
                                             ),
                                             items: List.generate(12, (i) {
@@ -888,7 +890,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                 child: Text(
                                                   _formatMonth(d),
                                                   style: const TextStyle(
-                                                    color: UI.white,
+                                                    color: UI.textPrimary,
                                                   ),
                                                 ),
                                               );
@@ -915,7 +917,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                   _openAddTrainingDialog(),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: UI.primary,
-                                                foregroundColor: UI.white,
+                                                foregroundColor: UI.textPrimary,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(6),
@@ -941,7 +943,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                   _openTrainingScheduleDialog(),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: UI.primary,
-                                                foregroundColor: UI.white,
+                                                foregroundColor: UI.textPrimary,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(6),
@@ -968,7 +970,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   const Text(
                                     'Игроки команды',
                                     style: TextStyle(
-                                      color: UI.white,
+                                      color: UI.textPrimary,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -976,7 +978,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                   const Spacer(),
                                   const Text(
                                     'Месяц:',
-                                    style: TextStyle(color: UI.white),
+                                    style: TextStyle(color: UI.textPrimary),
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
@@ -997,7 +999,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                       underline: const SizedBox(),
                                       icon: const Icon(
                                         Icons.keyboard_arrow_down,
-                                        color: UI.white,
+                                        color: UI.textPrimary,
                                         size: 12,
                                       ),
                                       items: List.generate(12, (i) {
@@ -1011,7 +1013,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                           child: Text(
                                             _formatMonth(d),
                                             style: const TextStyle(
-                                              color: UI.white,
+                                              color: UI.textPrimary,
                                             ),
                                           ),
                                         );
@@ -1032,7 +1034,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             _openAddTrainingDialog(),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: UI.primary,
-                                          foregroundColor: UI.white,
+                                          foregroundColor: UI.textPrimary,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -1054,7 +1056,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                             _openTrainingScheduleDialog(),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: UI.primary,
-                                          foregroundColor: UI.white,
+                                          foregroundColor: UI.textPrimary,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -1584,7 +1586,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                     player.id,
                                                   ).toStringAsFixed(1),
                                                   style: TextStyle(
-                                                    color: UI.white,
+                                                    color: UI.textPrimary,
                                                     fontSize:
                                                         UI.isSmallScreen(
                                                           context,
@@ -1649,7 +1651,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           Text(
             label,
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: UI.isSmallScreen(context) ? 10 : 12,
             ),
             textAlign: TextAlign.center,
@@ -1682,7 +1684,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           Text(
             'Топ-3 игроков',
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: UI.isSmallScreen(context) ? 10 : 12,
               fontWeight: FontWeight.bold,
             ),
@@ -1724,7 +1726,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                             child: Text(
                               player.name,
                               style: TextStyle(
-                                color: UI.white,
+                                color: UI.textPrimary,
                                 fontSize: UI.isSmallScreen(context) ? 10 : 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1807,7 +1809,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           title: Text(
             'Редактировать баллы',
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: UI.getSubtitleFontSize(context),
             ),
           ),
@@ -1840,16 +1842,16 @@ class _GroupViewPageState extends State<GroupViewPage>
                   underline: const SizedBox(),
                   icon: const Icon(
                     Icons.keyboard_arrow_down,
-                    color: UI.white,
+                    color: UI.textPrimary,
                     size: 16,
                   ),
-                  style: const TextStyle(color: UI.white),
+                  style: const TextStyle(color: UI.textPrimary),
                   items: List.generate(6, (i) {
                     return DropdownMenuItem<int>(
                       value: i,
                       child: Text(
                         i.toString(),
-                        style: const TextStyle(color: UI.white),
+                        style: const TextStyle(color: UI.textPrimary),
                       ),
                     );
                   }),
@@ -1873,7 +1875,7 @@ class _GroupViewPageState extends State<GroupViewPage>
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: UI.primary,
-                foregroundColor: UI.white,
+                foregroundColor: UI.textPrimary,
               ),
               child: const Text('Сохранить'),
             ),
@@ -1942,7 +1944,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         title: Text(
           'Удалить тренировку',
           style: TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: UI.getSubtitleFontSize(context),
           ),
         ),
@@ -1962,7 +1964,7 @@ class _GroupViewPageState extends State<GroupViewPage>
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: UI.white,
+              foregroundColor: UI.textPrimary,
             ),
             child: const Text('Удалить'),
           ),
@@ -2013,7 +2015,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           title: Text(
             'Создать тренировку',
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: UI.getSubtitleFontSize(context),
             ),
           ),
@@ -2023,7 +2025,7 @@ class _GroupViewPageState extends State<GroupViewPage>
               TextField(
                 controller: dateController,
                 inputFormatters: [dateMaskFormatter],
-                style: const TextStyle(color: UI.white),
+                style: const TextStyle(color: UI.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Дата тренировки (дд.мм.гггг)',
                   labelStyle: const TextStyle(color: UI.muted),
@@ -2052,9 +2054,9 @@ class _GroupViewPageState extends State<GroupViewPage>
                             data: Theme.of(context).copyWith(
                               colorScheme: const ColorScheme.dark(
                                 primary: UI.primary,
-                                onPrimary: UI.white,
+                                onPrimary: UI.textPrimary,
                                 surface: UI.card,
-                                onSurface: UI.white,
+                                onSurface: UI.textPrimary,
                               ),
                             ),
                             child: child!,
@@ -2088,7 +2090,7 @@ class _GroupViewPageState extends State<GroupViewPage>
               const SizedBox(height: 16),
               TextField(
                 controller: addressController,
-                style: const TextStyle(color: UI.white),
+                style: const TextStyle(color: UI.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Адрес тренировки',
                   labelStyle: const TextStyle(color: UI.muted),
@@ -2117,7 +2119,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: selectedDate != null ? UI.primary : UI.muted,
-                foregroundColor: UI.white,
+                foregroundColor: UI.textPrimary,
               ),
               child: const Text('Создать'),
             ),
@@ -2262,7 +2264,7 @@ class _PlayerInfo extends StatelessWidget {
                       child: Text(
                         player.name,
                         style: TextStyle(
-                          color: UI.white,
+                          color: UI.textPrimary,
                           fontSize: UI.isSmallScreen(context) ? 14 : 17,
                           fontWeight: FontWeight.bold,
                         ),
@@ -2307,7 +2309,7 @@ class _PlayerInfo extends StatelessWidget {
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: size * 0.5,
             fontWeight: FontWeight.bold,
           ),

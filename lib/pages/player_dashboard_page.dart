@@ -81,7 +81,19 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     if (_isLoading) {
       return Scaffold(
         backgroundColor: UI.background,
-        body: const Center(child: CircularProgressIndicator(color: UI.primary)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: UI.primary, strokeWidth: 3),
+              const SizedBox(height: 16),
+              Text(
+                'Загрузка данных...',
+                style: TextStyle(color: UI.muted, fontSize: 16),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -93,13 +105,22 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context),
+              BounceInAnimation(child: _buildHeader(context)),
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-              _buildAchievementsSection(context),
+              BounceInAnimation(
+                delay: const Duration(milliseconds: 200),
+                child: _buildAchievementsSection(context),
+              ),
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-              _buildTeamsSection(context),
+              BounceInAnimation(
+                delay: const Duration(milliseconds: 400),
+                child: _buildTeamsSection(context),
+              ),
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-              _buildRankingSection(context),
+              BounceInAnimation(
+                delay: const Duration(milliseconds: 600),
+                child: _buildRankingSection(context),
+              ),
             ],
           ),
         ),
@@ -108,28 +129,62 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Панель игрока',
-          style: TextStyle(
-            fontSize: UI.getTitleFontSize(context),
-            fontWeight: FontWeight.bold,
-            color: UI.primary,
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: UI.gradientBasketball,
+        borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+        boxShadow: [UI.cardShadow.copyWith(color: UI.primary.withOpacity(0.2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: UI.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+                child: const Icon(
+                  Icons.sports_basketball,
+                  color: UI.textPrimary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Панель игрока',
+                      style: TextStyle(
+                        fontSize: UI.getTitleFontSize(context),
+                        fontWeight: UI.fontWeightBold,
+                        color: UI.textPrimary,
+                        fontFamily: UI.fontFamily,
+                      ),
+                    ),
+                    Text(
+                      'Добро пожаловать, ${_currentPlayer.name}!',
+                      style: TextStyle(
+                        fontSize: UI.getBodyFontSize(context),
+                        color: UI.textSecondary,
+                        fontFamily: UI.fontFamily,
+                        fontWeight: UI.fontWeightRegular,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Добро пожаловать, ${_currentPlayer.name}!',
-          style: TextStyle(
-            fontSize: UI.getBodyFontSize(context),
-            color: UI.white,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildActionButtons(context),
-      ],
+          const SizedBox(height: 24),
+          _buildActionButtons(context),
+        ],
+      ),
     );
   }
 
@@ -175,31 +230,46 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     required String text,
     required VoidCallback onTap,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      height: UI.getButtonHeight(context),
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: UI.card,
-          foregroundColor: UI.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UI.radiusLg),
-            side: const BorderSide(color: UI.border),
-          ),
+    return AnimatedButton(
+      onPressed: onTap,
+      child: Container(
+        width: double.infinity,
+        height: UI.getButtonHeight(context) + 8,
+        decoration: BoxDecoration(
+          color: UI.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(UI.radiusLg),
+          border: Border.all(color: UI.white.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: UI.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: UI.getIconSize(context)),
+            const SizedBox(width: 16),
+            Icon(icon, size: UI.getIconSize(context), color: UI.textPrimary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 text,
-                style: TextStyle(fontSize: UI.getBodyFontSize(context)),
+                style: TextStyle(
+                  fontSize: UI.getBodyFontSize(context),
+                  color: UI.textPrimary,
+                  fontWeight: UI.fontWeightSemiBold,
+                  fontFamily: UI.fontFamily,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: UI.textPrimary,
+            ),
+            const SizedBox(width: 16),
           ],
         ),
       ),
@@ -207,48 +277,71 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
   }
 
   Widget _buildAchievementsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return AnimatedCard(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: UI.gradientCard,
+          borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+          border: Border.all(color: UI.border),
+          boxShadow: [UI.cardShadow],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.emoji_events,
-              color: UI.primary,
-              size: UI.getIconSize(context),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: UI.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(UI.radiusLg),
+                  ),
+                  child: Icon(
+                    Icons.emoji_events,
+                    color: UI.primary,
+                    size: UI.getIconSize(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Мои достижения',
+                  style: TextStyle(
+                    fontSize: UI.getSubtitleFontSize(context),
+                    fontWeight: UI.fontWeightBold,
+                    color: UI.textPrimary,
+                    fontFamily: UI.fontFamily,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Мои достижения',
-              style: TextStyle(
-                fontSize: UI.getSubtitleFontSize(context),
-                fontWeight: FontWeight.bold,
-                color: UI.primary,
-              ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildAchievementCard(
+                    context: context,
+                    title: 'Очки за ${_getCurrentMonthName()}',
+                    value: _currentPlayer.total_points.toString(),
+                    icon: Icons.star,
+                    color: UI.warning,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildAchievementCard(
+                    context: context,
+                    title: 'Посещено тренировок',
+                    value: _currentPlayer.attendance_count.toString(),
+                    icon: Icons.fitness_center,
+                    color: UI.success,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildAchievementCard(
-                context: context,
-                title: 'Очки за ${_getCurrentMonthName()}',
-                value: _currentPlayer.total_points.toString(),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildAchievementCard(
-                context: context,
-                title: 'Посещено тренировок',
-                value: _currentPlayer.attendance_count.toString(),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
@@ -256,31 +349,44 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     required BuildContext context,
     required String title,
     required String value,
+    required IconData icon,
+    required Color color,
   }) {
     return Container(
-      padding: UI.getCardPadding(context),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: UI.card,
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(UI.radiusLg),
-        border: Border.all(color: UI.border),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: UI.muted,
-              fontSize: UI.isSmallScreen(context) ? 12 : 14,
-            ),
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: UI.textMuted,
+                    fontSize: UI.isSmallScreen(context) ? 12 : 14,
+                    fontWeight: UI.fontWeightMedium,
+                    fontFamily: UI.fontFamily,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
-              color: UI.white,
-              fontSize: UI.isSmallScreen(context) ? 18 : 20,
-              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: UI.isSmallScreen(context) ? 24 : 28,
+              fontWeight: UI.fontWeightBold,
+              fontFamily: UI.fontFamily,
             ),
           ),
         ],
@@ -299,65 +405,106 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
       playerGroup = null;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Команды',
-          style: TextStyle(
-            fontSize: UI.getSubtitleFontSize(context),
-            fontWeight: FontWeight.bold,
-            color: UI.primary,
-          ),
+    return AnimatedCard(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: UI.gradientCard,
+          borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+          border: Border.all(color: UI.border),
+          boxShadow: [UI.cardShadow],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Нажмите на карточку команды, чтобы увидеть детальную информацию',
-          style: TextStyle(
-            color: UI.muted,
-            fontSize: UI.isSmallScreen(context) ? 12 : 14,
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (playerGroup != null)
-          _TeamCard(
-            context: context,
-            group: playerGroup,
-            allPlayers: _allPlayers,
-            onTap: () => context.push(
-              '/group-view',
-              extra: {'group': playerGroup, 'isPlayerMode': true},
-            ),
-          )
-        else
-          Container(
-            padding: UI.getCardPadding(context),
-            decoration: BoxDecoration(
-              color: UI.card,
-              borderRadius: BorderRadius.circular(UI.radiusLg),
-              border: Border.all(color: UI.border),
-            ),
-            child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: UI.muted,
-                  size: UI.getIconSize(context),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: UI.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(UI.radiusLg),
+                  ),
+                  child: Icon(
+                    Icons.groups,
+                    color: UI.info,
+                    size: UI.getIconSize(context),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Игрок не состоит ни в одной группе',
-                    style: TextStyle(
-                      color: UI.muted,
-                      fontSize: UI.getBodyFontSize(context),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Команды',
+                        style: TextStyle(
+                          fontSize: UI.getSubtitleFontSize(context),
+                          fontWeight: UI.fontWeightBold,
+                          color: UI.textPrimary,
+                          fontFamily: UI.fontFamily,
+                        ),
+                      ),
+                      Text(
+                        'Нажмите на карточку команды, чтобы увидеть детальную информацию',
+                        style: TextStyle(
+                          color: UI.textMuted,
+                          fontSize: UI.isSmallScreen(context) ? 12 : 14,
+                          fontFamily: UI.fontFamily,
+                          fontWeight: UI.fontWeightRegular,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-      ],
+            const SizedBox(height: 20),
+            if (playerGroup != null)
+              _TeamCard(
+                context: context,
+                group: playerGroup,
+                allPlayers: _allPlayers,
+                onTap: () async {
+                  await context.push(
+                    '/group-view',
+                    extra: {'group': playerGroup, 'isPlayerMode': true},
+                  );
+                  // Обновляем данные после возврата из группы
+                  _loadData();
+                },
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: UI.surface,
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                  border: Border.all(color: UI.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: UI.muted,
+                      size: UI.getIconSize(context),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Игрок не состоит ни в одной группе',
+                        style: TextStyle(
+                          color: UI.muted,
+                          fontSize: UI.getBodyFontSize(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -369,92 +516,141 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
         ? sortedPlayers
         : sortedPlayers.take(10).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return AnimatedCard(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: UI.gradientCard,
+          borderRadius: BorderRadius.circular(UI.radiusLg * 2),
+          border: Border.all(color: UI.border),
+          boxShadow: [UI.cardShadow],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.emoji_events,
-              color: UI.primary,
-              size: UI.getIconSize(context),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Рейтинг игроков',
-              style: TextStyle(
-                fontSize: UI.getSubtitleFontSize(context),
-                fontWeight: FontWeight.bold,
-                color: UI.primary,
-              ),
-            ),
-            const Spacer(),
-            if (sortedPlayers.length > 10)
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isRankingExpanded = !_isRankingExpanded;
-                  });
-                },
-                icon: Icon(
-                  _isRankingExpanded ? Icons.expand_less : Icons.expand_more,
-                  size: 16,
-                ),
-                label: Text(
-                  _isRankingExpanded ? 'Свернуть' : 'Показать всех',
-                  style: TextStyle(
-                    fontSize: UI.getBodyFontSize(context),
-                    color: UI.primary,
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: UI.accent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(UI.radiusLg),
+                  ),
+                  child: Icon(
+                    Icons.emoji_events,
+                    color: UI.accent,
+                    size: UI.getIconSize(context),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Text(
+                  'Рейтинг игроков',
+                  style: TextStyle(
+                    fontSize: UI.getSubtitleFontSize(context),
+                    fontWeight: UI.fontWeightBold,
+                    color: UI.textPrimary,
+                    fontFamily: UI.fontFamily,
+                  ),
+                ),
+                const Spacer(),
+                if (sortedPlayers.length > 10)
+                  AnimatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isRankingExpanded = !_isRankingExpanded;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: UI.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(UI.radiusLg),
+                        border: Border.all(color: UI.primary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isRankingExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            size: 16,
+                            color: UI.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isRankingExpanded ? 'Свернуть' : 'Показать всех',
+                            style: TextStyle(
+                              fontSize: UI.getBodyFontSize(context),
+                              color: UI.primary,
+                              fontWeight: UI.fontWeightSemiBold,
+                              fontFamily: UI.fontFamily,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              decoration: BoxDecoration(
+                color: UI.surface,
+                borderRadius: BorderRadius.circular(UI.radiusLg),
+                border: Border.all(color: UI.border),
               ),
+              child: Column(
+                children: [
+                  _buildRankingHeader(context),
+                  ...playersToShow.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final player = entry.value;
+                    final isCurrentPlayer = player.id == _currentPlayer.id;
+                    return _RankingRow(
+                      context: context,
+                      position: index + 1,
+                      player: player,
+                      groups: _groups,
+                      isHighlighted: isCurrentPlayer,
+                    );
+                  }),
+                ],
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: UI.card,
-            borderRadius: BorderRadius.circular(UI.radiusLg),
-            border: Border.all(color: UI.border),
-          ),
-          child: Column(
-            children: [
-              _buildRankingHeader(context),
-              ...playersToShow.asMap().entries.map((entry) {
-                final index = entry.key;
-                final player = entry.value;
-                final isCurrentPlayer = player.id == _currentPlayer.id;
-                return _RankingRow(
-                  context: context,
-                  position: index + 1,
-                  player: player,
-                  groups: _groups,
-                  isHighlighted: isCurrentPlayer,
-                );
-              }),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildRankingHeader(BuildContext context) {
     return Container(
-      padding: UI.getCardPadding(context),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: UI.border)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: UI.primary.withOpacity(0.05),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(UI.radiusLg),
+          topRight: Radius.circular(UI.radiusLg),
+        ),
+        border: const Border(bottom: BorderSide(color: UI.border)),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: UI.isSmallScreen(context) ? 30 : 40,
+            width: UI.isSmallScreen(context) ? 50 : 60,
             child: Text(
               'Место',
               style: TextStyle(
-                color: UI.muted,
+                color: UI.primary,
                 fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                fontWeight: UI.fontWeightBold,
+                fontFamily: UI.fontFamily,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 12),
@@ -462,8 +658,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
             child: Text(
               'Игрок',
               style: TextStyle(
-                color: UI.muted,
+                color: UI.primary,
                 fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                fontWeight: UI.fontWeightBold,
+                fontFamily: UI.fontFamily,
               ),
             ),
           ),
@@ -472,8 +670,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
             child: Text(
               'Очки',
               style: TextStyle(
-                color: UI.muted,
+                color: UI.primary,
                 fontSize: UI.isSmallScreen(context) ? 10 : 12,
+                fontWeight: UI.fontWeightBold,
+                fontFamily: UI.fontFamily,
               ),
             ),
           ),
@@ -540,14 +740,15 @@ class _TeamCard extends StatelessWidget {
 
     final topPlayers = sortedPlayers.take(3).toList();
 
-    return GestureDetector(
-      onTap: onTap,
+    return AnimatedButton(
+      onPressed: onTap,
       child: Container(
-        padding: UI.getCardPadding(context),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: UI.card,
+          gradient: UI.gradientCard,
           borderRadius: BorderRadius.circular(UI.radiusLg),
           border: Border.all(color: UI.border),
+          boxShadow: [UI.cardShadow],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +768,7 @@ class _TeamCard extends StatelessWidget {
                   child: Text(
                     group.name,
                     style: TextStyle(
-                      color: UI.white,
+                      color: UI.textPrimary,
                       fontSize: UI.getBodyFontSize(context),
                       fontWeight: FontWeight.bold,
                     ),
@@ -595,14 +796,15 @@ class _TeamCard extends StatelessWidget {
                   )
                 : Row(
                     children: [
-                      Expanded(
+                      Flexible(
                         child: _TeamStat(
                           context: context,
                           label: 'Игроков:',
                           value: groupPlayers.length.toString(),
                         ),
                       ),
-                      Expanded(
+                      const SizedBox(width: 16),
+                      Flexible(
                         child: _TeamStat(
                           context: context,
                           label: 'Средние очки:',
@@ -639,7 +841,7 @@ class _TeamCard extends StatelessWidget {
                       child: Text(
                         player.name,
                         style: TextStyle(
-                          color: UI.white,
+                          color: UI.textPrimary,
                           fontSize: UI.isSmallScreen(context) ? 12 : 14,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -648,7 +850,7 @@ class _TeamCard extends StatelessWidget {
                     Text(
                       player.total_points.toString(),
                       style: TextStyle(
-                        color: UI.white,
+                        color: UI.textPrimary,
                         fontSize: UI.isSmallScreen(context) ? 12 : 14,
                       ),
                     ),
@@ -676,26 +878,30 @@ class _TeamStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: UI.muted,
-            fontSize: UI.isSmallScreen(context) ? 10 : 12,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: UI.muted,
+              fontSize: UI.isSmallScreen(context) ? 10 : 12,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            color: UI.white,
-            fontSize: UI.isSmallScreen(context) ? 14 : 16,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: UI.textPrimary,
+              fontSize: UI.isSmallScreen(context) ? 14 : 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -733,9 +939,9 @@ class _RankingRow extends StatelessWidget {
     final isSmall = UI.isSmallScreen(context);
 
     return Container(
-      padding: UI.getCardPadding(context),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isHighlighted ? UI.border.withOpacity(0.3) : Colors.transparent,
+        color: isHighlighted ? UI.primary.withOpacity(0.1) : Colors.transparent,
         border: position < 3
             ? const Border(bottom: BorderSide(color: UI.border))
             : null,
@@ -743,7 +949,7 @@ class _RankingRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: isSmall ? 30 : 40,
+            width: isSmall ? 50 : 60,
             child: Row(
               children: [
                 Icon(
@@ -755,8 +961,10 @@ class _RankingRow extends StatelessWidget {
                 Text(
                   '#$position',
                   style: TextStyle(
-                    color: UI.white,
+                    color: UI.textPrimary,
                     fontSize: isSmall ? 12 : 14,
+                    fontWeight: UI.fontWeightBold,
+                    fontFamily: UI.fontFamily,
                   ),
                 ),
               ],
@@ -771,7 +979,14 @@ class _RankingRow extends StatelessWidget {
                   height: avatarSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: UI.primary, width: 1),
+                    border: Border.all(color: UI.primary, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: UI.primary.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: ClipOval(
                     child:
@@ -796,17 +1011,20 @@ class _RankingRow extends StatelessWidget {
                       Text(
                         player.name,
                         style: TextStyle(
-                          color: UI.white,
+                          color: UI.textPrimary,
                           fontSize: isSmall ? 12 : 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: UI.fontWeightBold,
+                          fontFamily: UI.fontFamily,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '@${player.login}',
                         style: TextStyle(
-                          color: UI.muted,
+                          color: UI.textMuted,
                           fontSize: isSmall ? 10 : 12,
+                          fontFamily: UI.fontFamily,
+                          fontWeight: UI.fontWeightRegular,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -824,9 +1042,10 @@ class _RankingRow extends StatelessWidget {
                 Text(
                   player.total_points.toString(),
                   style: TextStyle(
-                    color: UI.white,
+                    color: UI.textPrimary,
                     fontSize: isSmall ? 12 : 14,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: UI.fontWeightBold,
+                    fontFamily: UI.fontFamily,
                   ),
                 ),
                 Container(
@@ -869,14 +1088,25 @@ class _RankingRow extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        gradient: UI.gradientPrimary,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: UI.primary.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Center(
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: size * 0.5,
-            fontWeight: FontWeight.bold,
+            fontWeight: UI.fontWeightBold,
+            fontFamily: UI.fontFamily,
           ),
         ),
       ),

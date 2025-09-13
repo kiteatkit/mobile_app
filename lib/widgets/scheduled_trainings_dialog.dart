@@ -158,7 +158,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                   child: Text(
                     'Очередь тренировок - ${widget.group.name}',
                     style: TextStyle(
-                      color: UI.white,
+                      color: UI.textPrimary,
                       fontSize: UI.getSubtitleFontSize(context),
                       fontWeight: FontWeight.bold,
                     ),
@@ -256,7 +256,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                             style: TextStyle(
                                               color: isPast
                                                   ? UI.muted
-                                                  : UI.white,
+                                                  : UI.textPrimary,
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -308,14 +308,14 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                             children: [
                                               const Icon(
                                                 Icons.add,
-                                                color: Colors.white,
+                                                color: UI.textPrimary,
                                                 size: 16,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 'Создать',
                                                 style: TextStyle(
-                                                  color: Colors.white,
+                                                  color: UI.textPrimary,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -417,7 +417,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                             style: TextStyle(
                                               color: isPast
                                                   ? UI.muted
-                                                  : UI.white,
+                                                  : UI.textPrimary,
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -477,7 +477,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                       children: [
                                                         const Icon(
                                                           Icons.add,
-                                                          color: Colors.white,
+                                                          color: UI.textPrimary,
                                                           size: 16,
                                                         ),
                                                         const SizedBox(
@@ -486,7 +486,8 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                         Text(
                                                           'Создать',
                                                           style: TextStyle(
-                                                            color: Colors.white,
+                                                            color:
+                                                                UI.textPrimary,
                                                             fontSize: 12,
                                                             fontWeight:
                                                                 FontWeight.bold,
@@ -571,7 +572,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                       children: [
                                                         const Icon(
                                                           Icons.add,
-                                                          color: Colors.white,
+                                                          color: UI.textPrimary,
                                                           size: 16,
                                                         ),
                                                         const SizedBox(
@@ -580,7 +581,8 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                         Text(
                                                           'Создать',
                                                           style: TextStyle(
-                                                            color: Colors.white,
+                                                            color:
+                                                                UI.textPrimary,
                                                             fontSize: 12,
                                                             fontWeight:
                                                                 FontWeight.bold,
@@ -651,7 +653,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.muted.withOpacity(0.2),
-                      foregroundColor: UI.white,
+                      foregroundColor: UI.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: const Text('Закрыть'),
@@ -665,7 +667,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                     label: const Text('Обновить'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: UI.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),

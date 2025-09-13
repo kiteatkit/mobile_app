@@ -125,7 +125,7 @@ class _GroupViewPageState extends State<GroupViewPage>
   final Map<String, double> _monthlyAverageCache = {};
   DateTime? _lastCacheUpdate;
 
-  double _monthlyAverage(String playerId) {
+  double _monthlyTotal(String playerId) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -142,12 +142,12 @@ class _GroupViewPageState extends State<GroupViewPage>
       return _monthlyAverageCache[playerId]!;
     }
 
-    // Вычисляем средний балл
+    // Вычисляем общее количество баллов за месяц до текущего дня
     final pastTrainings = trainings
         .where(
-          (t) => DateTime.parse(
-            t.date,
-          ).isBefore(today.add(const Duration(days: 1))),
+          (t) =>
+              DateTime.parse(t.date).isBefore(today) ||
+              DateTime.parse(t.date).isAtSameMomentAs(today),
         )
         .toList();
 
@@ -157,19 +157,14 @@ class _GroupViewPageState extends State<GroupViewPage>
     }
 
     int totalPoints = 0;
-    int attendedCount = 0;
 
     for (final training in pastTrainings) {
       final points = _pointsFor(playerId, training.id);
-      if (points > 0) {
-        totalPoints += points;
-        attendedCount++;
-      }
+      totalPoints += points; // Суммируем все баллы, включая 0
     }
 
-    final average = attendedCount > 0 ? totalPoints / attendedCount : 0.0;
-    _monthlyAverageCache[playerId] = average;
-    return average;
+    _monthlyAverageCache[playerId] = totalPoints.toDouble();
+    return totalPoints.toDouble();
   }
 
   List<Player> _topPlayers = [];
@@ -203,11 +198,11 @@ class _GroupViewPageState extends State<GroupViewPage>
     if (players.isEmpty) return Colors.grey;
 
     final currentPlayer = players[index];
-    final currentPoints = _monthlyAverage(currentPlayer.id);
+    final currentPoints = _monthlyTotal(currentPlayer.id);
 
     // Находим уникальные очки и сортируем их
     final uniquePoints =
-        players.map((p) => _monthlyAverage(p.id)).toSet().toList()
+        players.map((p) => _monthlyTotal(p.id)).toSet().toList()
           ..sort((a, b) => b.compareTo(a));
 
     if (uniquePoints.isEmpty) return Colors.grey;
@@ -245,7 +240,7 @@ class _GroupViewPageState extends State<GroupViewPage>
     }
 
     final copy = [...players];
-    copy.sort((a, b) => _monthlyAverage(b.id).compareTo(_monthlyAverage(a.id)));
+    copy.sort((a, b) => _monthlyTotal(b.id).compareTo(_monthlyTotal(a.id)));
 
     _topPlayers = copy.take(3).toList();
     _cachedTopPlayers = _topPlayers;
@@ -332,14 +327,14 @@ class _GroupViewPageState extends State<GroupViewPage>
                       children: [
                         Icon(
                           Icons.arrow_back_ios,
-                          color: UI.white,
+                          color: UI.textPrimary,
                           size: UI.isSmallScreen(context) ? 14 : 16,
                         ),
                         SizedBox(width: UI.isSmallScreen(context) ? 2 : 4),
                         Text(
                           'Назад',
                           style: TextStyle(
-                            color: UI.white,
+                            color: UI.textPrimary,
                             fontSize: UI.isSmallScreen(context) ? 12 : 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -363,7 +358,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                 child: Text(
                   '${widget.group.name} - Игроки команды',
                   style: TextStyle(
-                    color: UI.white,
+                    color: UI.textPrimary,
                     fontSize: UI.getSubtitleFontSize(context),
                     fontWeight: FontWeight.bold,
                   ),
@@ -386,7 +381,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                       ? '0.0'
                       : (players.fold<double>(
                                   0,
-                                  (s, p) => s + _monthlyAverage(p.id),
+                                  (s, p) => s + _monthlyTotal(p.id),
                                 ) /
                                 players.length)
                             .toStringAsFixed(1),
@@ -404,7 +399,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           Row(
             children: [
               const Spacer(),
-              const Text('Месяц:', style: TextStyle(color: UI.white)),
+              const Text('Месяц:', style: TextStyle(color: UI.textPrimary)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -419,7 +414,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                   underline: const SizedBox(),
                   icon: const Icon(
                     Icons.keyboard_arrow_down,
-                    color: UI.white,
+                    color: UI.textPrimary,
                     size: 12,
                   ),
                   items: List.generate(12, (i) {
@@ -432,7 +427,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                       value: d,
                       child: Text(
                         _formatMonth(d),
-                        style: const TextStyle(color: UI.white),
+                        style: const TextStyle(color: UI.textPrimary),
                       ),
                     );
                   }),
@@ -457,7 +452,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                     onPressed: _openAddTrainingDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
-                      foregroundColor: UI.white,
+                      foregroundColor: UI.textPrimary,
                     ),
                     icon: const Icon(Icons.add, size: 14),
                     label: const Text(
@@ -472,7 +467,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                     onPressed: _openTrainingScheduleDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
-                      foregroundColor: UI.white,
+                      foregroundColor: UI.textPrimary,
                     ),
                     icon: const Icon(Icons.schedule, size: 14),
                     label: const Text(
@@ -626,7 +621,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Средний балл',
+                                'Общий балл',
                                 style: TextStyle(
                                   color: UI.muted,
                                   fontSize: isSmallScreen ? 8 : 12,
@@ -736,7 +731,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                 child: Text(
                                   player.name,
                                   style: TextStyle(
-                                    color: UI.white,
+                                    color: UI.textPrimary,
                                     fontSize: isSmallScreen ? 12 : 14,
                                     fontWeight: isTopPlayer
                                         ? FontWeight.bold
@@ -942,11 +937,11 @@ class _GroupViewPageState extends State<GroupViewPage>
                                     ),
                                     child: Center(
                                       child: Text(
-                                        _monthlyAverage(
+                                        _monthlyTotal(
                                           player.id,
-                                        ).toStringAsFixed(1),
+                                        ).toStringAsFixed(0),
                                         style: TextStyle(
-                                          color: UI.white,
+                                          color: UI.textPrimary,
                                           fontSize: isSmallScreen ? 10 : 14,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -996,7 +991,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           Text(
             value,
             style: TextStyle(
-              color: UI.white,
+              color: UI.textPrimary,
               fontSize: UI.isSmallScreen(context) ? 20 : 28,
               fontWeight: FontWeight.bold,
             ),
@@ -1040,7 +1035,7 @@ class _GroupViewPageState extends State<GroupViewPage>
               Text(
                 'Топ-3 игроков',
                 style: TextStyle(
-                  color: UI.white,
+                  color: UI.textPrimary,
                   fontSize: UI.isSmallScreen(context) ? 14 : 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1074,14 +1069,14 @@ class _GroupViewPageState extends State<GroupViewPage>
                         child: Text(
                           player.name,
                           style: TextStyle(
-                            color: UI.white,
+                            color: UI.textPrimary,
                             fontSize: UI.isSmallScreen(context) ? 10 : 12,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
-                        _monthlyAverage(player.id).toStringAsFixed(1),
+                        _monthlyTotal(player.id).toStringAsFixed(0),
                         style: TextStyle(
                           color: UI.primary,
                           fontSize: UI.isSmallScreen(context) ? 10 : 12,
@@ -1159,7 +1154,7 @@ class _GroupViewPageState extends State<GroupViewPage>
             Text(
               'Выберите количество баллов:',
               style: TextStyle(
-                color: UI.white,
+                color: UI.textPrimary,
                 fontSize: UI.getBodyFontSize(context),
               ),
             ),
@@ -1177,7 +1172,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                 underline: const SizedBox(),
                 icon: const Icon(
                   Icons.keyboard_arrow_down,
-                  color: UI.white,
+                  color: UI.textPrimary,
                   size: 16,
                 ),
                 items: List.generate(6, (i) {
@@ -1185,7 +1180,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                     value: i,
                     child: Text(
                       i.toString(),
-                      style: const TextStyle(color: UI.white),
+                      style: const TextStyle(color: UI.textPrimary),
                     ),
                   );
                 }),
@@ -1242,7 +1237,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         title: Text(
           'Удалить тренировку',
           style: TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: UI.getSubtitleFontSize(context),
           ),
         ),
@@ -1262,7 +1257,7 @@ class _GroupViewPageState extends State<GroupViewPage>
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: UI.white,
+              foregroundColor: UI.textPrimary,
             ),
             child: const Text('Удалить'),
           ),
@@ -1306,7 +1301,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.white,
+            color: UI.textPrimary,
             fontSize: isSmallScreen ? 10 : 12,
             fontWeight: FontWeight.bold,
           ),
@@ -1332,7 +1327,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
   final _dateController = TextEditingController();
   DateTime? selectedDate;
   final repo = SupabaseRepository();
-  
+
   // Маска для ввода даты
   final dateMaskFormatter = MaskTextInputFormatter(
     mask: '##.##.####',
@@ -1352,7 +1347,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
       backgroundColor: UI.card,
       title: const Text(
         'Создать тренировку',
-        style: TextStyle(color: UI.white),
+        style: TextStyle(color: UI.textPrimary),
       ),
       content: Form(
         key: _formKey,
@@ -1361,7 +1356,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
           children: [
             TextFormField(
               controller: _locationController,
-              style: const TextStyle(color: UI.white),
+              style: const TextStyle(color: UI.textPrimary),
               decoration: const InputDecoration(
                 labelText: 'Место проведения',
                 labelStyle: TextStyle(color: UI.muted),
@@ -1384,7 +1379,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
               controller: _dateController,
               inputFormatters: [dateMaskFormatter],
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: UI.white),
+              style: const TextStyle(color: UI.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Дата тренировки (дд.мм.гггг)',
                 labelStyle: const TextStyle(color: UI.muted),
@@ -1404,16 +1399,18 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                     final date = await showDatePicker(
                       context: context,
                       initialDate: selectedDate ?? DateTime.now(),
-                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                       builder: (context, child) {
                         return Theme(
                           data: Theme.of(context).copyWith(
                             colorScheme: const ColorScheme.dark(
                               primary: UI.primary,
-                              onPrimary: UI.white,
+                              onPrimary: UI.textPrimary,
                               surface: UI.card,
-                              onSurface: UI.white,
+                              onSurface: UI.textPrimary,
                             ),
                           ),
                           child: child!,
@@ -1423,7 +1420,8 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                     if (date != null) {
                       setState(() {
                         selectedDate = date;
-                        _dateController.text = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+                        _dateController.text =
+                            '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
                       });
                     }
                   },
@@ -1468,7 +1466,8 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
             if (_formKey.currentState!.validate()) {
               // Получаем дату из TextField или selectedDate
               DateTime? trainingDate = selectedDate;
-              if (_dateController.text.isNotEmpty && _dateController.text.length == 10) {
+              if (_dateController.text.isNotEmpty &&
+                  _dateController.text.length == 10) {
                 try {
                   final parts = _dateController.text.split('.');
                   if (parts.length == 3) {
@@ -1488,7 +1487,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                   // Игнорируем ошибки парсинга
                 }
               }
-              
+
               if (trainingDate == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1498,7 +1497,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                 );
                 return;
               }
-              
+
               try {
                 await repo.createTrainingSession(
                   groupId: widget.group.id,
@@ -1533,7 +1532,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: UI.primary,
-            foregroundColor: UI.white,
+            foregroundColor: UI.textPrimary,
           ),
           child: const Text('Создать'),
         ),

@@ -129,12 +129,12 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
       backgroundColor: UI.background,
       appBar: AppBar(
         backgroundColor: UI.background,
-        foregroundColor: UI.white,
+        foregroundColor: UI.textPrimary,
         title: Text(
           'Профиль игрока',
           style: TextStyle(
             fontSize: UI.getTitleFontSize(context),
-            color: UI.white,
+            color: UI.textPrimary,
           ),
         ),
       ),
@@ -167,7 +167,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                               style: TextStyle(
                                 fontSize: UI.isSmallScreen(context) ? 32 : 40,
                                 fontWeight: FontWeight.bold,
-                                color: UI.white,
+                                color: UI.textPrimary,
                               ),
                             )
                           : null,
@@ -179,7 +179,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                         onPressed: _pickAvatar,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: UI.border),
-                          foregroundColor: UI.white,
+                          foregroundColor: UI.textPrimary,
                         ),
                         icon: const Icon(Icons.camera_alt, size: 16),
                         label: Text(
@@ -219,7 +219,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
 
                     TextField(
                       controller: loginCtrl,
-                      style: const TextStyle(color: UI.white),
+                      style: const TextStyle(color: UI.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Логин',
                         labelStyle: const TextStyle(color: UI.muted),
@@ -288,7 +288,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                                             'Не установлен'),
                                   style: TextStyle(
                                     fontSize: UI.getBodyFontSize(context),
-                                    color: UI.white,
+                                    color: UI.textPrimary,
                                   ),
                                 ),
                               ],
@@ -336,7 +336,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: newPassCtrl,
-                      style: const TextStyle(color: UI.white),
+                      style: const TextStyle(color: UI.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Новый пароль',
                         labelStyle: const TextStyle(color: UI.muted),
@@ -369,7 +369,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: confirmPassCtrl,
-                      style: const TextStyle(color: UI.white),
+                      style: const TextStyle(color: UI.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Подтвердите пароль',
                         labelStyle: const TextStyle(color: UI.muted),
@@ -442,7 +442,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                         onPressed: saving ? null : _save,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: UI.primary,
-                          foregroundColor: UI.white,
+                          foregroundColor: UI.textPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(UI.radiusSm),
                           ),
@@ -454,7 +454,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    UI.textPrimary,
                                   ),
                                 ),
                               )

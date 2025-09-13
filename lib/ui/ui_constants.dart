@@ -1,17 +1,30 @@
-// Токены дизайна, синхронизированные с веб-версией
+// Токены дизайна с баскетбольным вайбом
 import 'package:flutter/material.dart';
 
 class UI {
-  // Цвета
-  static const Color background = Color(0xFF0F0C0B);
-  static const Color card = Color(0xFF171412);
-  static const Color border = Color(0xFF24201E);
+  // Баскетбольная цветовая палитра - более светлая и энергичная
+  static const Color background = Color(0xFFF8FAFC); // Светло-серый фон
+  static const Color card = Color(0xFFFFFFFF); // Белые карточки
+  static const Color border = Color(0xFFE2E8F0); // Светлые границы
+  static const Color surface = Color(0xFFF1F5F9); // Поверхность для акцентов
 
-  static const Color primary = Color(0xFFFF8A00);
-  static const Color primaryGlow = Color(0xFFFFC262);
+  // Баскетбольные цвета
+  static const Color primary = Color(0xFFE53E3E); // Красный мяч
+  static const Color primaryGlow = Color(0xFFFF6B6B); // Светлый красный
+  static const Color secondary = Color(0xFF2D3748); // Темно-серый для текста
+  static const Color accent = Color(0xFFF6AD55); // Оранжевый акцент
+  static const Color success = Color(0xFF48BB78); // Зеленый успех
+  static const Color warning = Color(0xFFED8936); // Оранжевое предупреждение
+  static const Color info = Color(0xFF4299E1); // Синяя информация
 
-  static const Color muted = Color(0xFF9A9A9A);
+  static const Color muted = Color(0xFF4A5568); // Приглушенный текст
   static const Color white = Colors.white;
+  static const Color black = Color(0xFF1A202C); // Темный текст
+
+  // Текстовые цвета для лучшей читаемости
+  static const Color textPrimary = Color(0xFF1A202C); // Основной текст
+  static const Color textSecondary = Color(0xFF2D3748); // Вторичный текст
+  static const Color textMuted = Color(0xFF4A5568); // Приглушенный текст
 
   // Радиусы
   static const double radiusLg = 8;
@@ -27,12 +40,56 @@ class UI {
     end: Alignment.centerRight,
   );
 
-  // Тени (если понадобятся)
-  static const BoxShadow cardShadow = BoxShadow(
-    color: Colors.black26,
-    blurRadius: 30,
-    offset: Offset(0, 10),
+  static const LinearGradient gradientBasketball = LinearGradient(
+    colors: [primary, accent, warning],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
+
+  static const LinearGradient gradientCard = LinearGradient(
+    colors: [white, surface],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  // Тени
+  static const BoxShadow cardShadow = BoxShadow(
+    color: Color(0x0A000000),
+    blurRadius: 20,
+    offset: Offset(0, 4),
+    spreadRadius: 0,
+  );
+
+  static const BoxShadow cardShadowHover = BoxShadow(
+    color: Color(0x14000000),
+    blurRadius: 30,
+    offset: Offset(0, 8),
+    spreadRadius: 0,
+  );
+
+  static const BoxShadow buttonShadow = BoxShadow(
+    color: Color(0x1A000000),
+    blurRadius: 12,
+    offset: Offset(0, 4),
+    spreadRadius: 0,
+  );
+
+  // Анимации
+  static const Duration animationDuration = Duration(milliseconds: 200);
+  static const Duration animationDurationSlow = Duration(milliseconds: 300);
+  static const Duration animationDurationFast = Duration(milliseconds: 150);
+
+  static const Curve animationCurve = Curves.easeInOut;
+  static const Curve animationCurveBounce = Curves.elasticOut;
+  static const Curve animationCurveSmooth = Curves.easeOutCubic;
+
+  // Шрифты
+  static const String fontFamily = 'Inter'; // Современный, читаемый шрифт
+  static const FontWeight fontWeightLight = FontWeight.w300;
+  static const FontWeight fontWeightRegular = FontWeight.w400;
+  static const FontWeight fontWeightMedium = FontWeight.w500;
+  static const FontWeight fontWeightSemiBold = FontWeight.w600;
+  static const FontWeight fontWeightBold = FontWeight.w700;
 
   // Адаптивные размеры
   static double getScreenWidth(BuildContext context) {
@@ -128,4 +185,205 @@ class UI {
   }
 }
 
+// Анимированные виджеты
+class AnimatedButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onPressed;
+  final ButtonStyle? style;
+  final Duration duration;
 
+  const AnimatedButton({
+    super.key,
+    required this.child,
+    this.onPressed,
+    this.style,
+    this.duration = UI.animationDuration,
+  });
+
+  @override
+  State<AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<AnimatedButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: UI.animationCurve));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onPressed != null ? (_) => _controller.forward() : null,
+      onTapUp: widget.onPressed != null ? (_) => _controller.reverse() : null,
+      onTapCancel: widget.onPressed != null
+          ? () => _controller.reverse()
+          : null,
+      onTap: widget.onPressed,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value.clamp(0.0, 2.0),
+            child: widget.child,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AnimatedCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final Duration duration;
+  final bool enableHover;
+
+  const AnimatedCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.duration = UI.animationDuration,
+    this.enableHover = true,
+  });
+
+  @override
+  State<AnimatedCard> createState() => _AnimatedCardState();
+}
+
+class _AnimatedCardState extends State<AnimatedCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _elevationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(parent: _controller, curve: UI.animationCurve));
+    _elevationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 8.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: UI.animationCurve));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap != null && widget.enableHover
+          ? (_) => _controller.forward()
+          : null,
+      onTapUp: widget.onTap != null && widget.enableHover
+          ? (_) => _controller.reverse()
+          : null,
+      onTapCancel: widget.onTap != null && widget.enableHover
+          ? () => _controller.reverse()
+          : null,
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value.clamp(0.0, 2.0),
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  UI.cardShadow.copyWith(
+                    blurRadius: 20 + _elevationAnimation.value.clamp(0.0, 20.0),
+                    offset: Offset(
+                      0,
+                      4 + _elevationAnimation.value.clamp(0.0, 20.0),
+                    ),
+                  ),
+                ],
+              ),
+              child: widget.child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class BounceInAnimation extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  const BounceInAnimation({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = UI.animationDurationSlow,
+  });
+
+  @override
+  State<BounceInAnimation> createState() => _BounceInAnimationState();
+}
+
+class _BounceInAnimationState extends State<BounceInAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final clampedValue = _animation.value.clamp(0.0, 1.0);
+        return Transform.scale(
+          scale: clampedValue,
+          child: Opacity(opacity: clampedValue, child: widget.child),
+        );
+      },
+    );
+  }
+}
