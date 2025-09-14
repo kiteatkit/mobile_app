@@ -53,7 +53,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка при загрузке расписания: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UI.warning,
           ),
         );
       }
@@ -95,7 +95,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка при создании тренировки: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UI.warning,
           ),
         );
       }
@@ -126,7 +126,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка при удалении тренировки: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UI.warning,
           ),
         );
       }
@@ -335,7 +335,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                             vertical: 10,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.withOpacity(0.2),
+                                            color: UI.warning.withOpacity(0.2),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -346,14 +346,14 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                             children: [
                                               const Icon(
                                                 Icons.delete,
-                                                color: Colors.red,
+                                                color: UI.warning,
                                                 size: 16,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 'Удалить',
                                                 style: TextStyle(
-                                                  color: Colors.red,
+                                                  color: UI.warning,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -511,7 +511,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                           vertical: 10,
                                                         ),
                                                     decoration: BoxDecoration(
-                                                      color: Colors.red
+                                                      color: UI.warning
                                                           .withOpacity(0.2),
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -525,7 +525,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                       children: [
                                                         const Icon(
                                                           Icons.delete,
-                                                          color: Colors.red,
+                                                          color: UI.warning,
                                                           size: 16,
                                                         ),
                                                         const SizedBox(
@@ -534,7 +534,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                         Text(
                                                           'Удалить',
                                                           style: TextStyle(
-                                                            color: Colors.red,
+                                                            color: UI.warning,
                                                             fontSize: 12,
                                                             fontWeight:
                                                                 FontWeight.bold,
@@ -602,7 +602,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                     padding:
                                                         const EdgeInsets.all(8),
                                                     decoration: BoxDecoration(
-                                                      color: Colors.red
+                                                      color: UI.warning
                                                           .withOpacity(0.2),
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -611,7 +611,7 @@ class _ScheduledTrainingsDialogState extends State<ScheduledTrainingsDialog> {
                                                     ),
                                                     child: const Icon(
                                                       Icons.delete,
-                                                      color: Colors.red,
+                                                      color: UI.warning,
                                                       size: 16,
                                                     ),
                                                   ),

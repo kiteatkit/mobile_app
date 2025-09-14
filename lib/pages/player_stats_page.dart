@@ -447,7 +447,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                 decoration: BoxDecoration(
                                                   color: h.attended
                                                       ? Colors.green
-                                                      : Colors.red,
+                                                      : UI.warning,
                                                   shape: BoxShape.circle,
                                                 ),
                                               ),
@@ -507,7 +507,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                                                     style: TextStyle(
                                                       color: h.attended
                                                           ? Colors.green
-                                                          : Colors.red,
+                                                          : UI.warning,
                                                       fontSize:
                                                           UI.isSmallScreen(
                                                             context,

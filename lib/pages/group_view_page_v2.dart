@@ -837,7 +837,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Ошибка: $e'), backgroundColor: UI.warning),
         );
       }
     }
@@ -968,7 +968,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
               foregroundColor: UI.textPrimary,
             ),
             child: const Text('Удалить'),
@@ -995,7 +995,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Ошибка при удалении тренировки: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
             ),
           );
         }
@@ -1203,7 +1203,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Введите корректную дату тренировки'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: UI.warning,
                   ),
                 );
                 return;
@@ -1234,7 +1234,7 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Ошибка: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: UI.warning,
                     ),
                   );
                 }

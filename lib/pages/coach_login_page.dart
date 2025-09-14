@@ -48,11 +48,7 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
         elevation: 0,
         title: Text(
           'Вход тренера',
-          style: TextStyle(
-            fontSize: UI.getTitleFontSize(context),
-            color: UI.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: UI.getHeadingStyle(context, color: UI.black),
         ),
       ),
       body: SafeArea(
@@ -89,12 +85,7 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
                   delay: const Duration(milliseconds: 200),
                   child: Text(
                     'Вход тренера',
-                    style: TextStyle(
-                      fontSize: UI.getTitleFontSize(context),
-                      fontWeight: UI.fontWeightBold,
-                      color: UI.primary,
-                      fontFamily: UI.fontFamily,
-                    ),
+                    style: UI.getHeadingStyle(context, color: UI.primary),
                   ),
                 ),
                 const SizedBox(height: 8),

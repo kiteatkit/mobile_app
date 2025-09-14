@@ -1787,7 +1787,7 @@ class _GroupViewPageState extends State<GroupViewPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка при обновлении баллов: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UI.warning,
           ),
         );
       }
@@ -1928,7 +1928,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Ошибка при обновлении баллов: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
             ),
           );
         }
@@ -1963,7 +1963,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
               foregroundColor: UI.textPrimary,
             ),
             child: const Text('Удалить'),
@@ -1990,7 +1990,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Ошибка при удалении тренировки: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
             ),
           );
         }
@@ -2171,7 +2171,7 @@ class _GroupViewPageState extends State<GroupViewPage>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Ошибка при создании тренировки: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
             ),
           );
         }

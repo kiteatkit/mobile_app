@@ -406,17 +406,17 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: UI.warning.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(UI.radiusSm),
                           border: Border.all(
-                            color: Colors.red.withOpacity(0.3),
+                            color: UI.warning.withOpacity(0.3),
                           ),
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               Icons.error_outline,
-                              color: Colors.red,
+                              color: UI.warning,
                               size: 16,
                             ),
                             const SizedBox(width: 8),
@@ -424,7 +424,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                               child: Text(
                                 error!,
                                 style: const TextStyle(
-                                  color: Colors.red,
+                                  color: UI.warning,
                                   fontSize: 14,
                                 ),
                               ),

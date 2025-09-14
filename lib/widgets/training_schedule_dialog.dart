@@ -110,7 +110,7 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка при создании расписания: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UI.warning,
           ),
         );
       }

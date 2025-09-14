@@ -169,10 +169,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                             Expanded(
                               child: Text(
                                 'Панель тренера',
-                                style: TextStyle(
+                                style: UI.getHeadingStyle(
+                                  context,
                                   color: UI.primary,
-                                  fontSize: UI.getTitleFontSize(context),
-                                  fontWeight: FontWeight.w600,
                                 ),
                                 textAlign: TextAlign.left,
                               ),
@@ -202,10 +201,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                               const SizedBox(height: 16),
                               Text(
                                 'Панель тренера',
-                                style: TextStyle(
+                                style: UI.getHeadingStyle(
+                                  context,
                                   color: UI.primary,
-                                  fontSize: UI.getTitleFontSize(context),
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -229,14 +227,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
               // Заголовок Команды
               Center(
-                child: Text(
-                  'Команды',
-                  style: TextStyle(
-                    color: UI.textPrimary,
-                    fontSize: UI.getSubtitleFontSize(context),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text('Команды', style: UI.getSubheadingStyle(context)),
               ),
 
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
@@ -645,8 +636,8 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                 Text(
                                                                   '${members.length}',
                                                                   style: const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
+                                                                    color: UI
+                                                                        .textPrimary,
                                                                   ),
                                                                 ),
                                                                 const Text(
@@ -676,8 +667,8 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                 Text(
                                                                   '${(groupAttendancePercentages[g.id] ?? 0.0).toStringAsFixed(1)}%',
                                                                   style: const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
+                                                                    color: UI
+                                                                        .textPrimary,
                                                                   ),
                                                                 ),
                                                                 const Text(
@@ -716,11 +707,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                           children: [
                                                             Text(
                                                               '${members.length}',
-                                                              style:
-                                                                  const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
+                                                              style: const TextStyle(
+                                                                color: UI
+                                                                    .textPrimary,
+                                                              ),
                                                             ),
                                                             const Text(
                                                               'Игроков',
@@ -749,11 +739,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                           children: [
                                                             Text(
                                                               '${(groupAttendancePercentages[g.id] ?? 0.0).toStringAsFixed(1)}%',
-                                                              style:
-                                                                  const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
+                                                              style: const TextStyle(
+                                                                color: UI
+                                                                    .textPrimary,
+                                                              ),
                                                             ),
                                                             const Text(
                                                               'Посещаемость',
@@ -959,7 +948,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Ошибка при создании команды: $e'),
-                        backgroundColor: Colors.red,
+                        backgroundColor: UI.warning,
                       ),
                     );
                   }
@@ -1090,7 +1079,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Ошибка при обновлении команды: $e'),
-                        backgroundColor: Colors.red,
+                        backgroundColor: UI.warning,
                       ),
                     );
                   }
@@ -1509,7 +1498,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Ошибка при создании игрока: $e'),
-                        backgroundColor: Colors.red,
+                        backgroundColor: UI.warning,
                       ),
                     );
                   }
@@ -1678,12 +1667,12 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
+                                  color: UI.warning.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Icon(
                                   Icons.delete_outline,
-                                  color: Colors.red,
+                                  color: UI.warning,
                                   size: 16,
                                 ),
                               ),
@@ -1817,7 +1806,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Ошибка при перемещении игрока: $e'),
-                        backgroundColor: Colors.red,
+                        backgroundColor: UI.warning,
                       ),
                     );
                   }
@@ -1865,7 +1854,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: UI.warning,
               borderRadius: BorderRadius.circular(UI.radiusSm),
             ),
             child: TextButton(
@@ -1906,7 +1895,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Ошибка при удалении игрока: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: UI.warning,
             ),
           );
         }
