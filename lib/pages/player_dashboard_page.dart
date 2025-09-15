@@ -1115,7 +1115,7 @@ class _RankingRow extends StatelessWidget {
 
   Color _parseColor(String hex) {
     final value =
-        int.tryParse(hex.replaceFirst('#', ''), radix: 16) ?? 0x3B82F6;
+        int.tryParse(hex.replaceFirst('#', ''), radix: 16) ?? 0xEC5E27;
     return Color(0xFF000000 | value);
   }
 }

@@ -8,27 +8,23 @@ class UI {
   static const Color border = Color(0xFFE2E8F0); // Светлые границы
   static const Color surface = Color(0xFFF1F5F9); // Поверхность для акцентов
 
-  // Коричневая цветовая палитра
-  static const Color primary = Color(0xFFCDA47B); // Светло-коричневый основной
-  static const Color primaryGlow = Color(0xFFD4B08A); // Светлый коричневый
-  static const Color secondary = Color(
-    0xFF9F4125,
-  ); // Темно-коричневый для текста
-  static const Color accent = Color(0xFFCDA47B); // Коричневый акцент
+  // Новая цветовая палитра с акцентами #EC5E27 и #403D39
+  static const Color primary = Color(0xFFEC5E27); // Оранжевый основной
+  static const Color primaryGlow = Color(0xFFF0734A); // Светлый оранжевый
+  static const Color secondary = Color(0xFF403D39); // Темно-коричневый для текста
+  static const Color accent = Color(0xFFEC5E27); // Оранжевый акцент
   static const Color success = Color(0xFF48BB78); // Зеленый успех
-  static const Color warning = Color(
-    0xFF9F4125,
-  ); // Темно-коричневое предупреждение
+  static const Color warning = Color(0xFFEC5E27); // Оранжевое предупреждение
   static const Color info = Color(0xFF4299E1); // Синяя информация
 
-  static const Color muted = Color(0xFF9F4125); // Приглушенный текст
+  static const Color muted = Color(0xFF403D39); // Приглушенный текст
   static const Color white = Colors.white;
-  static const Color black = Color(0xFF382020); // Очень темно-коричневый текст
+  static const Color black = Color(0xFF403D39); // Темно-коричневый текст
 
   // Текстовые цвета для лучшей читаемости
-  static const Color textPrimary = Color(0xFF382020); // Основной текст
-  static const Color textSecondary = Color(0xFF9F4125); // Вторичный текст
-  static const Color textMuted = Color(0xFF9F4125); // Приглушенный текст
+  static const Color textPrimary = Color(0xFF403D39); // Основной текст
+  static const Color textSecondary = Color(0xFF403D39); // Вторичный текст
+  static const Color textMuted = Color(0xFF403D39); // Приглушенный текст
 
   // Радиусы
   static const double radiusLg = 8;
@@ -58,21 +54,21 @@ class UI {
 
   // Тени
   static const BoxShadow cardShadow = BoxShadow(
-    color: Color(0x0A382020),
+    color: Color(0x0A403D39),
     blurRadius: 20,
     offset: Offset(0, 4),
     spreadRadius: 0,
   );
 
   static const BoxShadow cardShadowHover = BoxShadow(
-    color: Color(0x14382020),
+    color: Color(0x14403D39),
     blurRadius: 30,
     offset: Offset(0, 8),
     spreadRadius: 0,
   );
 
   static const BoxShadow buttonShadow = BoxShadow(
-    color: Color(0x1A382020),
+    color: Color(0x1A403D39),
     blurRadius: 12,
     offset: Offset(0, 4),
     spreadRadius: 0,

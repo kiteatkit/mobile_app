@@ -22,20 +22,20 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   List<Player> players = [];
   Map<String, double> groupAttendancePercentages = {};
   final nameCtrl = TextEditingController();
-  String selectedColor = '#3B82F6';
+  String selectedColor = '#EC5E27';
 
   // Предустановленные цвета для команд
   static const List<Map<String, dynamic>> predefinedColors = [
-    {'name': 'Синий', 'value': '#3B82F6'},
+    {'name': 'Оранжевый', 'value': '#EC5E27'},
+    {'name': 'Коричневый', 'value': '#403D39'},
     {'name': 'Красный', 'value': '#EF4444'},
     {'name': 'Зеленый', 'value': '#10B981'},
     {'name': 'Желтый', 'value': '#F59E0B'},
     {'name': 'Фиолетовый', 'value': '#8B5CF6'},
     {'name': 'Розовый', 'value': '#EC4899'},
-    {'name': 'Оранжевый', 'value': '#F97316'},
+    {'name': 'Синий', 'value': '#3B82F6'},
     {'name': 'Бирюзовый', 'value': '#06B6D4'},
     {'name': 'Серый', 'value': '#6B7280'},
-    {'name': 'Изумрудный', 'value': '#059669'},
   ];
 
   // Контроллеры для добавления игрока
@@ -146,7 +146,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0F0C0B),
+        backgroundColor: Color(0xFF403D39),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -180,9 +180,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: UI.textPrimary,
                                 side: const BorderSide(
-                                  color: Color(0xFF24201E),
+                                  color: Color(0xFF403D39),
                                 ),
-                                backgroundColor: const Color(0xFF171412),
+                                backgroundColor: const Color(0xFF403D39),
                               ),
                               onPressed: () => context.go('/'),
                               icon: const Icon(Icons.logout, size: 16),
@@ -213,8 +213,8 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: UI.textPrimary,
-                            side: const BorderSide(color: Color(0xFF24201E)),
-                            backgroundColor: const Color(0xFF171412),
+                            side: const BorderSide(color: Color(0xFF403D39)),
+                            backgroundColor: const Color(0xFF403D39),
                           ),
                           onPressed: () => context.go('/'),
                           icon: const Icon(Icons.logout, size: 16),
@@ -573,7 +573,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                   ),
                                                   PopupMenuButton<String>(
                                                     color: const Color(
-                                                      0xFF171412,
+                                                      0xFF403D39,
                                                     ),
                                                     icon: const Icon(
                                                       Icons.more_vert,
@@ -627,7 +627,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                 const Icon(
                                                                   Icons.person,
                                                                   color: Color(
-                                                                    0xFFFF8A00,
+                                                                    0xFFEC5E27,
                                                                   ),
                                                                 ),
                                                                 const SizedBox(
@@ -644,7 +644,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                   'Игроков',
                                                                   style: TextStyle(
                                                                     color: Color(
-                                                                      0xFF9A9A9A,
+                                                                      0xFF403D39,
                                                                     ),
                                                                     fontSize:
                                                                         12,
@@ -675,7 +675,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                                   'Посещаемость',
                                                                   style: TextStyle(
                                                                     color: Color(
-                                                                      0xFF9A9A9A,
+                                                                      0xFF403D39,
                                                                     ),
                                                                     fontSize:
                                                                         12,
@@ -697,7 +697,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                             Icon(
                                                               Icons.person,
                                                               color: Color(
-                                                                0xFFFF8A00,
+                                                                0xFFEC5E27,
                                                               ),
                                                             ),
                                                             SizedBox(height: 4),
@@ -716,7 +716,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                               'Игроков',
                                                               style: TextStyle(
                                                                 color: Color(
-                                                                  0xFF9A9A9A,
+                                                                  0xFF403D39,
                                                                 ),
                                                                 fontSize: 12,
                                                               ),
@@ -748,7 +748,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                               'Посещаемость',
                                                               style: TextStyle(
                                                                 color: Color(
-                                                                  0xFF9A9A9A,
+                                                                  0xFF403D39,
                                                                 ),
                                                                 fontSize: 12,
                                                               ),
@@ -779,7 +779,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                         Icons.military_tech,
                                                         size: 14,
                                                         color: Color(
-                                                          0xFFFF8A00,
+                                                          0xFFEC5E27,
                                                         ),
                                                       ),
                                                       const SizedBox(width: 4),
@@ -793,11 +793,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                       const SizedBox(width: 4),
                                                       Expanded(
                                                         child: Text(
-                                                          '${members.first.name} • ${members.first.total_points} очков за месяц',
-                                                          style:
-                                                              const TextStyle(
+                                                              '${members.first.name} • ${members.first.total_points} очков за месяц',
+                                                              style:
+                                                                  const TextStyle(
                                                                 color: Color(
-                                                                  0xFF9A9A9A,
+                                                                  0xFF403D39,
                                                                 ),
                                                                 fontSize: 12,
                                                               ),
@@ -830,13 +830,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
   Color _parseColor(String hex) {
     final value =
-        int.tryParse(hex.replaceFirst('#', ''), radix: 16) ?? 0x3B82F6;
+        int.tryParse(hex.replaceFirst('#', ''), radix: 16) ?? 0xEC5E27;
     return Color(0xFF000000 | value);
   }
 
   Future<void> _openCreateGroupDialog() async {
     nameCtrl.clear();
-    selectedColor = '#3B82F6';
+    selectedColor = '#EC5E27';
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
