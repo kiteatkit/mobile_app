@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/ui_constants.dart';
+import '../services/auth_storage_service.dart';
 
 class CoachLoginPage extends StatefulWidget {
   const CoachLoginPage({super.key});
@@ -29,6 +30,9 @@ class _CoachLoginPageState extends State<CoachLoginPage> {
 
     // Простая проверка пароля
     if (password == '1') {
+      // Сохраняем данные входа
+      await AuthStorageService.saveLoginData(userType: 'coach');
+      
       if (!mounted) return;
       context.go('/dashboard/coach');
     } else {

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../supabase_client.dart';
 import '../models/player.dart';
 import '../ui/ui_constants.dart';
+import '../services/auth_storage_service.dart';
 
 class PlayerLoginPage extends StatefulWidget {
   const PlayerLoginPage({super.key});
@@ -39,6 +40,13 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
           .single();
 
       final player = Player.fromJson(res);
+      
+      // Сохраняем данные входа
+      await AuthStorageService.saveLoginData(
+        userType: 'player',
+        player: player,
+      );
+      
       if (!mounted) return;
       context.go('/dashboard/player', extra: player);
     } catch (e) {

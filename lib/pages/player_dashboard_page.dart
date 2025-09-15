@@ -4,6 +4,7 @@ import '../models/group.dart';
 import '../ui/ui_constants.dart';
 import '../data/supabase_repository.dart';
 import 'package:go_router/go_router.dart';
+import '../services/auth_storage_service.dart';
 
 class PlayerDashboardPage extends StatefulWidget {
   const PlayerDashboardPage({super.key, required this.player});
@@ -219,7 +220,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
           context: context,
           icon: Icons.exit_to_app,
           text: 'Выход',
-          onTap: () => context.go('/'),
+          onTap: () async {
+            await AuthStorageService.clearLoginData();
+            if (mounted) context.go('/');
+          },
         ),
       ],
     );

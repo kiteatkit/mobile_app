@@ -6,7 +6,6 @@ import '../models/training_session.dart';
 import '../ui/ui_constants.dart';
 import '../data/supabase_repository.dart';
 import '../supabase_client.dart';
-import '../widgets/back_button.dart';
 
 class PlayerStatsPage extends StatefulWidget {
   const PlayerStatsPage({super.key, required this.player});
@@ -209,6 +208,18 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: UI.background,
+      appBar: AppBar(
+        backgroundColor: UI.background,
+        foregroundColor: UI.textPrimary,
+        title: Text(
+          'Статистика игрока',
+          style: TextStyle(
+            fontSize: UI.getTitleFontSize(context),
+            fontWeight: FontWeight.bold,
+            color: UI.primary,
+          ),
+        ),
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator(color: UI.primary))
           : SafeArea(
@@ -217,20 +228,6 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Заголовок с кнопкой назад
-                    Row(children: [const CustomBackButton()]),
-                    SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
-
-                    // Заголовок "Статистика игрока"
-                    Text(
-                      'Статистика игрока',
-                      style: TextStyle(
-                        fontSize: UI.getTitleFontSize(context),
-                        fontWeight: FontWeight.bold,
-                        color: UI.primary,
-                      ),
-                    ),
-                    SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
 
                     // Профиль игрока
                     Center(

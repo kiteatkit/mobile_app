@@ -839,7 +839,6 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
       });
       
       // Очищаем кэш репозитория для синхронизации с другими страницами
-      print('🧹 Очищаем кэш после изменения баллов игрока $playerId');
       await repo.clearCache();
     } catch (e) {
       if (mounted) {

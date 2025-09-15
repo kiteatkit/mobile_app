@@ -6,7 +6,7 @@ import '../models/group.dart';
 import '../models/player.dart';
 import '../widgets/player_details_dialog.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-// import '../widgets/training_schedule_dialog.dart';
+import '../services/auth_storage_service.dart';
 
 class CoachDashboardPage extends StatefulWidget {
   const CoachDashboardPage({super.key});
@@ -68,7 +68,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   }
 
   Future<void> _loadWithCacheClear() async {
-    print('🧹 Очищаем кэш и перезагружаем данные...');
     await repo.clearCache();
     _load();
   }
@@ -125,7 +124,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   }
 
   Future<void> _load() async {
-    print('🔄 Загружаем данные панели тренера...');
     try {
       final results = await Future.wait([repo.getGroups(), repo.getPlayers()]);
       final groupsList = results[0] as List<Group>;
@@ -137,11 +135,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
         try {
           final percentage = await repo.getGroupAttendancePercentage(group.id);
           attendanceMap[group.id] = percentage;
-          print('📊 Группа ${group.name}: ${percentage.toStringAsFixed(1)}% посещаемости');
         } catch (e) {
-          print(
-            'Ошибка при загрузке посещаемости для группы ${group.name}: $e',
-          );
           attendanceMap[group.id] = 0.0;
         }
       }
@@ -199,7 +193,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                 ),
                                 backgroundColor: const Color(0xFF403D39),
                               ),
-                              onPressed: () => context.go('/'),
+                              onPressed: () async {
+                                await AuthStorageService.clearLoginData();
+                                if (mounted) context.go('/');
+                              },
                               icon: const Icon(Icons.logout, size: 16),
                               label: const Text('Выход'),
                             ),
@@ -231,7 +228,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                             side: const BorderSide(color: Color(0xFF403D39)),
                             backgroundColor: const Color(0xFF403D39),
                           ),
-                          onPressed: () => context.go('/'),
+                          onPressed: () async {
+                            await AuthStorageService.clearLoginData();
+                            if (mounted) context.go('/');
+                          },
                           icon: const Icon(Icons.logout, size: 16),
                           label: const Text('Выход'),
                         ),
@@ -1771,9 +1771,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             FilledButton(
               onPressed: () async {
                 try {
-                  print(
-                    'Обновляем игрока ${player.name} с groupId: $selectedGroupId',
-                  );
                   await repo.updatePlayer(
                     id: player.id,
                     name: player.name,
@@ -1820,7 +1817,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     );
                   }
                 } catch (e) {
-                  print('Ошибка при обновлении игрока: $e');
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -1921,18 +1917,6 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
       }
     }
   }
-
-  // Future<void> _openTrainingScheduleDialog(Group group) async {
-  //   await showDialog(
-  //     context: context,
-  //     builder: (context) => TrainingScheduleDialog(
-  //       group: group,
-  //       onScheduleCreated: () {
-  //         _load();
-  //       },
-  //     ),
-  //   );
-  // }
 
   Widget _buildPlayerFallbackAvatar(Player player) {
     return Container(

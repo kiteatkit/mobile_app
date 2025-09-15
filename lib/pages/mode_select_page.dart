@@ -1,12 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/ui_constants.dart';
+import '../services/auth_storage_service.dart';
 
-class ModeSelectPage extends StatelessWidget {
+class ModeSelectPage extends StatefulWidget {
   const ModeSelectPage({super.key});
 
   @override
+  State<ModeSelectPage> createState() => _ModeSelectPageState();
+}
+
+class _ModeSelectPageState extends State<ModeSelectPage> {
+  bool _checkingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedLogin();
+  }
+
+  Future<void> _checkSavedLogin() async {
+    try {
+      final hasValidLogin = await AuthStorageService.hasValidLoginData();
+      if (hasValidLogin && mounted) {
+        final userType = await AuthStorageService.getUserType();
+        if (userType == 'coach') {
+          context.go('/dashboard/coach');
+          return;
+        } else if (userType == 'player') {
+          final player = await AuthStorageService.getPlayerData();
+          if (player != null) {
+            context.go('/dashboard/player', extra: player);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      print('Ошибка при проверке сохраненного входа: $e');
+    }
+    
+    if (mounted) {
+      setState(() => _checkingAuth = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_checkingAuth) {
+      return Scaffold(
+        backgroundColor: UI.background,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: UI.background,
       body: SafeArea(
@@ -176,35 +223,6 @@ class ModeSelectPage extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // Дополнительная информация
-                BounceInAnimation(
-                  delay: const Duration(milliseconds: 600),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: UI.surface,
-                      borderRadius: BorderRadius.circular(UI.radiusLg),
-                      border: Border.all(color: UI.border),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: UI.info, size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Выберите подходящий режим для входа в систему',
-                            style: TextStyle(
-                              color: UI.textMuted,
-                              fontSize: 14,
-                              fontFamily: UI.fontFamily,
-                              fontWeight: UI.fontWeightRegular,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
