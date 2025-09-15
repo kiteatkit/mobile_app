@@ -33,6 +33,13 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     _loadData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Обновляем данные при возвращении на страницу
+    _loadData();
+  }
+
   String _getCurrentMonthName() {
     const monthsRu = [
       'январь',
@@ -141,17 +148,11 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: UI.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(UI.radiusLg),
-                ),
-                child: const Icon(
-                  Icons.sports_basketball,
-                  color: UI.textPrimary,
-                  size: 24,
-                ),
+              Image.asset(
+                'assets/images/logo_black_white.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -163,7 +164,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                       style: TextStyle(
                         fontSize: UI.getTitleFontSize(context),
                         fontWeight: UI.fontWeightBold,
-                        color: UI.textPrimary,
+                        color: UI.white, // Светлый текст
                         fontFamily: UI.fontFamily,
                       ),
                     ),
@@ -171,7 +172,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                       'Добро пожаловать, ${_currentPlayer.name}!',
                       style: TextStyle(
                         fontSize: UI.getBodyFontSize(context),
-                        color: UI.textSecondary,
+                        color: UI.white.withOpacity(0.8), // Светлый текст с прозрачностью
                         fontFamily: UI.fontFamily,
                         fontWeight: UI.fontWeightRegular,
                       ),
@@ -353,6 +354,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     required Color color,
   }) {
     return Container(
+      height: 120, // Фиксированная высота для одинакового размера
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -361,6 +363,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Равномерное распределение
         children: [
           Row(
             children: [
@@ -375,11 +378,12 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                     fontWeight: UI.fontWeightMedium,
                     fontFamily: UI.fontFamily,
                   ),
+                  maxLines: 2, // Максимум 2 строки для заголовка
+                  overflow: TextOverflow.ellipsis, // Обрезание длинного текста
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
@@ -973,6 +977,7 @@ class _RankingRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   width: avatarSize,
@@ -1089,13 +1094,14 @@ class _RankingRow extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: UI.gradientPrimary,
+        color: UI.primary.withOpacity(0.2), // Светлый оранжевый фон вместо градиента
         shape: BoxShape.circle,
+        border: Border.all(color: UI.primary.withOpacity(0.3), width: 1),
         boxShadow: [
           BoxShadow(
-            color: UI.primary.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: UI.primary.withOpacity(0.1), // Более мягкая тень
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -1103,7 +1109,7 @@ class _RankingRow extends StatelessWidget {
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.textPrimary,
+            color: UI.primary, // Оранжевый текст на светлом фоне
             fontSize: size * 0.5,
             fontWeight: UI.fontWeightBold,
             fontFamily: UI.fontFamily,

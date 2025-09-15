@@ -684,6 +684,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                 : null,
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Аватар игрока
                               Container(
@@ -836,7 +837,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                   _setPlayerPoints(
                                                     player,
                                                     training,
-                                                    value == true ? 1 : 0,
+                                                    value == true ? 3 : 0,
                                                   );
                                                 },
                                                 activeColor: UI.primary,
@@ -1116,6 +1117,9 @@ class _GroupViewPageState extends State<GroupViewPage>
           created_at: DateTime.now().toIso8601String(),
         );
 
+        // Обновляем посещаемость игрока немедленно
+        _updatePlayerAttendance(player);
+
         // Очищаем кэш средних баллов для этого игрока
         _monthlyAverageCache.remove(player.id);
         _cachedTopPlayers = null;
@@ -1123,12 +1127,46 @@ class _GroupViewPageState extends State<GroupViewPage>
 
         _updateLeader();
       });
+      
+      // Очищаем кэш репозитория для синхронизации с другими страницами
+      print('🧹 Очищаем кэш после изменения баллов игрока ${player.name}');
+      await repo.clearCache();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: $e'), backgroundColor: UI.warning),
         );
       }
+    }
+  }
+
+  void _updatePlayerAttendance(Player player) {
+    // Пересчитываем посещаемость для конкретного игрока
+    int attendedCount = 0;
+    
+    for (final training in trainings) {
+      final attendance = attendanceMap['${training.id}_${player.id}'];
+      if (attendance != null && attendance.attended) {
+        attendedCount++;
+      }
+    }
+    
+    // Обновляем данные игрока с новой посещаемостью
+    final playerIndex = players.indexWhere((p) => p.id == player.id);
+    if (playerIndex != -1) {
+      players[playerIndex] = Player(
+        id: player.id,
+        name: player.name,
+        birth_date: player.birth_date,
+        login: player.login,
+        password: player.password,
+        avatar_url: player.avatar_url,
+        group_id: player.group_id,
+        total_points: player.total_points,
+        attendance_count: attendedCount,
+        created_at: player.created_at,
+        updated_at: player.updated_at,
+      );
     }
   }
 
@@ -1296,12 +1334,16 @@ class _GroupViewPageState extends State<GroupViewPage>
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: UI.primary.withOpacity(0.2), // Светлый оранжевый фон
+        shape: BoxShape.circle,
+        border: Border.all(color: UI.primary.withOpacity(0.3), width: 1),
+      ),
       child: Center(
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.textPrimary,
+            color: UI.primary, // Оранжевый текст на светлом фоне
             fontSize: isSmallScreen ? 10 : 12,
             fontWeight: FontWeight.bold,
           ),

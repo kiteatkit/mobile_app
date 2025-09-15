@@ -22,11 +22,9 @@ class MyApp extends StatelessWidget {
         primary: UI.primary,
         secondary: UI.accent,
         surface: UI.card,
-        background: UI.background,
         onPrimary: UI.textPrimary,
         onSecondary: UI.black,
         onSurface: UI.black,
-        onBackground: UI.black,
       ),
       inputDecorationTheme: InputDecorationTheme(
         fillColor: UI.card,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/player.dart';
 import '../ui/ui_constants.dart';
+import '../data/supabase_repository.dart';
 
 class PlayerDetailsDialog extends StatefulWidget {
   const PlayerDetailsDialog({super.key, required this.player});
@@ -14,6 +15,32 @@ class PlayerDetailsDialog extends StatefulWidget {
 
 class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
   bool _obscurePassword = true;
+  late Player _currentPlayer;
+  final SupabaseRepository _repository = SupabaseRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPlayer = widget.player;
+    _loadPlayerData();
+  }
+
+  Future<void> _loadPlayerData() async {
+    try {
+      final players = await _repository.getPlayers();
+      final updatedPlayer = players.firstWhere(
+        (p) => p.id == _currentPlayer.id,
+        orElse: () => _currentPlayer,
+      );
+      if (mounted) {
+        setState(() {
+          _currentPlayer = updatedPlayer;
+        });
+      }
+    } catch (e) {
+      // Если не удалось обновить данные игрока, используем текущие
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +53,13 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: widget.player.avatar_url != null
-                ? NetworkImage(widget.player.avatar_url!)
+            backgroundImage: _currentPlayer.avatar_url != null
+                ? NetworkImage(_currentPlayer.avatar_url!)
                 : null,
-            child: widget.player.avatar_url == null
+            child: _currentPlayer.avatar_url == null
                 ? Text(
-                    widget.player.name.isNotEmpty
-                        ? widget.player.name[0].toUpperCase()
+                    _currentPlayer.name.isNotEmpty
+                        ? _currentPlayer.name[0].toUpperCase()
                         : '?',
                     style: const TextStyle(
                       fontSize: 18,
@@ -60,25 +87,25 @@ class _PlayerDetailsDialogState extends State<PlayerDetailsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('Имя', widget.player.name),
+            _buildInfoRow('Имя', _currentPlayer.name),
             const SizedBox(height: 16),
             _buildInfoRow(
               'Дата рождения',
-              _formatDate(widget.player.birth_date),
+              _formatDate(_currentPlayer.birth_date),
             ),
             const SizedBox(height: 16),
-            _buildInfoRow('Логин', widget.player.login),
+            _buildInfoRow('Логин', _currentPlayer.login),
             const SizedBox(height: 16),
             _buildPasswordRow(
               'Пароль',
-              widget.player.password ?? 'Не установлен',
+              _currentPlayer.password ?? 'Не установлен',
             ),
             const SizedBox(height: 16),
-            _buildInfoRow('Общие баллы', widget.player.total_points.toString()),
+            _buildInfoRow('Общие баллы', _currentPlayer.total_points.toString()),
             const SizedBox(height: 16),
             _buildInfoRow(
               'Посещений',
-              widget.player.attendance_count.toString(),
+              _currentPlayer.attendance_count.toString(),
             ),
           ],
         ),

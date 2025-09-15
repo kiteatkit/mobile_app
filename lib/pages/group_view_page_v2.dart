@@ -826,6 +826,9 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
           created_at: DateTime.now().toIso8601String(),
         );
 
+        // Обновляем посещаемость игрока немедленно
+        _updatePlayerAttendance(playerId);
+
         // Очищаем кэш средних баллов для этого игрока
         _monthlyAverageCache.remove(playerId);
         _cachedTopPlayers = null;
@@ -834,12 +837,47 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
         _updatePlayerRows();
         _updateLeader();
       });
+      
+      // Очищаем кэш репозитория для синхронизации с другими страницами
+      print('🧹 Очищаем кэш после изменения баллов игрока $playerId');
+      await repo.clearCache();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: $e'), backgroundColor: UI.warning),
         );
       }
+    }
+  }
+
+  void _updatePlayerAttendance(String playerId) {
+    // Пересчитываем посещаемость для конкретного игрока
+    int attendedCount = 0;
+    
+    for (final training in trainings) {
+      final attendance = attendanceMap['${training.id}_$playerId'];
+      if (attendance != null && attendance.attended) {
+        attendedCount++;
+      }
+    }
+    
+    // Обновляем данные игрока с новой посещаемостью
+    final playerIndex = players.indexWhere((p) => p.id == playerId);
+    if (playerIndex != -1) {
+      final player = players[playerIndex];
+      players[playerIndex] = Player(
+        id: player.id,
+        name: player.name,
+        birth_date: player.birth_date,
+        login: player.login,
+        password: player.password,
+        avatar_url: player.avatar_url,
+        group_id: player.group_id,
+        total_points: player.total_points,
+        attendance_count: attendedCount,
+        created_at: player.created_at,
+        updated_at: player.updated_at,
+      );
     }
   }
 
@@ -1008,12 +1046,16 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: UI.primary.withOpacity(0.2), // Светлый оранжевый фон
+        shape: BoxShape.circle,
+        border: Border.all(color: UI.primary.withOpacity(0.3), width: 1),
+      ),
       child: Center(
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.textPrimary,
+            color: UI.primary, // Оранжевый текст на светлом фоне
             fontSize: UI.isSmallScreen(context) ? 8 : 10,
             fontWeight: FontWeight.bold,
           ),

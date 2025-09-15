@@ -60,6 +60,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Очищаем кэш и обновляем данные при возвращении на страницу
+    _loadWithCacheClear();
+  }
+
+  Future<void> _loadWithCacheClear() async {
+    print('🧹 Очищаем кэш и перезагружаем данные...');
+    await repo.clearCache();
+    _load();
+  }
+
   String _generateLogin(String firstName, String lastName) {
     // Генерируем логин на основе фамилии и имени
     final cleanFirstName = firstName.toLowerCase().replaceAll(
@@ -112,6 +125,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   }
 
   Future<void> _load() async {
+    print('🔄 Загружаем данные панели тренера...');
     try {
       final results = await Future.wait([repo.getGroups(), repo.getPlayers()]);
       final groupsList = results[0] as List<Group>;
@@ -123,6 +137,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
         try {
           final percentage = await repo.getGroupAttendancePercentage(group.id);
           attendanceMap[group.id] = percentage;
+          print('📊 Группа ${group.name}: ${percentage.toStringAsFixed(1)}% посещаемости');
         } catch (e) {
           print(
             'Ошибка при загрузке посещаемости для группы ${group.name}: $e',
@@ -178,7 +193,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                             ),
                             OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: UI.textPrimary,
+                                foregroundColor: UI.white,
                                 side: const BorderSide(
                                   color: Color(0xFF403D39),
                                 ),
@@ -212,7 +227,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                         ),
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: UI.textPrimary,
+                            foregroundColor: UI.white,
                             side: const BorderSide(color: Color(0xFF403D39)),
                             backgroundColor: const Color(0xFF403D39),
                           ),
@@ -525,8 +540,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                   .toList();
 
                               return GestureDetector(
-                                onTap: () =>
-                                    context.push('/group-view', extra: g),
+                                onTap: () async {
+                                  await context.push('/group-view', extra: g);
+                                  // Очищаем кэш и обновляем данные после возврата из группы
+                                  _loadWithCacheClear();
+                                },
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
@@ -1586,6 +1604,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 player.name,
@@ -1919,12 +1938,16 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     return Container(
       width: 32,
       height: 32,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: UI.primary.withOpacity(0.2), // Светлый оранжевый фон
+        shape: BoxShape.circle,
+        border: Border.all(color: UI.primary.withOpacity(0.3), width: 1),
+      ),
       child: Center(
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
-          style: const TextStyle(
-            color: UI.textPrimary,
+          style: TextStyle(
+            color: UI.primary, // Оранжевый текст на светлом фоне
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),

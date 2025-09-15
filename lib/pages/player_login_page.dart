@@ -68,26 +68,13 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Анимированный логотип
-                BounceInAnimation(
-                  child: Container(
+                // Анимированный логотип с прыжком
+                BasketballBounceAnimation(
+                  child: Image.asset(
+                    'assets/images/logo_red.png',
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(
-                      gradient: UI.gradientBasketball,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        UI.cardShadow.copyWith(
-                          color: UI.primary.withOpacity(0.3),
-                          blurRadius: 30,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: UI.textPrimary,
-                      size: 50,
-                    ),
+                    fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -317,7 +304,7 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                     onPressed: () => context.go('/'),
                     child: Container(
                       width: double.infinity,
-                      height: UI.getButtonHeight(context),
+                      height: UI.getButtonHeight(context) + 8,
                       decoration: BoxDecoration(
                         color: UI.textPrimary,
                         borderRadius: BorderRadius.circular(UI.radiusLg),
@@ -352,6 +339,82 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Анимация прыжка баскетбольного мяча
+class BasketballBounceAnimation extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  const BasketballBounceAnimation({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 800),
+  });
+
+  @override
+  State<BasketballBounceAnimation> createState() => _BasketballBounceAnimationState();
+}
+
+class _BasketballBounceAnimationState extends State<BasketballBounceAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _bounceAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    
+    // Анимация прыжка (движение вверх-вниз)
+    _bounceAnimation = Tween<double>(
+      begin: 0.0,
+      end: -20.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    ));
+    
+    // Анимация масштаба (сжатие при приземлении)
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.4, 0.8, curve: Curves.easeInOut),
+    ));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _bounceAnimation.value),
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: widget.child,
+          ),
+        );
+      },
     );
   }
 }

@@ -23,6 +23,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
   bool loading = true;
   List<Attendance> history = [];
   List<TrainingSession> recentTrainings = [];
+  late Player _currentPlayer;
 
   @override
   bool get wantKeepAlive => true;
@@ -30,11 +31,31 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
   @override
   void initState() {
     super.initState();
+    _currentPlayer = widget.player;
+    _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Обновляем данные при возвращении на страницу
     _load();
   }
 
   Future<void> _load() async {
     setState(() => loading = true);
+
+    // Обновляем данные игрока
+    try {
+      final players = await repo.getPlayers();
+      final updatedPlayer = players.firstWhere(
+        (p) => p.id == _currentPlayer.id,
+        orElse: () => _currentPlayer,
+      );
+      _currentPlayer = updatedPlayer;
+    } catch (e) {
+      // Если не удалось обновить данные игрока, используем текущие
+    }
 
     // Загружаем историю посещений с деталями тренировок
     final now = DateTime.now();
@@ -43,7 +64,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     final a = await SupabaseManager.client
         .from('attendance')
         .select('*, training_sessions(*)')
-        .eq('player_id', widget.player.id)
+        .eq('player_id', _currentPlayer.id)
         .lte('training_sessions.date', today.toIso8601String().split('T')[0])
         .order('created_at', ascending: false)
         .limit(20);
@@ -53,7 +74,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
     final trainings = await repo.getTrainingsInRange(
       startOfMonth,
       now,
-      groupId: widget.player.group_id,
+      groupId: _currentPlayer.group_id,
     );
 
     setState(() {
@@ -145,7 +166,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
   }
 
   String _getTrainingsText() {
-    final attended = widget.player.attendance_count;
+    final attended = _currentPlayer.attendance_count;
     final total = _getTotalTrainingsCount();
     return '$attended ${_getTrainingWord(attended)} из $total';
   }
@@ -170,8 +191,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
       ),
       child: Center(
         child: Text(
-          widget.player.name.isNotEmpty
-              ? widget.player.name[0].toUpperCase()
+          _currentPlayer.name.isNotEmpty
+              ? _currentPlayer.name[0].toUpperCase()
               : '?',
           style: const TextStyle(
             color: UI.textPrimary,
@@ -225,10 +246,10 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                             ),
                             child: ClipOval(
                               child:
-                                  widget.player.avatar_url != null &&
-                                      widget.player.avatar_url!.isNotEmpty
+                                  _currentPlayer.avatar_url != null &&
+                                      _currentPlayer.avatar_url!.isNotEmpty
                                   ? Image.network(
-                                      widget.player.avatar_url!,
+                                      _currentPlayer.avatar_url!,
                                       width: UI.isSmallScreen(context)
                                           ? 70
                                           : 80,
@@ -247,7 +268,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
 
                           // Имя игрока
                           Text(
-                            widget.player.name,
+                            _currentPlayer.name,
                             style: TextStyle(
                               color: UI.textPrimary,
                               fontSize: UI.getTitleFontSize(context),
@@ -269,7 +290,7 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
                               border: Border.all(color: UI.border),
                             ),
                             child: Text(
-                              '@${widget.player.login}',
+                              '@${_currentPlayer.login}',
                               style: TextStyle(
                                 color: UI.textPrimary,
                                 fontSize: UI.getBodyFontSize(context),

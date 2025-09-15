@@ -1459,7 +1459,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                     )
                                                   : Row(
                                                       children: [
-                                                        // Чекбокс для быстрого выставления 1 балла
+                                                        // Чекбокс для быстрого выставления 3 баллов
                                                         Checkbox(
                                                           value:
                                                               trainingPoints >
@@ -1469,7 +1469,7 @@ class _GroupViewPageState extends State<GroupViewPage>
                                                               _setPlayerPoints(
                                                                 player,
                                                                 training,
-                                                                1,
+                                                                3,
                                                               );
                                                             } else {
                                                               _setPlayerPoints(
@@ -2304,12 +2304,16 @@ class _PlayerInfo extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: UI.primary, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: UI.primary.withOpacity(0.2), // Светлый оранжевый фон
+        shape: BoxShape.circle,
+        border: Border.all(color: UI.primary.withOpacity(0.3), width: 1),
+      ),
       child: Center(
         child: Text(
           player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
           style: TextStyle(
-            color: UI.textPrimary,
+            color: UI.primary, // Оранжевый текст на светлом фоне
             fontSize: size * 0.5,
             fontWeight: FontWeight.bold,
           ),

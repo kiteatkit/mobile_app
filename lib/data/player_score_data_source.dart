@@ -97,15 +97,17 @@ class PlayerScoreDataSource extends DataGridSource {
       decoration: const BoxDecoration(
         border: Border(right: BorderSide(color: UI.border)),
       ),
-      child: Text(
-        playerRow.player.name,
-        style: const TextStyle(
-          color: UI.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.normal,
+      child: Center(
+        child: Text(
+          playerRow.player.name,
+          style: const TextStyle(
+            color: UI.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.normal,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -157,7 +159,7 @@ class PlayerScoreDataSource extends DataGridSource {
         Checkbox(
           value: points > 0,
           onChanged: (value) {
-            onPointsChanged(playerId, trainingId, value == true ? 1 : 0);
+            onPointsChanged(playerId, trainingId, value == true ? 3 : 0);
           },
           activeColor: UI.primary,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

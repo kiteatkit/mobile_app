@@ -602,7 +602,7 @@ class SupabaseRepository {
         Map<String, dynamic>.from(data),
       );
 
-      // Автоматически создаем записи посещения для всех игроков группы с 1 баллом
+      // Автоматически создаем записи посещения для всех игроков группы с 3 баллами
       final players = await getPlayers(groupId: scheduledTraining.group_id);
       if (players.isNotEmpty) {
         final attendanceRecords = players
@@ -610,7 +610,7 @@ class SupabaseRepository {
               (player) => {
                 'session_id': trainingSession.id,
                 'player_id': player.id,
-                'points': 1,
+                'points': 3,
                 'attended': true,
               },
             )
@@ -670,7 +670,7 @@ class SupabaseRepository {
         Map<String, dynamic>.from(data),
       );
 
-      // Автоматически создаем записи посещения для всех игроков группы с 1 баллом
+      // Автоматически создаем записи посещения для всех игроков группы с 3 баллами
       final players = await getPlayers(groupId: groupId);
       if (players.isNotEmpty) {
         final attendanceRecords = players
@@ -678,7 +678,7 @@ class SupabaseRepository {
               (player) => {
                 'session_id': trainingSession.id,
                 'player_id': player.id,
-                'points': 1,
+                'points': 3,
                 'attended': true,
               },
             )

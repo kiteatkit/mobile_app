@@ -17,27 +17,15 @@ class ModeSelectPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 40),
-                // Анимированный логотип
-                BounceInAnimation(
+                // Анимированный логотип с прыжком
+                BasketballBounceAnimation(
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: UI.gradientBasketball,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            UI.cardShadow.copyWith(
-                              color: UI.primary.withOpacity(0.3),
-                              blurRadius: 30,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.sports_basketball,
-                          size: 48,
-                          color: UI.textPrimary,
-                        ),
+                      Image.asset(
+                        'assets/images/logo_red.png',
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -222,6 +210,82 @@ class ModeSelectPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Анимация прыжка баскетбольного мяча
+class BasketballBounceAnimation extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  const BasketballBounceAnimation({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 800),
+  });
+
+  @override
+  State<BasketballBounceAnimation> createState() => _BasketballBounceAnimationState();
+}
+
+class _BasketballBounceAnimationState extends State<BasketballBounceAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _bounceAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    
+    // Анимация прыжка (движение вверх-вниз)
+    _bounceAnimation = Tween<double>(
+      begin: 0.0,
+      end: -20.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    ));
+    
+    // Анимация масштаба (сжатие при приземлении)
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.4, 0.8, curve: Curves.easeInOut),
+    ));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _bounceAnimation.value),
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: widget.child,
+          ),
+        );
+      },
     );
   }
 }
