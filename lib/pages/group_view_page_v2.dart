@@ -128,6 +128,34 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
     dataSource.updateData(playerRows, trainings);
   }
 
+  void _updateSinglePlayerRow(String playerId) {
+    // Находим индекс игрока
+    final playerIndex = players.indexWhere((p) => p.id == playerId);
+    if (playerIndex == -1) return;
+
+    final player = players[playerIndex];
+    
+    // Пересчитываем только для этого игрока
+    final trainingScores = <String, int>{};
+    for (final training in trainings) {
+      trainingScores[training.id] = _pointsFor(player.id, training.id);
+    }
+
+    final totalScore = _monthlyTotal(player.id);
+    final isTopPlayer = _topPlayers.any((p) => p.id == player.id);
+
+    // Обновляем только одну строку
+    playerRows[playerIndex] = PlayerScoreRow(
+      player: player,
+      trainingScores: trainingScores,
+      averageScore: totalScore,
+      isTopPlayer: isTopPlayer,
+    );
+
+    // Обновляем только эту строку в DataSource
+    dataSource.updateSingleRow(playerIndex, playerRows[playerIndex]);
+  }
+
   int _pointsFor(String playerId, String trainingId) {
     final rec = attendanceMap['${trainingId}_$playerId'];
     if (rec == null || !rec.attended) return 0;
@@ -783,27 +811,25 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
         points: points,
       );
       if (!mounted) return;
-      setState(() {
-        attendanceMap['${trainingId}_$playerId'] = Attendance(
-          id: '${trainingId}_$playerId',
-          session_id: trainingId,
-          player_id: playerId,
-          attended: points > 0,
-          points: points,
-          created_at: DateTime.now().toIso8601String(),
-        );
+      
+      // Обновляем только локальные данные без setState
+      attendanceMap['${trainingId}_$playerId'] = Attendance(
+        id: '${trainingId}_$playerId',
+        session_id: trainingId,
+        player_id: playerId,
+        attended: points > 0,
+        points: points,
+        created_at: DateTime.now().toIso8601String(),
+      );
 
-        // Обновляем посещаемость игрока немедленно
-        _updatePlayerAttendance(playerId);
+      // Обновляем посещаемость игрока
+      _updatePlayerAttendance(playerId);
 
-        // Очищаем кэш средних баллов для этого игрока
-        _monthlyAverageCache.remove(playerId);
-        _cachedTopPlayers = null;
-        _lastTopPlayersCacheKey = null;
+      // Очищаем кэш средних баллов только для этого игрока
+      _monthlyAverageCache.remove(playerId);
 
-        _updatePlayerRows();
-        _updateLeader();
-      });
+      // Обновляем только конкретную строку в таблице (без notifyListeners)
+      _updateSinglePlayerRow(playerId);
       
       // Очищаем кэш репозитория для синхронизации с другими страницами
       await repo.clearCache();

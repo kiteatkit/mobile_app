@@ -3,6 +3,7 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import '../models/player_score_row.dart';
 import '../models/training_session.dart';
 import '../ui/ui_constants.dart';
+import '../widgets/attendance_checkbox.dart';
 
 class PlayerScoreDataSource extends DataGridSource {
   PlayerScoreDataSource({
@@ -25,6 +26,9 @@ class PlayerScoreDataSource extends DataGridSource {
   Function(String playerId, String trainingId, int currentPoints)? onEditPoints;
 
   List<DataGridRow> _dataGridRows = [];
+  
+  // Кэш для виджетов чекбоксов
+  final Map<String, AttendanceCheckbox> _checkboxCache = {};
 
   void _buildDataGridRows() {
     _dataGridRows = _playerRows.map<DataGridRow>((playerRow) {
@@ -60,7 +64,62 @@ class PlayerScoreDataSource extends DataGridSource {
     _playerRows = playerRows;
     _trainings = trainings;
     _buildDataGridRows();
+    // Очищаем кэш при полном обновлении данных
+    _checkboxCache.clear();
     notifyListeners();
+  }
+
+  void updateSingleRow(int index, PlayerScoreRow playerRow) {
+    if (index >= 0 && index < _playerRows.length) {
+      _playerRows[index] = playerRow;
+      
+      // Обновляем только одну строку в _dataGridRows
+      final cells = <DataGridCell>[
+        DataGridCell<String>(
+          columnName: 'player',
+          value: playerRow.player.name,
+        ),
+      ];
+
+      // Добавляем ячейки для каждой тренировки
+      for (final training in _trainings) {
+        final points = playerRow.trainingScores[training.id] ?? 0;
+        cells.add(DataGridCell<int>(columnName: training.id, value: points));
+      }
+
+      // Добавляем ячейку среднего балла
+      cells.add(
+        DataGridCell<double>(
+          columnName: 'average',
+          value: playerRow.averageScore,
+        ),
+      );
+
+      _dataGridRows[index] = DataGridRow(cells: cells);
+      
+      // Обновляем кэшированные чекбоксы для этого игрока
+      for (final training in _trainings) {
+        final cacheKey = '${playerRow.player.id}_${training.id}';
+        if (_checkboxCache.containsKey(cacheKey)) {
+          final points = playerRow.trainingScores[training.id] ?? 0;
+          _checkboxCache[cacheKey] = AttendanceCheckbox(
+            key: ValueKey(cacheKey),
+            playerId: playerRow.player.id,
+            trainingId: training.id,
+            points: points,
+            onChanged: onPointsChanged,
+            onEditPoints: (playerId, trainingId, currentPoints) {
+              if (onEditPoints != null) {
+                onEditPoints!(playerId, trainingId, currentPoints);
+              }
+            },
+          );
+        }
+      }
+      
+      // Уведомляем об изменении только для конкретной строки
+      notifyListeners();
+    }
   }
 
   @override
@@ -154,43 +213,29 @@ class PlayerScoreDataSource extends DataGridSource {
     String trainingId,
     int points,
   ) {
-    return Row(
-      children: [
-        Checkbox(
-          value: points > 0,
-          onChanged: (value) {
-            onPointsChanged(playerId, trainingId, value == true ? 3 : 0);
-          },
-          activeColor: UI.primary,
-          checkColor: UI.white,
-          side: const BorderSide(color: UI.primary, width: 2),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        Expanded(
-          child: GestureDetector(
-            onTap: () => _showPointsDialog(playerId, trainingId, points),
-            child: Container(
-              height: 28,
-              decoration: BoxDecoration(
-                color: UI.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: UI.primary.withOpacity(0.3)),
-              ),
-              child: Center(
-                child: Text(
-                  points.toString(),
-                  style: TextStyle(
-                    color: UI.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    final cacheKey = '${playerId}_$trainingId';
+    
+    // Проверяем кэш и возвращаем существующий виджет
+    if (_checkboxCache.containsKey(cacheKey)) {
+      return _checkboxCache[cacheKey]!;
+    }
+    
+    // Создаем новый виджет и кэшируем его
+    final newCheckbox = AttendanceCheckbox(
+      key: ValueKey(cacheKey),
+      playerId: playerId,
+      trainingId: trainingId,
+      points: points,
+      onChanged: onPointsChanged,
+      onEditPoints: (playerId, trainingId, currentPoints) {
+        if (onEditPoints != null) {
+          onEditPoints!(playerId, trainingId, currentPoints);
+        }
+      },
     );
+    
+    _checkboxCache[cacheKey] = newCheckbox;
+    return newCheckbox;
   }
 
   Widget _buildAverageScoreCell(double averageScore) {
@@ -216,13 +261,4 @@ class PlayerScoreDataSource extends DataGridSource {
     );
   }
 
-  void _showPointsDialog(
-    String playerId,
-    String trainingId,
-    int currentPoints,
-  ) {
-    if (onEditPoints != null) {
-      onEditPoints!(playerId, trainingId, currentPoints);
-    }
-  }
 }
