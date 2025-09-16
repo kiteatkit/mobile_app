@@ -319,7 +319,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
           Row(
             children: [
               const Spacer(),
-              const Text('Месяц:', style: TextStyle(color: UI.textPrimary)),
+              const Text('Период:', style: TextStyle(color: UI.textPrimary)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

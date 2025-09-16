@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../models/group.dart';
+import '../models/training_session.dart';
+import '../models/attendance.dart';
 import '../ui/ui_constants.dart';
 import '../data/supabase_repository.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +25,10 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
   bool _isLoading = true;
   bool _isRankingExpanded = false;
   late Player _currentPlayer;
+  
+  // Данные для расчета среднего балла команды
+  List<TrainingSession> _trainings = [];
+  Map<String, Attendance> _attendanceMap = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -60,14 +66,75 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
     return monthsRu[now.month - 1];
   }
 
+  // Методы для расчета баллов (аналогично group_view_page_v2.dart)
+  int _pointsFor(String playerId, String trainingId) {
+    final rec = _attendanceMap['${trainingId}_$playerId'];
+    if (rec == null || !rec.attended) return 0;
+    return rec.points;
+  }
+
+  double _monthlyTotal(String playerId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Вычисляем общее количество баллов за месяц до текущего дня
+    final pastTrainings = _trainings
+        .where(
+          (t) =>
+              DateTime.parse(t.date).isBefore(today) ||
+              DateTime.parse(t.date).isAtSameMomentAs(today),
+        )
+        .toList();
+
+    if (pastTrainings.isEmpty) {
+      return 0.0;
+    }
+
+    int totalPoints = 0;
+
+    for (final training in pastTrainings) {
+      final points = _pointsFor(playerId, training.id);
+      totalPoints += points; // Суммируем все баллы, включая 0
+    }
+
+    return totalPoints.toDouble();
+  }
+
   Future<void> _loadData() async {
     try {
       final players = await _repository.getPlayers();
       final groups = await _repository.getGroups();
 
+      // Загружаем данные о тренировках и посещениях для расчета среднего балла команды
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month, 1);
+      final end = DateTime(now.year, now.month + 1, 0);
+      
+      List<TrainingSession> trainings = [];
+      Map<String, Attendance> attendanceMap = {};
+      
+      // Загружаем тренировки и посещения для каждой группы
+      for (final group in groups) {
+        final groupTrainings = await _repository.getTrainingsInRange(
+          start,
+          end,
+          groupId: group.id,
+        );
+        trainings.addAll(groupTrainings);
+        
+        if (groupTrainings.isNotEmpty) {
+          final attendance = await _repository.getAttendanceForSessions(
+            groupTrainings.map((t) => t.id).toList()
+          );
+          attendanceMap.addAll({for (final r in attendance) '${r.session_id}_${r.player_id}': r});
+        }
+      }
+
       setState(() {
         _allPlayers = players;
         _groups = groups;
+        _trainings = trainings;
+        _attendanceMap = attendanceMap;
         _isLoading = false;
         // Обновляем данные текущего игрока
         final updatedPlayer = players.firstWhere(
@@ -473,6 +540,9 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                 context: context,
                 group: playerGroup,
                 allPlayers: _allPlayers,
+                trainings: _trainings,
+                attendanceMap: _attendanceMap,
+                monthlyTotal: _monthlyTotal,
                 onTap: () async {
                   await context.push(
                     '/group-view',
@@ -696,12 +766,18 @@ class _TeamCard extends StatelessWidget {
     required this.context,
     required this.group,
     required this.allPlayers,
+    required this.trainings,
+    required this.attendanceMap,
+    required this.monthlyTotal,
     required this.onTap,
   });
 
   final BuildContext context;
   final Group group;
   final List<Player> allPlayers;
+  final List<TrainingSession> trainings;
+  final Map<String, Attendance> attendanceMap;
+  final double Function(String) monthlyTotal;
   final VoidCallback onTap;
 
   // Функция для определения медали по месту
@@ -737,9 +813,12 @@ class _TeamCard extends StatelessWidget {
     final groupPlayers = allPlayers
         .where((p) => p.group_id == group.id)
         .toList();
+    // Правильный расчет среднего балла команды за текущий месяц
     final averagePoints = groupPlayers.isNotEmpty
-        ? groupPlayers.map((p) => p.total_points).reduce((a, b) => a + b) /
-              groupPlayers.length
+        ? groupPlayers.fold<double>(
+            0,
+            (s, p) => s + monthlyTotal(p.id),
+          ) / groupPlayers.length
         : 0.0;
 
     // Сортируем игроков по очкам (по убыванию)
@@ -797,7 +876,7 @@ class _TeamCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       _TeamStat(
                         context: context,
-                        label: 'Средние очки:',
+                        label: 'Средний балл:',
                         value: averagePoints.toStringAsFixed(0),
                       ),
                     ],
@@ -815,7 +894,7 @@ class _TeamCard extends StatelessWidget {
                       Flexible(
                         child: _TeamStat(
                           context: context,
-                          label: 'Средние очки:',
+                          label: 'Средний балл:',
                           value: averagePoints.toStringAsFixed(0),
                         ),
                       ),
