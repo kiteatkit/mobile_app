@@ -241,8 +241,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 16),
 
               // Заголовок Команды
-              Center(
-                child: Text('Команды', style: UI.getSubheadingStyle(context)),
+              Text(
+                'Команды', 
+                style: UI.getHeadingStyle(context, color: UI.textPrimary),
+                textAlign: TextAlign.left,
               ),
 
               SizedBox(height: UI.isSmallScreen(context) ? 16 : 24),
@@ -302,13 +304,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                             Icon(
                                               Icons.person_add,
                                               size: 16,
-                                              color: UI.textPrimary,
+                                              color: UI.white,
                                             ),
                                             SizedBox(width: 4),
                                             Text(
                                               'Добавить игрока',
                                               style: TextStyle(
-                                                color: UI.textPrimary,
+                                                color: UI.white,
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -327,11 +329,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                           horizontal: 12,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: UI.card,
+                                          color: UI.white,
                                           borderRadius: BorderRadius.circular(
                                             4,
                                           ),
-                                          border: Border.all(color: UI.border),
+                                          border: Border.all(color: UI.primary, width: 2),
                                         ),
                                         child: const Row(
                                           mainAxisAlignment:
@@ -340,13 +342,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                             Icon(
                                               Icons.settings,
                                               size: 16,
-                                              color: UI.textPrimary,
+                                              color: UI.primary,
                                             ),
                                             SizedBox(width: 4),
                                             Text(
                                               'Управлять',
                                               style: TextStyle(
-                                                color: UI.textPrimary,
+                                                color: UI.primary,
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -382,21 +384,21 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                         horizontal: 12,
                                       ),
                                       decoration: BoxDecoration(
-                                        gradient: UI.gradientPrimary,
-                                        borderRadius: BorderRadius.circular(4),
+                                        color: UI.primary,
+                                        borderRadius: BorderRadius.circular(UI.radiusLg),
                                       ),
                                       child: const Row(
                                         children: [
                                           Icon(
                                             Icons.person_add,
                                             size: 16,
-                                            color: UI.textPrimary,
+                                            color: UI.white,
                                           ),
                                           SizedBox(width: 4),
                                           Text(
                                             'Добавить игрока',
                                             style: TextStyle(
-                                              color: UI.textPrimary,
+                                              color: UI.white,
                                               fontSize: 12,
                                             ),
                                           ),
@@ -414,7 +416,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: UI.card,
-                                        borderRadius: BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(UI.radiusLg),
                                         border: Border.all(color: UI.border),
                                       ),
                                       child: const Row(
@@ -489,16 +491,16 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                           child: Container(
                             height: UI.getButtonHeight(context),
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              gradient: UI.gradientPrimary,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                                      decoration: BoxDecoration(
+                                        color: UI.primary,
+                                        borderRadius: BorderRadius.circular(UI.radiusLg),
+                                      ),
                             child: Row(
                               children: [
                                 const Icon(
                                   Icons.add,
                                   size: 16,
-                                  color: UI.textPrimary,
+                                  color: UI.white,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -506,7 +508,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                       ? 'Добавить'
                                       : 'Добавить команду',
                                   style: const TextStyle(
-                                    color: UI.textPrimary,
+                                    color: UI.white,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -550,7 +552,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: _parseColor(g.color),
-                                      width: 2,
+                                      width: 4,
                                     ),
                                   ),
                                   child: Row(
@@ -590,9 +592,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                     ),
                                                   ),
                                                   PopupMenuButton<String>(
-                                                    color: const Color(
-                                                      0xFF403D39,
-                                                    ),
+                                                    color: UI.card,
                                                     icon: const Icon(
                                                       Icons.more_vert,
                                                       color: UI.textPrimary,
@@ -615,6 +615,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                         value: 'edit',
                                                         child: Text(
                                                           'Редактировать',
+                                                          style: TextStyle(color: UI.textPrimary),
                                                         ),
                                                       ),
                                                       // const PopupMenuItem(
@@ -625,7 +626,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                                                       // ),
                                                       const PopupMenuItem(
                                                         value: 'delete',
-                                                        child: Text('Удалить'),
+                                                        child: Text(
+                                                          'Удалить',
+                                                          style: TextStyle(color: UI.textPrimary),
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
@@ -915,7 +919,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                           child: isSelected
                               ? const Icon(
                                   Icons.check,
-                                  color: UI.textPrimary,
+                                  color: UI.white,
                                   size: 24,
                                 )
                               : null,
@@ -935,11 +939,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.white,
+                foregroundColor: UI.primary,
+                side: const BorderSide(color: UI.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+              ),
+              child: const Text('Отмена'),
             ),
-            FilledButton(
+            ElevatedButton(
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
 
@@ -972,9 +984,12 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   }
                 }
               },
-              style: FilledButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: UI.primary,
-                foregroundColor: UI.textPrimary,
+                foregroundColor: UI.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
               ),
               child: const Text('Создать'),
             ),
@@ -1047,7 +1062,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                           child: isSelected
                               ? const Icon(
                                   Icons.check,
-                                  color: UI.textPrimary,
+                                  color: UI.white,
                                   size: 24,
                                 )
                               : null,
@@ -1067,11 +1082,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.white,
+                foregroundColor: UI.primary,
+                side: const BorderSide(color: UI.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+              ),
+              child: const Text('Отмена'),
             ),
-            FilledButton(
+            ElevatedButton(
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
 
@@ -1103,9 +1126,12 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   }
                 }
               },
-              style: FilledButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: UI.primary,
-                foregroundColor: UI.textPrimary,
+                foregroundColor: UI.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
               ),
               child: const Text('Сохранить'),
             ),
@@ -1122,12 +1148,27 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
         title: const Text('Удалить команду?'),
         content: Text('Вы уверены, что хотите удалить "${g.name}"?'),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, false),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: UI.white,
+              foregroundColor: UI.primary,
+              side: const BorderSide(color: UI.primary, width: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UI.radiusLg),
+              ),
+            ),
             child: const Text('Отмена'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: UI.primary,
+              foregroundColor: UI.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UI.radiusLg),
+              ),
+            ),
             child: const Text('Удалить'),
           ),
         ],
@@ -1450,9 +1491,17 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.white,
+                foregroundColor: UI.primary,
+                side: const BorderSide(color: UI.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+              ),
+              child: const Text('Отмена'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1524,7 +1573,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: UI.primary,
-                foregroundColor: UI.textPrimary,
+                foregroundColor: UI.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
               ),
               child: const Text('Добавить'),
             ),
@@ -1706,9 +1758,17 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Закрыть', style: TextStyle(color: UI.muted)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.white,
+                foregroundColor: UI.primary,
+                side: const BorderSide(color: UI.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+              ),
+              child: const Text('Закрыть'),
             ),
           ],
         ),
@@ -1764,11 +1824,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ],
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UI.white,
+                foregroundColor: UI.primary,
+                side: const BorderSide(color: UI.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
+              ),
+              child: const Text('Отмена'),
             ),
-            FilledButton(
+            ElevatedButton(
               onPressed: () async {
                 try {
                   await repo.updatePlayer(
@@ -1827,9 +1895,12 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                   }
                 }
               },
-              style: FilledButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: UI.primary,
-                foregroundColor: UI.textPrimary,
+                foregroundColor: UI.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(UI.radiusLg),
+                ),
               ),
               child: const Text('Переместить'),
             ),
@@ -1860,25 +1931,28 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           style: const TextStyle(color: UI.textPrimary),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Отмена',
-              style: TextStyle(color: UI.textPrimary),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: UI.warning,
-              borderRadius: BorderRadius.circular(UI.radiusSm),
-            ),
-            child: TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Удалить',
-                style: TextStyle(color: UI.textPrimary),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: UI.white,
+              foregroundColor: UI.primary,
+              side: const BorderSide(color: UI.primary, width: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UI.radiusLg),
               ),
             ),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: UI.primary,
+              foregroundColor: UI.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UI.radiusLg),
+              ),
+            ),
+            child: const Text('Удалить'),
           ),
         ],
       ),

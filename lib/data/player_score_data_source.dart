@@ -162,6 +162,8 @@ class PlayerScoreDataSource extends DataGridSource {
             onPointsChanged(playerId, trainingId, value == true ? 3 : 0);
           },
           activeColor: UI.primary,
+          checkColor: UI.white,
+          side: const BorderSide(color: UI.primary, width: 2),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         Expanded(

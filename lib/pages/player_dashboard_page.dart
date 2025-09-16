@@ -255,14 +255,14 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
         child: Row(
           children: [
             const SizedBox(width: 16),
-            Icon(icon, size: UI.getIconSize(context), color: UI.textPrimary),
+            Icon(icon, size: UI.getIconSize(context), color: UI.white),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
                   fontSize: UI.getBodyFontSize(context),
-                  color: UI.textPrimary,
+                  color: UI.white,
                   fontWeight: UI.fontWeightSemiBold,
                   fontFamily: UI.fontFamily,
                 ),
@@ -272,7 +272,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
             const Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: UI.textPrimary,
+              color: UI.white,
             ),
             const SizedBox(width: 16),
           ],

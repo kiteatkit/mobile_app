@@ -118,7 +118,7 @@ class _GroupOption extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check, color: UI.primary, size: 20),
+              const Icon(Icons.check, color: UI.white, size: 20),
           ],
         ),
       ),

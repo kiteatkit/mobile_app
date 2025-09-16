@@ -8,13 +8,13 @@ class UI {
   static const Color border = Color(0xFFE2E8F0); // Светлые границы
   static const Color surface = Color(0xFFF1F5F9); // Поверхность для акцентов
 
-  // Новая цветовая палитра с акцентами #EC5E27 и #403D39
-  static const Color primary = Color(0xFFEC5E27); // Оранжевый основной
-  static const Color primaryGlow = Color(0xFFF0734A); // Светлый оранжевый
+  // Новая цветовая палитра с акцентами #E67E5A и #403D39
+  static const Color primary = Color(0xFFE67E5A); // Мягкий оранжевый основной
+  static const Color primaryGlow = Color(0xFFF0A085); // Светлый мягкий оранжевый
   static const Color secondary = Color(0xFF403D39); // Темно-коричневый для текста
-  static const Color accent = Color(0xFFEC5E27); // Оранжевый акцент
+  static const Color accent = Color(0xFFE67E5A); // Мягкий оранжевый акцент
   static const Color success = Color(0xFF48BB78); // Зеленый успех
-  static const Color warning = Color(0xFFEC5E27); // Оранжевое предупреждение
+  static const Color warning = Color(0xFFE67E5A); // Мягкое оранжевое предупреждение
   static const Color info = Color(0xFF4299E1); // Синяя информация
 
   static const Color muted = Color(0xFF403D39); // Приглушенный текст
@@ -42,8 +42,8 @@ class UI {
 
   static const LinearGradient gradientBasketball = LinearGradient(
     colors: [primary, accent, secondary],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    begin: Alignment.bottomRight,
+    end: Alignment.topLeft,
   );
 
   static const LinearGradient gradientCard = LinearGradient(

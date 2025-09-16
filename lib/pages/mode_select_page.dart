@@ -159,14 +159,14 @@ class _ModeSelectPageState extends State<ModeSelectPage> {
                                 children: [
                                   const Icon(
                                     Icons.person,
-                                    color: UI.textPrimary,
+                                    color: UI.white,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
                                     'Вход игрока',
                                     style: TextStyle(
-                                      color: UI.textPrimary,
+                                      color: UI.white,
                                       fontWeight: UI.fontWeightBold,
                                       fontSize: 16,
                                       fontFamily: UI.fontFamily,
@@ -186,7 +186,7 @@ class _ModeSelectPageState extends State<ModeSelectPage> {
                               width: double.infinity,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: UI.textPrimary,
+                                color: UI.white,
                                 borderRadius: BorderRadius.circular(
                                   UI.radiusLg,
                                 ),

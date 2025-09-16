@@ -64,6 +64,10 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
         backgroundColor: UI.background,
         foregroundColor: UI.black,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: UI.primary),
+          onPressed: () => context.go('/'),
+        ),
         title: Text(
           'Вход игрока',
           style: UI.getHeadingStyle(context, color: UI.black),
@@ -281,7 +285,7 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                                       children: [
                                         const Icon(
                                           Icons.login,
-                                          color: UI.textPrimary,
+                                          color: UI.white,
                                           size: 20,
                                         ),
                                         const SizedBox(width: 12),
@@ -292,49 +296,12 @@ class _PlayerLoginPageState extends State<PlayerLoginPage> {
                                               context,
                                             ),
                                             fontWeight: UI.fontWeightSemiBold,
-                                            color: UI.textPrimary,
+                                            color: UI.white,
                                             fontFamily: UI.fontFamily,
                                           ),
                                         ),
                                       ],
                                     ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                BounceInAnimation(
-                  delay: const Duration(milliseconds: 800),
-                  child: AnimatedButton(
-                    onPressed: () => context.go('/'),
-                    child: Container(
-                      width: double.infinity,
-                      height: UI.getButtonHeight(context) + 8,
-                      decoration: BoxDecoration(
-                        color: UI.textPrimary,
-                        borderRadius: BorderRadius.circular(UI.radiusLg),
-                        border: Border.all(color: UI.primary, width: 2),
-                        boxShadow: [UI.buttonShadow],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.arrow_back,
-                            color: UI.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Назад',
-                            style: TextStyle(
-                              fontSize: UI.getBodyFontSize(context),
-                              color: UI.primary,
-                              fontWeight: UI.fontWeightSemiBold,
-                              fontFamily: UI.fontFamily,
                             ),
                           ),
                         ],

@@ -61,15 +61,6 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
         titleCtrl.text.trim().isNotEmpty;
   }
 
-  String _getButtonHint() {
-    if (titleCtrl.text.trim().isEmpty) {
-      return 'Введите адрес тренировки';
-    }
-    if (selectedWeekdays.isEmpty) {
-      return 'Выберите дни недели';
-    }
-    return '';
-  }
 
   Future<void> _createSchedule() async {
     if (selectedWeekdays.isEmpty || titleCtrl.text.trim().isEmpty) {
@@ -225,56 +216,45 @@ class _TrainingScheduleDialogState extends State<TrainingScheduleDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        ElevatedButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(
-            'Отмена',
-            style: TextStyle(
-              color: UI.muted,
-              fontSize: UI.getBodyFontSize(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: UI.white,
+            foregroundColor: UI.primary,
+            side: const BorderSide(color: UI.primary, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UI.radiusLg),
             ),
           ),
+          child: Text(
+            'Отмена',
+            style: TextStyle(fontSize: UI.getBodyFontSize(context)),
+          ),
         ),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: _canCreateSchedule ? _createSchedule : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _canCreateSchedule ? UI.primary : UI.muted,
-                foregroundColor: UI.textPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(UI.radiusSm),
-                ),
-              ),
-              child: _isLoading
-                  ? SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          UI.textPrimary,
-                        ),
-                      ),
-                    )
-                  : Text(
-                      'Создать расписание',
-                      style: TextStyle(fontSize: UI.getBodyFontSize(context)),
-                    ),
+        ElevatedButton(
+          onPressed: _canCreateSchedule ? _createSchedule : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _canCreateSchedule ? UI.primary : UI.muted,
+            foregroundColor: UI.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UI.radiusLg),
             ),
-            if (!_canCreateSchedule && !_isLoading) ...[
-              const SizedBox(height: 8),
-              Text(
-                _getButtonHint(),
-                style: TextStyle(
-                  color: UI.muted,
-                  fontSize: UI.isSmallScreen(context) ? 10 : 12,
+          ),
+          child: _isLoading
+              ? SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      UI.white,
+                    ),
+                  ),
+                )
+              : Text(
+                  'Создать',
+                  style: TextStyle(fontSize: UI.getBodyFontSize(context)),
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
         ),
       ],
     );

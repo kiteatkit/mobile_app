@@ -239,6 +239,37 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
 
     return Scaffold(
       backgroundColor: UI.background,
+      appBar: AppBar(
+        backgroundColor: UI.background,
+        foregroundColor: UI.textPrimary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: UI.primary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'Игроки команды ',
+                style: TextStyle(
+                  color: UI.textPrimary,
+                  fontSize: UI.getSubtitleFontSize(context),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextSpan(
+                text: widget.group.name,
+                style: TextStyle(
+                  color: UI.primary,
+                  fontSize: UI.getSubtitleFontSize(context),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -258,71 +289,6 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
       padding: UI.getScreenPadding(context),
       child: Column(
         children: [
-          // Заголовок с кнопкой назад
-          Row(
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(UI.radiusLg),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: UI.isSmallScreen(context) ? 8 : 12,
-                      vertical: UI.isSmallScreen(context) ? 6 : 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: UI.card,
-                      borderRadius: BorderRadius.circular(UI.radiusLg),
-                      border: Border.all(color: UI.border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.arrow_back_ios,
-                          color: UI.textPrimary,
-                          size: UI.isSmallScreen(context) ? 14 : 16,
-                        ),
-                        SizedBox(width: UI.isSmallScreen(context) ? 2 : 4),
-                        Text(
-                          'Назад',
-                          style: TextStyle(
-                            color: UI.textPrimary,
-                            fontSize: UI.isSmallScreen(context) ? 12 : 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '${widget.group.name} - Игроки команды',
-                  style: TextStyle(
-                    color: UI.textPrimary,
-                    fontSize: UI.getSubtitleFontSize(context),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
 
           // Статистика
           Row(
@@ -405,8 +371,9 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
                   child: ElevatedButton.icon(
                     onPressed: _openAddTrainingDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: UI.primary,
-                      foregroundColor: UI.textPrimary,
+                      backgroundColor: UI.white,
+                      foregroundColor: UI.primary,
+                      side: const BorderSide(color: UI.primary, width: 2),
                     ),
                     icon: const Icon(Icons.add, size: 14),
                     label: const Text(
@@ -421,7 +388,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
                     onPressed: _openTrainingScheduleDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: UI.primary,
-                      foregroundColor: UI.textPrimary,
+                      foregroundColor: UI.white,
                     ),
                     icon: const Icon(Icons.schedule, size: 14),
                     label: const Text(
@@ -694,7 +661,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
               ),
               const SizedBox(width: 8),
               Text(
-                'Топ-3 игроков',
+                'Топ-3 игрока',
                 style: TextStyle(
                   color: UI.textPrimary,
                   fontSize: UI.isSmallScreen(context) ? 14 : 16,
@@ -1209,9 +1176,17 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        ElevatedButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена', style: TextStyle(color: UI.muted)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: UI.white,
+            foregroundColor: UI.primary,
+            side: const BorderSide(color: UI.primary, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UI.radiusLg),
+            ),
+          ),
+          child: const Text('Отмена'),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -1284,7 +1259,10 @@ class _AddTrainingDialogState extends State<_AddTrainingDialog> {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: UI.primary,
-            foregroundColor: UI.textPrimary,
+            foregroundColor: UI.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UI.radiusLg),
+            ),
           ),
           child: const Text('Создать'),
         ),

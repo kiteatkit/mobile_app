@@ -442,9 +442,9 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                         onPressed: saving ? null : _save,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: UI.primary,
-                          foregroundColor: UI.textPrimary,
+                          foregroundColor: UI.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(UI.radiusSm),
+                            borderRadius: BorderRadius.circular(UI.radiusLg),
                           ),
                         ),
                         child: saving
@@ -454,7 +454,7 @@ class _PlayerProfilePageState extends State<PlayerProfilePage> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    UI.textPrimary,
+                                    UI.white,
                                   ),
                                 ),
                               )
