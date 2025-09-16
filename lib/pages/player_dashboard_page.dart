@@ -639,36 +639,18 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                       });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: UI.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(UI.radiusLg),
                         border: Border.all(color: UI.primary.withOpacity(0.3)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isRankingExpanded
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                            size: 16,
-                            color: UI.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _isRankingExpanded ? 'Свернуть' : 'Показать всех',
-                            style: TextStyle(
-                              fontSize: UI.getBodyFontSize(context),
-                              color: UI.primary,
-                              fontWeight: UI.fontWeightSemiBold,
-                              fontFamily: UI.fontFamily,
-                            ),
-                          ),
-                        ],
+                      child: Icon(
+                        _isRankingExpanded
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        size: 18,
+                        color: UI.primary,
                       ),
                     ),
                   ),
