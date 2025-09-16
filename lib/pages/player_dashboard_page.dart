@@ -405,7 +405,7 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
                     context: context,
                     title: 'Посещено тренировок',
                     value: _currentPlayer.attendance_count.toString(),
-                    icon: Icons.fitness_center,
+                    icon: Icons.sports_basketball,
                     color: UI.success,
                   ),
                 ),
