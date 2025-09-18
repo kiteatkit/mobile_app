@@ -350,6 +350,8 @@ class SupabaseRepository {
     String? password,
     String? avatarUrl,
     String? groupId,
+    int? total_points,
+    int? attendance_count,
   }) async {
     try {
       final payload = <String, dynamic>{};
@@ -358,6 +360,8 @@ class SupabaseRepository {
       if (login != null) payload['login'] = login;
       if (password != null) payload['password'] = password;
       if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
+      if (total_points != null) payload['total_points'] = total_points;
+      if (attendance_count != null) payload['attendance_count'] = attendance_count;
       // Обновляем group_id только если он явно передан
       if (groupId != null) {
         payload['group_id'] = groupId;
@@ -752,6 +756,43 @@ class SupabaseRepository {
 
   Future<void> clearCache() async {
     _invalidateCache();
+  }
+
+  // Функция для обновления total_points всех игроков на основе данных attendance
+  Future<void> updateAllPlayersTotalPoints() async {
+    try {
+      // Получаем всех игроков
+      final players = await getPlayers();
+      
+      for (final player in players) {
+        // Получаем все записи посещаемости для игрока
+        final attendanceData = await _client
+            .from('attendance')
+            .select('points')
+            .eq('player_id', player.id)
+            .eq('attended', true);
+        
+        // Считаем общие баллы
+        int totalPoints = 0;
+        int attendanceCount = 0;
+        
+        for (final record in attendanceData) {
+          totalPoints += record['points'] as int? ?? 0;
+          attendanceCount++;
+        }
+        
+        // Обновляем игрока, если баллы изменились
+        if (player.total_points != totalPoints || player.attendance_count != attendanceCount) {
+          await updatePlayer(
+            id: player.id,
+            total_points: totalPoints,
+            attendance_count: attendanceCount,
+          );
+        }
+      }
+    } catch (e) {
+      print('Ошибка при обновлении total_points: $e');
+    }
   }
 
   // Метод для расчета процента посещаемости группы

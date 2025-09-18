@@ -102,6 +102,9 @@ class _PlayerDashboardPageState extends State<PlayerDashboardPage>
 
   Future<void> _loadData() async {
     try {
+      // Сначала обновляем total_points всех игроков
+      await _repository.updateAllPlayersTotalPoints();
+      
       final players = await _repository.getPlayers();
       final groups = await _repository.getGroups();
 

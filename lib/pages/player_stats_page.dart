@@ -165,7 +165,8 @@ class _PlayerStatsPageState extends State<PlayerStatsPage>
   }
 
   String _getTrainingsText() {
-    final attended = _currentPlayer.attendance_count;
+    // Рассчитываем количество посещенных тренировок из истории
+    final attended = history.where((e) => e.attended).length;
     final total = _getTotalTrainingsCount();
     return '$attended ${_getTrainingWord(attended)} из $total';
   }

@@ -825,6 +825,14 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
       // Обновляем посещаемость игрока
       _updatePlayerAttendance(playerId);
 
+      // Обновляем total_points в базе данных
+      final player = players.firstWhere((p) => p.id == playerId);
+      await repo.updatePlayer(
+        id: playerId,
+        total_points: player.total_points,
+        attendance_count: player.attendance_count,
+      );
+
       // Очищаем кэш средних баллов только для этого игрока
       _monthlyAverageCache.remove(playerId);
 
@@ -843,17 +851,19 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
   }
 
   void _updatePlayerAttendance(String playerId) {
-    // Пересчитываем посещаемость для конкретного игрока
+    // Пересчитываем посещаемость и общие баллы для конкретного игрока
     int attendedCount = 0;
+    int totalPoints = 0;
     
     for (final training in trainings) {
       final attendance = attendanceMap['${training.id}_$playerId'];
       if (attendance != null && attendance.attended) {
         attendedCount++;
+        totalPoints += attendance.points;
       }
     }
     
-    // Обновляем данные игрока с новой посещаемостью
+    // Обновляем данные игрока с новой посещаемостью и баллами
     final playerIndex = players.indexWhere((p) => p.id == playerId);
     if (playerIndex != -1) {
       final player = players[playerIndex];
@@ -865,7 +875,7 @@ class _GroupViewPageV2State extends State<GroupViewPageV2>
         password: player.password,
         avatar_url: player.avatar_url,
         group_id: player.group_id,
-        total_points: player.total_points,
+        total_points: totalPoints, // Обновляем общие баллы
         attendance_count: attendedCount,
         created_at: player.created_at,
         updated_at: player.updated_at,
